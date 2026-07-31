@@ -39,10 +39,10 @@ async function main() {
             {
               AllowedHeaders: ["*"],
               AllowedMethods: ["GET", "PUT", "POST", "HEAD"],
-              AllowedOrigins: [
-                process.env.CORS_ORIGIN || "http://localhost:3000",
-                "*",
-              ],
+              AllowedOrigins: (process.env.CORS_ORIGIN || "http://localhost:3000")
+                .split(",")
+                .map((o) => o.trim())
+                .filter(Boolean),
               ExposeHeaders: ["ETag"],
               MaxAgeSeconds: 3000,
             },
