@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Dr. N. T. Srinivas - MLA Office",
-  description: "Web application for the office of Dr. N. T. Srinivas, MLA. Connecting the constituency of Kudligi with transparent digital governance.",
+  title: "Dr. Srinivas N. T. - MLA Office",
+  description: "Web application for the office of Dr. Srinivas N. T., MLA. Connecting the constituency of Kudligi with transparent digital governance.",
 };
 
 export default function RootLayout({ children }) {

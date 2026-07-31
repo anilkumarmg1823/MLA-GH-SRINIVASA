@@ -1,0 +1,248 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  admin
+  development
+  department_records
+  demands
+  assembly_qa
+  staff
+}
+
+enum DemandApproach {
+  civil
+  personal
+}
+
+enum DemandStatus {
+  Pending
+  InProgress
+  Completed
+  Rejected
+}
+
+enum DocRoot {
+  secretariat
+  department
+  follow_ups
+}
+
+enum AskedBy {
+  mla
+  other
+}
+
+enum QaStatus {
+  pending
+  answered
+}
+
+enum ComplaintStatus {
+  new
+  read
+  closed
+}
+
+model User {
+  id           String   @id @default(cuid())
+  role         UserRole @default(staff)
+  email        String?  @unique
+  phone        String?  @unique
+  passwordHash String?
+  name         String
+  nameKn       String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  permissions StaffPermission?
+  mediaAssets MediaAsset[]
+}
+
+model StaffPermission {
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// JSON: { development: {view,add,edit,delete,download}, ... }
+  modules Json
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Development {
+  id               String   @id @default(cuid())
+  gramPanchayat    String
+  village          String
+  name             String
+  nameKn           String   @default("")
+  description      String   @default("")
+  descriptionKn    String   @default("")
+  details          String   @default("")
+  detailsKn        String   @default("")
+  amountSanctioned Float    @default(0)
+  status           String   @default("Ongoing")
+  statusKn         String   @default("")
+  beneficiaries    String   @default("")
+  beneficiariesKn  String   @default("")
+  department       String   @default("")
+  departmentKn     String   @default("")
+  startDate        String?
+  locationNote     String   @default("")
+  locationNoteKn   String   @default("")
+  yojane           String   @default("")
+  yojaneKn         String   @default("")
+  archivedAt       DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  media DevelopmentMedia[]
+
+  @@index([gramPanchayat, village])
+  @@index([status])
+  @@index([archivedAt])
+}
+
+model DevelopmentMedia {
+  id            String      @id @default(cuid())
+  developmentId String
+  development   Development @relation(fields: [developmentId], references: [id], onDelete: Cascade)
+  url           String
+  s3Key         String?
+  mimeType      String      @default("image/jpeg")
+  type          String      @default("image")
+  createdAt     DateTime    @default(now())
+}
+
+model DepartmentDocument {
+  id           String   @id @default(cuid())
+  root         DocRoot
+  category     String
+  title        String
+  titleKn      String   @default("")
+  eGeneratedId String?
+  fileName     String
+  mimeType     String
+  size         Int      @default(0)
+  url          String
+  s3Key        String?
+  coverUrl     String?
+  coverS3Key   String?
+  status       String?
+  uploadedBy   String   @default("")
+  uploadedAt   DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  archivedAt   DateTime?
+
+  @@index([root, category])
+  @@index([archivedAt])
+}
+
+model Demand {
+  id            String         @id @default(cuid())
+  gramPanchayat String
+  village       String
+  name          String
+  approach      DemandApproach
+  subject       String
+  status        DemandStatus   @default(Pending)
+  archivedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([gramPanchayat, village])
+  @@index([status])
+  @@index([archivedAt])
+}
+
+model AssemblyQa {
+  id          String   @id @default(cuid())
+  questionNo  String   @default("")
+  sessionLabel String  @default("")
+  sessionDate String?
+  askedBy     AskedBy
+  askedByName String   @default("")
+  partyName   String   @default("")
+  question    String
+  questionKn  String   @default("")
+  answer      String   @default("")
+  answerKn    String   @default("")
+  status      QaStatus @default(pending)
+  uploadedBy  String   @default("")
+  archivedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  files AssemblyQaFile[]
+
+  @@index([askedBy])
+  @@index([sessionDate])
+  @@index([status])
+  @@index([archivedAt])
+}
+
+model AssemblyQaFile {
+  id          String     @id @default(cuid())
+  assemblyQaId String
+  assemblyQa  AssemblyQa @relation(fields: [assemblyQaId], references: [id], onDelete: Cascade)
+  fileName    String
+  mimeType    String
+  size        Int        @default(0)
+  url         String
+  s3Key       String?
+  createdAt   DateTime   @default(now())
+}
+
+model Complaint {
+  id        String          @id @default(cuid())
+  name      String
+  phone     String
+  village   String
+  subject    String          @default("")
+  message    String
+  status     ComplaintStatus @default(new)
+  archivedAt DateTime?
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([archivedAt])
+}
+
+model LandingContent {
+  id        String   @id @default("default")
+  data      Json
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+}
+
+model MediaAsset {
+  id           String   @id @default(cuid())
+  url          String
+  s3Key        String?
+  mimeType     String   @default("")
+  size         Int      @default(0)
+  module       String   @default("general")
+  uploadedById String?
+  uploadedBy   User?    @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+}
+
+model OtpChallenge {
+  id          String   @id @default(cuid())
+  phone       String
+  codeHash    String
+  attempts    Int      @default(0)
+  expiresAt   DateTime
+  createdAt   DateTime @default(now())
+
+  @@index([phone])
+}

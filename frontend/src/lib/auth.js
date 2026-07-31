@@ -1,0 +1,160 @@
+import { api, setToken, clearToken } from "@/lib/api";
+import { canModule } from "@/lib/permissionsStore";
+
+const SESSION_KEY = "mla_session";
+
+export function getSession() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch {
+    return null;
+  }
+}
+
+export function setSession(session) {
+  if (typeof window === "undefined") return;
+  if (session?.token) setToken(session.token);
+  localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+export function clearSession() {
+  if (typeof window === "undefined") return;
+  clearToken();
+  localStorage.removeItem(SESSION_KEY);
+}
+
+export function canAccessDevelopment(session) {
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return canModule(session, "development", "view");
+}
+
+export function canAccessDepartmentRecords(session) {
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return canModule(session, "department_records", "view");
+}
+
+export function canAccessDemands(session) {
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return canModule(session, "demands", "view");
+}
+
+export function canAccessAssemblyQa(session) {
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return canModule(session, "assembly_qa", "view");
+}
+
+export function canDo(session, moduleId, action) {
+  if (!session) return false;
+  if (session.role === "admin") return true;
+  return canModule(session, moduleId, action);
+}
+
+/** Prefer selected role if permitted; otherwise first module with view access */
+export function resolveStaffRole(preferredRole, permissions) {
+  const mods = permissions || {};
+  const can = (id) => {
+    const p = mods[id];
+    return Boolean(p?.view || p?.add || p?.edit || p?.download);
+  };
+  const order = [
+    "development",
+    "department_records",
+    "demands",
+    "assembly_qa",
+  ];
+  if (preferredRole && can(preferredRole)) return preferredRole;
+  for (const id of order) {
+    if (can(id)) return id;
+  }
+  return preferredRole || "staff";
+}
+
+export function buildStaffSession({
+  phone,
+  role,
+  name,
+  nameKn,
+  permissions,
+  token,
+  id,
+}) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  const resolvedRole = resolveStaffRole(role, permissions);
+  return {
+    id,
+    token,
+    role: resolvedRole,
+    phone: digits,
+    name: name || "Staff User",
+    nameKn: (nameKn || "").trim() || name || "ಸಿಬ್ಬಂದಿ",
+    permissions: permissions || undefined,
+  };
+}
+
+export async function loginAdmin(email, password) {
+  const { data } = await api("/auth/admin/login", {
+    method: "POST",
+    body: { email, password },
+    token: null,
+  });
+  const session = {
+    token: data.token,
+    id: data.user.id,
+    role: "admin",
+    email: data.user.email,
+    name: data.user.name,
+    nameKn: data.user.nameKn,
+  };
+  setSession(session);
+  return session;
+}
+
+export async function requestStaffOtp(phone) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  const { data } = await api("/auth/staff/request-otp", {
+    method: "POST",
+    body: { phone: digits },
+    token: null,
+  });
+  return data;
+}
+
+export async function verifyStaffOtp({ phone, otp, role }) {
+  const digits = String(phone || "").replace(/\D/g, "");
+  const { data } = await api("/auth/staff/verify-otp", {
+    method: "POST",
+    body: { phone: digits, otp, role },
+    token: null,
+  });
+  const session = buildStaffSession({
+    id: data.user.id,
+    phone: data.user.phone,
+    role: role || data.user.role,
+    name: data.user.name,
+    nameKn: data.user.nameKn,
+    permissions: data.user.permissions,
+    token: data.token,
+  });
+  setSession(session);
+  return session;
+}
+
+/** Home route for the logged-in role (not the public landing page) */
+export function getRoleDashboardPath(session) {
+  if (!session?.role) return "/login";
+  if (session.role === "admin") return "/dashboard";
+  if (session.role === "development") return "/dashboard/development";
+  if (session.role === "department_records") {
+    return "/dashboard/department-records";
+  }
+  if (session.role === "demands") return "/dashboard/demands";
+  if (session.role === "assembly_qa") return "/dashboard/assembly-qa";
+  return "/dashboard";
+}

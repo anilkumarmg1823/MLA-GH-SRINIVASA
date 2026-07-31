@@ -1,8 +1,64 @@
 @import "tailwindcss";
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Noto+Sans:wght@400;600;700;900&family=Noto+Sans+Kannada:wght@400;700&family=Noto+Serif:wght@400;700;900&family=Noto+Serif+Kannada:wght@400;700&family=Source+Serif+4:wght@400;700&family=Tiro+Kannada&display=swap");
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --land-font-display: "Noto Serif", "Noto Serif Kannada", serif;
+  --land-font-body: "Noto Sans", "Noto Sans Kannada", sans-serif;
+}
+
+/* Dashboard portal theme tokens (landing/login excluded) */
+[data-theme="dark"] {
+  --dash-bg: #1e2223;
+  --dash-panel: #282c2d;
+  --dash-panel-soft: rgba(40, 44, 45, 0.9);
+  --dash-text: #ffffff;
+  --dash-text-80: rgba(255, 255, 255, 0.8);
+  --dash-text-70: rgba(255, 255, 255, 0.7);
+  --dash-text-60: rgba(255, 255, 255, 0.6);
+  --dash-text-55: rgba(255, 255, 255, 0.55);
+  --dash-text-50: rgba(255, 255, 255, 0.5);
+  --dash-text-45: rgba(255, 255, 255, 0.45);
+  --dash-text-40: rgba(255, 255, 255, 0.4);
+  --dash-text-30: rgba(255, 255, 255, 0.3);
+  --dash-text-25: rgba(255, 255, 255, 0.25);
+  --dash-muted: rgba(255, 255, 255, 0.55);
+  --dash-border: rgba(204, 188, 165, 0.25);
+  --dash-border-soft: rgba(255, 255, 255, 0.2);
+  --dash-border-faint: rgba(255, 255, 255, 0.1);
+  --dash-accent: #ccbca5;
+  --dash-heading: #ccbca5;
+  --dash-hover: rgba(255, 255, 255, 0.05);
+  --dash-hover-strong: rgba(255, 255, 255, 0.08);
+  --dash-overlay: rgba(0, 0, 0, 0.6);
+  --dash-input: #1e2223;
+}
+
+[data-theme="light"] {
+  --dash-bg: #f3f1ec;
+  --dash-panel: #ffffff;
+  --dash-panel-soft: rgba(255, 255, 255, 0.92);
+  --dash-text: #1e2223;
+  --dash-text-80: rgba(30, 34, 35, 0.85);
+  --dash-text-70: rgba(30, 34, 35, 0.75);
+  --dash-text-60: rgba(30, 34, 35, 0.65);
+  --dash-text-55: rgba(30, 34, 35, 0.55);
+  --dash-text-50: rgba(30, 34, 35, 0.5);
+  --dash-text-45: rgba(30, 34, 35, 0.45);
+  --dash-text-40: rgba(30, 34, 35, 0.4);
+  --dash-text-30: rgba(30, 34, 35, 0.3);
+  --dash-text-25: rgba(30, 34, 35, 0.25);
+  --dash-muted: rgba(30, 34, 35, 0.55);
+  --dash-border: rgba(154, 133, 104, 0.35);
+  --dash-border-soft: rgba(30, 34, 35, 0.14);
+  --dash-border-faint: rgba(30, 34, 35, 0.08);
+  --dash-accent: #9a8568;
+  --dash-heading: #001d56;
+  --dash-hover: rgba(30, 34, 35, 0.05);
+  --dash-hover-strong: rgba(30, 34, 35, 0.08);
+  --dash-overlay: rgba(30, 34, 35, 0.45);
+  --dash-input: #f7f5f1;
 }
 
 @theme inline {
@@ -24,3 +80,120 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Hide browser HTML5 video overlay buttons (Picture-in-picture, play buttons, media controls) */
+video::-webkit-media-controls,
+video::-webkit-media-controls-container,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-picture-in-picture-button,
+video::-webkit-media-controls-overlay-play-button,
+div[class*="video-speed"],
+div[id*="video-speed"],
+div[class*="vsc-"],
+div[id*="vsc-"],
+.vsc-controller,
+[class*="vsc-controller"],
+[id*="vsc-controller"] {
+  display: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Infinite Smooth Leader Cards Marquee Animation */
+@keyframes infiniteMarquee {
+  0% { transform: translateX(0%); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee-scroll {
+  display: flex;
+  width: max-content;
+  animation: infiniteMarquee 35s linear infinite;
+}
+
+.animate-marquee-scroll:hover {
+  animation-play-state: paused;
+}
+
+/* Login — map stage */
+@keyframes loginMapFloat {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-10px) scale(1.02); }
+}
+
+@keyframes loginGlowPulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.75; }
+}
+
+@keyframes loginCardIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes loginLineDrift {
+  0% { transform: translateX(-8%); opacity: 0.15; }
+  50% { opacity: 0.45; }
+  100% { transform: translateX(8%); opacity: 0.15; }
+}
+
+@keyframes loginLineSweep {
+  0% { transform: translateY(20%) rotate(-12deg); opacity: 0; }
+  20% { opacity: 0.35; }
+  80% { opacity: 0.35; }
+  100% { transform: translateY(-20%) rotate(-12deg); opacity: 0; }
+}
+
+@keyframes loginLogoBreathe {
+  0%, 100% { opacity: 0.06; transform: scale(1); }
+  50% { opacity: 0.12; transform: scale(1.04); }
+}
+
+.login-map-float {
+  animation: loginMapFloat 10s ease-in-out infinite;
+}
+
+.login-glow-pulse {
+  animation: loginGlowPulse 5s ease-in-out infinite;
+}
+
+.login-card-in {
+  animation: loginCardIn 0.7s ease-out both;
+}
+
+.login-line-a {
+  animation: loginLineDrift 14s ease-in-out infinite;
+}
+.login-line-b {
+  animation: loginLineDrift 18s ease-in-out infinite reverse;
+}
+.login-line-c {
+  animation: loginLineSweep 12s linear infinite;
+}
+.login-line-d {
+  animation: loginLineSweep 16s linear infinite;
+  animation-delay: -6s;
+}
+
+.login-inc-logo {
+  animation: loginLogoBreathe 8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-map-float,
+  .login-glow-pulse,
+  .login-card-in,
+  .login-line-a,
+  .login-line-b,
+  .login-line-c,
+  .login-line-d,
+  .login-inc-logo {
+    animation: none !important;
+  }
+}
+
