@@ -505,7 +505,7 @@ export default function Home() {
       {/* 3. HERO BANNER AREA (Rich Royal Blue Theme with Animated Slogan & Photo Carousel) */}
       <section
         id="home"
-        className="relative w-full overflow-hidden bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl min-h-[400px] sm:min-h-[460px] lg:h-[510px]"
+        className="relative w-full overflow-hidden bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl min-h-[420px] sm:min-h-[460px] lg:h-[510px]"
         style={{ fontFamily: "var(--land-font-display)" }}
       >
         {(() => {
@@ -555,12 +555,12 @@ export default function Home() {
           );
         })()}
 
-        {/* Banner Main Content — mobile: pin text+photo to bottom gold border */}
+        {/* Banner Main Content — mobile: pin text+photo to bottom; desktop: classic left text */}
         <div className="relative z-20 max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 w-full h-full flex items-end sm:items-center pb-0 pt-5 sm:py-6 lg:py-0 min-h-[420px] sm:min-h-[460px] lg:min-h-0 lg:h-full">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-6 items-end sm:items-center w-full mt-auto sm:my-auto">
 
-            {/* LEFT: slogans — sit low on mobile beside portrait */}
-            <div className="lg:col-span-8 flex flex-col gap-2 sm:gap-3.5 text-left items-start z-30 max-w-3xl min-w-0 w-[58%] sm:w-full pr-1 sm:pr-[36%] md:pr-[40%] lg:pr-0 pb-3 sm:pb-0 self-end">
+            {/* LEFT: slogans */}
+            <div className="lg:col-span-8 flex flex-col gap-2 sm:gap-3.5 text-left items-start z-30 max-w-3xl min-w-0 w-[58%] sm:w-full pr-1 sm:pr-[38%] md:pr-[36%] lg:pr-[8%] pb-3 sm:pb-0 self-end sm:self-auto">
 
               <motion.div
                 key={`badge-${currentSlide}`}
@@ -570,7 +570,7 @@ export default function Home() {
                 className="inline-flex items-center gap-1.5 sm:gap-2.5 bg-[var(--land-gold)] text-slate-950 text-[10px] sm:text-sm font-black px-2.5 sm:px-4.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white max-w-full"
               >
                 <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[var(--land-blue)] animate-pulse shrink-0" />
-                <span className="leading-snug line-clamp-2">
+                <span className="leading-snug line-clamp-2 sm:line-clamp-none">
                   {lang === "kn"
                     ? (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleKn
                     : (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleEn}
@@ -584,13 +584,13 @@ export default function Home() {
                 transition={{ duration: 0.5 }}
                 className="flex flex-col gap-1.5 sm:gap-2 text-white w-full min-w-0"
               >
-                <h1 className="text-sm sm:text-2xl md:text-3xl lg:text-4xl font-black leading-snug tracking-tight drop-shadow-md flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0.5 sm:gap-2 text-white">
+                <h1 className="text-sm sm:text-3xl lg:text-4xl font-black leading-snug sm:leading-tight tracking-tight drop-shadow-md flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0.5 sm:gap-2 text-white">
                   <span>
                     {lang === "kn"
                       ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1Kn
                       : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1En}
                   </span>
-                  <span className="text-[var(--land-gold)] font-extrabold text-[11px] sm:text-inherit">
+                  <span className="text-[var(--land-gold)] font-extrabold text-[11px] sm:text-3xl lg:text-4xl">
                     •{" "}
                     {lang === "kn"
                       ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2Kn
@@ -598,15 +598,15 @@ export default function Home() {
                   </span>
                 </h1>
 
-                <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-sm font-black text-[var(--land-gold)] bg-[var(--land-blue-deep)]/80 backdrop-blur-md px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl w-fit shadow-lg border border-[var(--land-gold)]/60 max-w-full">
-                  <span className="line-clamp-2 leading-snug">
+                <div className="inline-flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-black text-[var(--land-gold)] bg-[var(--land-blue-deep)]/80 backdrop-blur-md px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl w-fit shadow-lg border border-[var(--land-gold)]/60 max-w-full">
+                  <span className="line-clamp-2 sm:line-clamp-none leading-snug">
                     ✦{" "}
                     {lang === "kn"
                       ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3Kn
                       : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3En}
                   </span>
                 </div>
-                <p className="text-[10px] sm:text-sm font-bold text-slate-100 w-full max-w-2xl lg:max-w-3xl mt-0.5 leading-relaxed bg-[var(--land-blue-deep)]/80 backdrop-blur-xl p-2.5 sm:p-5 rounded-xl sm:rounded-2xl border border-[var(--land-gold)]/40 shadow-2xl line-clamp-4 sm:line-clamp-none">
+                <p className="text-[10px] sm:text-sm font-bold text-slate-100 w-full max-w-2xl lg:max-w-3xl mt-0.5 sm:mt-1.5 leading-relaxed bg-[var(--land-blue-deep)]/80 backdrop-blur-xl p-2.5 sm:p-5 rounded-xl sm:rounded-2xl border border-[var(--land-gold)]/40 sm:border-2 shadow-2xl line-clamp-4 sm:line-clamp-none">
                   {lang === "kn"
                     ? (heroSlides[currentSlide] || heroSlides[0] || {}).subKn
                     : (heroSlides[currentSlide] || heroSlides[0] || {}).subEn}
@@ -616,7 +616,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Mobile MLA portrait — flush to bottom border (like desktop) */}
+        {/* Mobile MLA portrait — flush to bottom border */}
         <div className="absolute right-0 bottom-0 z-30 sm:hidden w-[46%] max-w-[190px] h-[280px] pointer-events-none">
           <motion.div
             key={`mla-portrait-mobile-${currentSlide}`}
@@ -626,7 +626,12 @@ export default function Home() {
             className="relative w-full h-full"
           >
             <MediaImage
-              src={(heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage}
+              src={
+                (heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage ||
+                site.mlaPortrait ||
+                content.about?.portrait ||
+                "/mla_about_hd_cutout.png"
+              }
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
               sizes="190px"
@@ -636,7 +641,7 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Desktop / large: right-flushed MLA portrait */}
+        {/* Desktop / tablet: right-flushed MLA portrait */}
         <div className="absolute right-0 bottom-0 z-30 hidden sm:block w-[280px] md:w-[330px] lg:w-[420px] xl:w-[450px] h-[320px] md:h-[360px] lg:h-[400px] xl:h-[425px] pointer-events-none">
           <motion.div
             key={`mla-portrait-${currentSlide}`}
@@ -647,7 +652,12 @@ export default function Home() {
             className="relative w-full h-full flex items-end justify-end"
           >
             <MediaImage
-              src={(heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage}
+              src={
+                (heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage ||
+                site.mlaPortrait ||
+                content.about?.portrait ||
+                "/mla_about_hd_cutout.png"
+              }
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
               sizes="(max-width: 1024px) 330px, 450px"

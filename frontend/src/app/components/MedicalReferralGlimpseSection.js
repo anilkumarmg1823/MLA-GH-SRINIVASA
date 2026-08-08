@@ -30,8 +30,8 @@ export default function MedicalReferralGlimpseSection({ lang = "kn" }) {
       id="medical-referral-glimpse"
       className="relative py-12 sm:py-16 bg-white shadow-xl overflow-hidden text-slate-900"
     >
-      {/* Caduceus / doctor symbol only (no MLA photo wash) */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 opacity-[0.08] sm:opacity-10 pointer-events-none select-none">
+      {/* Caduceus — centered on mobile; left on desktop */}
+      <div className="absolute left-1/2 -translate-x-1/2 sm:left-10 sm:translate-x-0 top-1/2 -translate-y-1/2 z-0 opacity-[0.08] sm:opacity-10 pointer-events-none select-none">
         <Image
           src="/caduceus_medical_symbol.png"
           alt=""
@@ -39,6 +39,18 @@ export default function MedicalReferralGlimpseSection({ lang = "kn" }) {
           height={420}
           className="object-contain filter grayscale contrast-125"
           unoptimized
+        />
+      </div>
+
+      {/* Doctor MLA photo on right — desktop/tablet only (mobile unchanged) */}
+      <div className="absolute right-0 bottom-0 top-0 hidden sm:block w-1/2 lg:w-5/12 z-0 opacity-25 pointer-events-none select-none">
+        <Image
+          src="/mla_doctor_white_coat.png"
+          alt="Dr. Srinivas N. T. Doctor MLA"
+          fill
+          sizes="(max-width: 1024px) 50vw, 40vw"
+          className="object-cover object-top mix-blend-multiply filter contrast-110"
+          priority
         />
       </div>
 
