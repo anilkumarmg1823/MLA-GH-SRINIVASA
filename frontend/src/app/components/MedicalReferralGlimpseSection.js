@@ -65,7 +65,7 @@ export default function MedicalReferralGlimpseSection({ lang = "kn" }) {
           </div>
 
           {/* Main Title */}
-          <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-black text-[#001D56] tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+          <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-black text-[#001D56] tracking-tight leading-snug">
             {lang === "kn"
               ? "ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಪತ್ರ & ಉಚಿತ ಆಸ್ಪತ್ರೆ ಚಿಕಿತ್ಸಾ ನೆರವು"
               : "Medical Referral Letters & Free Hospital Care Assistance"}

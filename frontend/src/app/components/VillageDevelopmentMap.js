@@ -255,12 +255,12 @@ export default function VillageDevelopmentMap({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         
         {/* Left Interactive Map Container */}
-        <div className="lg:col-span-7 xl:col-span-8 relative w-full bg-slate-950/40 backdrop-blur-md border-2 border-white/30 rounded-2xl p-4 shadow-2xl overflow-hidden min-h-[520px] lg:h-[590px] flex flex-col items-center justify-center">
+        <div className="lg:col-span-7 xl:col-span-8 relative w-full bg-slate-950/40 backdrop-blur-md border-2 border-white/30 rounded-2xl p-3 sm:p-4 shadow-2xl overflow-hidden min-h-[360px] sm:min-h-[440px] lg:min-h-[520px] lg:h-[590px] flex flex-col items-center justify-center">
           
           {/* Map Controls Header */}
-          <div className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-[#001D56]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/30 text-xs text-white shadow-lg">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-bold">
+          <div className="absolute top-3 left-3 right-16 sm:right-auto sm:top-4 sm:left-4 z-30 flex items-center gap-2 bg-[#001D56]/90 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/30 text-[10px] sm:text-xs text-white shadow-lg max-w-[calc(100%-5.5rem)] sm:max-w-none min-w-0">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="font-bold truncate">
               {lang === "kn"
                 ? `ಆಯ್ದ ಪಂಚಾಯತಿ: ${selectedPin.fullName}`
                 : `Selected: ${selectedPin.fullName}`}

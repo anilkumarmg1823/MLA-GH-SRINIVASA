@@ -236,7 +236,7 @@ export default function AdminMedicalReferralsPage() {
                       <div className="text-[#60A5FA] font-bold text-[11px] mt-0.5">ರೋಗ: {item.disease}</div>
                     </td>
 
-                    <td className="p-4 font-bold text-[var(--dash-text)] min-w-[220px]">
+                    <td className="p-4 font-bold text-[var(--dash-text)] min-w-[140px] sm:min-w-[220px]">
                       <div className="flex items-center gap-1.5 text-[#FFD700] font-black mb-1">
                         <FaHospital className="text-xs" />
                         <span className="text-xs">{item.hospitalName}</span>

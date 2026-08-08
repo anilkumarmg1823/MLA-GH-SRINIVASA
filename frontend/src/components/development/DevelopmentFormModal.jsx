@@ -146,7 +146,7 @@ export default function DevelopmentFormModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-[var(--dash-overlay)] backdrop-blur-sm">
       <div className="absolute inset-0" onClick={onClose} aria-hidden="true" />
-      <div className="relative w-full max-w-5xl bg-[var(--dash-panel)] border-2 border-[#CCBCA5]/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+      <div className="relative w-full max-w-5xl max-h-[92vh] bg-[var(--dash-panel)] border-2 border-[#CCBCA5]/40 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
         {/* Gold header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3 bg-gradient-to-r from-[#CCBCA5] via-[#d4c4ad] to-[#b8a890] shrink-0">
           <h2 className="text-base sm:text-lg font-black text-[#1e2223]">
@@ -162,9 +162,9 @@ export default function DevelopmentFormModal({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex flex-col">
-          <div className="flex flex-col md:flex-row">
-            {/* Left — media (compact, no scroll) */}
+        <form onSubmit={handleSubmit} className="flex flex-col min-h-0 flex-1 overflow-hidden">
+          <div className="flex flex-col md:flex-row min-h-0 flex-1 overflow-y-auto">
+            {/* Left — media */}
             <div className="md:w-[38%] shrink-0 p-4 border-b md:border-b-0 md:border-r border-[#CCBCA5]/25 bg-[var(--dash-bg)]/70 flex flex-col gap-3">
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
@@ -254,7 +254,7 @@ export default function DevelopmentFormModal({
               )}
             </div>
 
-            {/* Right — fields (compact grid, no scroll) */}
+            {/* Right — fields */}
             <div className="flex-1 p-4 sm:p-5 grid grid-cols-1 sm:grid-cols-2 gap-x-3 gap-y-2.5 min-w-0 content-start">
               <Field label={t.gp}>
                 <select

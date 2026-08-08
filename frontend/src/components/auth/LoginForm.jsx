@@ -165,7 +165,7 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#F8FAFC] text-slate-900 flex overflow-hidden select-none">
+    <div className="relative min-h-[100dvh] w-full bg-[#F8FAFC] text-slate-900 flex overflow-x-hidden overflow-y-auto select-none">
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 opacity-40">
           <Image src="/kudligi_3d_map_blue.png" alt="Kudligi Constituency Map" fill priority className="object-cover filter brightness-110 contrast-125" />
@@ -183,7 +183,7 @@ export default function LoginForm() {
         <LanguageToggle className="bg-[#001438] text-white backdrop-blur-md shadow-lg border border-[#FFD700]/40 rounded-full" />
       </div>
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 sm:p-8 lg:p-12 items-center my-auto">
+      <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 sm:p-8 lg:p-12 items-center py-20 sm:py-16 lg:my-auto">
         <div className="hidden lg:flex lg:col-span-6 relative h-[580px] flex-col justify-between p-6 xl:p-10 select-none overflow-hidden rounded-3xl">
           <div className="absolute inset-0 z-0 overflow-hidden rounded-3xl">
             <Image src={MLA_PHOTO} alt={mlaName} fill priority sizes="50vw" className="object-cover object-[center_10%] brightness-110 contrast-105" />
@@ -216,12 +216,12 @@ export default function LoginForm() {
 
         <div className="lg:col-span-6 relative w-full flex flex-col items-center justify-center">
           <div className="w-full max-w-[460px] rounded-3xl border-2 border-slate-200 bg-white/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl border-t-4 border-t-[#0055C4]">
-            <div className="flex items-start justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
-              <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-3 min-w-0">
                 <div className="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-[#FFD700] bg-[#001438] p-1.5 shrink-0 shadow-md">
                   <Image src="/party_logo_v2.png" alt="INC" fill className="object-contain" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-xl font-black text-[#001D56] tracking-wide">
                     {t.loginTitle || KN.loginTitle}
                   </h2>

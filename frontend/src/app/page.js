@@ -22,7 +22,7 @@ import {
   FaUsers, FaHandshake, FaChartLine, FaShieldAlt, FaLaptop,
   FaFacebookF, FaTwitter, FaYoutube, FaInstagram, FaPhoneAlt, FaEnvelope,
   FaHospitalUser, FaImages, FaClipboardList, FaLandmark, FaGlobe,
-  FaBuilding, FaHome, FaMapMarkerAlt
+  FaBuilding, FaHome, FaMapMarkerAlt, FaBars, FaTimes
 } from "react-icons/fa";
 
 // Animated Counter Component for Constituency Stats
@@ -59,6 +59,7 @@ export default function Home() {
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [quickLinksOpen, setQuickLinksOpen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [socialSidebarCollapsed, setSocialSidebarCollapsed] = useState(false);
   const [content, setContent] = useState(landingContentSeed);
   const [publicDevelopments, setPublicDevelopments] = useState([]);
@@ -137,9 +138,19 @@ export default function Home() {
     }
   };
 
+  const closeMobileNav = () => {
+    setMobileNavOpen(false);
+    setQuickLinksOpen(false);
+  };
+
+  const scrollAndCloseMobile = (id) => {
+    handleScroll(id);
+    closeMobileNav();
+  };
+
   return (
     <div
-      className="min-h-screen w-full bg-[var(--land-bg)] text-white flex flex-col justify-between relative selection:bg-[var(--land-link)] selection:text-white"
+      className="min-h-screen w-full overflow-x-hidden bg-[var(--land-bg)] text-white flex flex-col justify-between relative selection:bg-[var(--land-link)] selection:text-white"
       style={{
         ...brandVars,
         fontFamily: "var(--land-font-body)",
@@ -269,11 +280,11 @@ export default function Home() {
               />
             </div>
 
-            <div className="flex flex-col text-left">
-              <span className="font-black text-xs sm:text-base tracking-wider uppercase text-white leading-tight">
+            <div className="flex flex-col text-left min-w-0 max-w-[42vw] sm:max-w-none">
+              <span className="font-black text-[10px] sm:text-base tracking-wider uppercase text-white leading-tight truncate">
                 {currentText.navbarTitle}
               </span>
-              <span className="text-[var(--land-gold)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
+              <span className="text-[var(--land-gold)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5 truncate hidden sm:block">
                 {site.taglineEn === site.taglineKn || !site.taglineKn
                   ? site.taglineEn
                   : `${site.taglineEn} | ${site.taglineKn}`}
@@ -352,7 +363,7 @@ export default function Home() {
           </nav>
 
           {/* Header Action Badges, Language Selector & Login Button */}
-          <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3.5 shrink-0">
 
             {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-[var(--land-blue-deep)]/80 p-1 rounded-full border border-[var(--land-gold)]/40 h-fit">
@@ -426,13 +437,69 @@ export default function Home() {
             {/* Login Button */}
             <Link
               href="/login"
-              className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-black text-[var(--land-gold)] border-2 border-[var(--land-gold)] rounded-full hover:bg-[var(--land-gold)] hover:text-slate-900 transition-all duration-300 shadow-md whitespace-nowrap inline-flex items-center"
+              className="hidden sm:inline-flex px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-black text-[var(--land-gold)] border-2 border-[var(--land-gold)] rounded-full hover:bg-[var(--land-gold)] hover:text-slate-900 transition-all duration-300 shadow-md whitespace-nowrap items-center"
             >
               {currentText.login || 'LOGIN'}
             </Link>
 
+            {/* Mobile menu toggle */}
+            <button
+              type="button"
+              onClick={() => setMobileNavOpen((o) => !o)}
+              className="xl:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border-2 border-[var(--land-gold)]/70 text-[var(--land-gold)] hover:bg-[var(--land-gold)]/15"
+              aria-label={mobileNavOpen ? "Close menu" : "Open menu"}
+              aria-expanded={mobileNavOpen}
+            >
+              {mobileNavOpen ? <FaTimes className="w-4 h-4" /> : <FaBars className="w-4 h-4" />}
+            </button>
+
           </div>
         </div>
+
+        {/* Mobile / tablet navigation drawer */}
+        {mobileNavOpen ? (
+          <div className="xl:hidden border-t border-[var(--land-gold)]/30 bg-[var(--land-blue-deep)]/98 backdrop-blur-xl px-4 py-3 flex flex-col gap-1 shadow-2xl max-h-[min(70vh,520px)] overflow-y-auto">
+            <button type="button" onClick={() => scrollAndCloseMobile("home")} className="text-left px-3 py-2.5 rounded-xl text-sm font-black text-[var(--land-gold)] hover:bg-white/10">
+              {currentText.navHome}
+            </button>
+            <button type="button" onClick={() => scrollAndCloseMobile("about")} className="text-left px-3 py-2.5 rounded-xl text-sm font-black text-white/90 hover:bg-white/10">
+              {currentText.navAbout}
+            </button>
+            <button type="button" onClick={() => scrollAndCloseMobile("developments")} className="text-left px-3 py-2.5 rounded-xl text-sm font-black text-white/90 hover:bg-white/10">
+              {currentText.navDevelopments}
+            </button>
+            <p className="px-3 pt-2 pb-1 text-[10px] font-black uppercase tracking-widest text-[var(--land-gold)]/80">
+              {currentText.quickLinks}
+            </p>
+            <Link href="/medical-referral" onClick={closeMobileNav} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10">
+              <FaHospitalUser className="w-4 h-4 text-[var(--land-gold)] shrink-0" />
+              {currentText.medicalReferral}
+            </Link>
+            <button type="button" onClick={() => scrollAndCloseMobile("gallery")} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10 text-left">
+              <FaImages className="w-4 h-4 text-emerald-400 shrink-0" />
+              {currentText.photoGallery}
+            </button>
+            <button type="button" onClick={() => scrollAndCloseMobile("grievance-form")} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10 text-left">
+              <FaClipboardList className="w-4 h-4 text-amber-400 shrink-0" />
+              {currentText.grievancesSuggestions}
+            </button>
+            <a href={content.quickLinks?.sevaSindhuUrl || "https://sevasindhu.karnataka.gov.in"} target="_blank" rel="noopener noreferrer" onClick={closeMobileNav} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10">
+              <FaLandmark className="w-4 h-4 text-blue-400 shrink-0" />
+              {currentText.sevaSindhu}
+            </a>
+            <a href={content.quickLinks?.districtPortalUrl || "https://vijayanagara.nic.in"} target="_blank" rel="noopener noreferrer" onClick={closeMobileNav} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10">
+              <FaGlobe className="w-4 h-4 text-cyan-400 shrink-0" />
+              {currentText.districtPortal}
+            </a>
+            <Link
+              href="/login"
+              onClick={closeMobileNav}
+              className="sm:hidden mt-2 mx-1 text-center px-4 py-2.5 text-sm font-black text-slate-900 bg-[var(--land-gold)] rounded-full"
+            >
+              {currentText.login || "LOGIN"}
+            </Link>
+          </div>
+        ) : null}
       </header>
 
       {/* 3. HERO BANNER AREA (Rich Royal Blue Theme with Animated Slogan & Photo Carousel) */}
@@ -493,7 +560,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto">
 
             {/* LEFT COLUMN: Animated Development Work Slogans (Expanded Width 8 Cols) */}
-            <div className="lg:col-span-8 flex flex-col gap-3.5 text-left items-start z-30 max-w-3xl">
+            <div className="lg:col-span-8 flex flex-col gap-3.5 text-left items-start z-30 max-w-3xl pr-0 sm:pr-[38%] md:pr-0">
 
               <motion.div
                 key={`badge-${currentSlide}`}
@@ -539,8 +606,8 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right End Flushed Dynamic MLA Portrait Image (Proportional height & rightmost edge alignment) */}
-        <div className="absolute right-0 bottom-0 z-30 w-[240px] sm:w-[330px] lg:w-[420px] xl:w-[450px] h-[280px] sm:h-[360px] lg:h-[400px] xl:h-[425px] pointer-events-none">
+        {/* Right End Flushed Dynamic MLA Portrait — hidden on very small screens to protect copy */}
+        <div className="absolute right-0 bottom-0 z-30 hidden sm:block w-[200px] sm:w-[300px] md:w-[330px] lg:w-[420px] xl:w-[450px] h-[240px] sm:h-[340px] lg:h-[400px] xl:h-[425px] pointer-events-none opacity-90 sm:opacity-100">
           <motion.div
             key={`mla-portrait-${currentSlide}`}
             initial={{ opacity: 0, scale: 0.96 }}
@@ -553,7 +620,7 @@ export default function Home() {
               src={(heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage}
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
-              sizes="(max-width: 640px) 240px, (max-width: 1024px) 330px, 450px"
+              sizes="(max-width: 640px) 200px, (max-width: 1024px) 330px, 450px"
               className="object-contain object-bottom object-right drop-shadow-2xl"
               priority
             />
@@ -603,7 +670,7 @@ export default function Home() {
             </div>
 
             {/* Plus Operator 1 */}
-            <div className="flex items-center justify-center shrink-0 py-1 lg:py-0">
+            <div className="hidden lg:flex items-center justify-center shrink-0 py-1 lg:py-0">
               <div className="w-8 h-8 rounded-full bg-[var(--land-gold)] text-slate-950 font-black text-xl flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
                 +
               </div>
@@ -628,7 +695,7 @@ export default function Home() {
             </div>
 
             {/* Plus Operator 2 */}
-            <div className="flex items-center justify-center shrink-0 py-1 lg:py-0">
+            <div className="hidden lg:flex items-center justify-center shrink-0 py-1 lg:py-0">
               <div className="w-8 h-8 rounded-full bg-[var(--land-gold)] text-slate-950 font-black text-xl flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
                 +
               </div>
@@ -653,7 +720,7 @@ export default function Home() {
             </div>
 
             {/* Equals Operator */}
-            <div className="flex items-center justify-center shrink-0 py-1 lg:py-0">
+            <div className="hidden lg:flex items-center justify-center shrink-0 py-1 lg:py-0">
               <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-400 to-[#FFD700] text-slate-950 font-black text-2xl flex items-center justify-center shadow-2xl border-2 border-white ring-4 ring-amber-300/40">
                 =
               </div>
@@ -704,8 +771,8 @@ export default function Home() {
           />
         </div>
 
-        {/* Seamless Full-Opacity MLA Photo (/mla_about_photo.png) Positioned on Left */}
-        <div className="absolute left-0 bottom-0 top-0 w-full sm:w-5/12 lg:w-[38%] z-0 pointer-events-none select-none">
+        {/* Seamless Full-Opacity MLA Photo — fade on small screens so bio stays readable */}
+        <div className="absolute left-0 bottom-0 top-0 w-full sm:w-5/12 lg:w-[38%] z-0 pointer-events-none select-none opacity-25 sm:opacity-100">
           <MediaImage
             src="/mla_about_hd_cutout.png"
             alt="Dr. Srinivas N. T. MLA"
@@ -840,7 +907,7 @@ export default function Home() {
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-[var(--land-blue)] drop-shadow-sm">
               {currentText.tourHeading}
             </h2>
-            <p className="text-slate-600 text-xs sm:text-sm md:text-base mt-1.5 font-bold whitespace-nowrap overflow-hidden text-ellipsis max-w-none text-center px-2">
+            <p className="text-slate-600 text-xs sm:text-sm md:text-base mt-1.5 font-bold max-w-3xl mx-auto text-center px-2 leading-relaxed">
               {currentText.tourDesc}
             </p>
             <div className="w-20 h-1.5 bg-[var(--land-blue-bright)] mx-auto mt-2 rounded-full shadow-md" />

@@ -81,6 +81,7 @@ export default function LandingStudioPage() {
   const [activeTab, setActiveTab] = useState("brand");
   const [previewViewport, setPreviewViewport] = useState("desktop"); // 'desktop' | 'tablet' | 'mobile'
   const [previewLang, setPreviewLang] = useState("kn"); // 'kn' | 'en'
+  const [mobilePane, setMobilePane] = useState("edit"); // 'edit' | 'preview' (phones)
   const previewWin = useRef(null);
 
   useEffect(() => {
@@ -164,7 +165,8 @@ export default function LandingStudioPage() {
             className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-[var(--dash-border)] bg-[var(--dash-bg)] hover:bg-[var(--dash-hover)] text-xs font-bold text-[var(--dash-text)] transition-all shadow-sm shrink-0"
           >
             <FaArrowLeft className="text-xs" />
-            <span>{isKn ? "ಎಕ್ಸಿಟ್ Studio" : "Exit Studio"}</span>
+            <span className="hidden sm:inline">{isKn ? "ಎಕ್ಸಿಟ್ Studio" : "Exit Studio"}</span>
+            <span className="sm:hidden">{isKn ? "ಹಿಂದೆ" : "Exit"}</span>
           </button>
 
           <div className="hidden sm:flex items-center gap-2 border-l border-[var(--dash-border-soft)] pl-4">
@@ -213,7 +215,7 @@ export default function LandingStudioPage() {
           </div>
 
           {/* Viewport Toggles */}
-          <div className="flex items-center gap-1 bg-[var(--dash-bg)] p-1 rounded-full border border-[var(--dash-border-soft)]">
+          <div className="hidden sm:flex items-center gap-1 bg-[var(--dash-bg)] p-1 rounded-full border border-[var(--dash-border-soft)]">
             <button
               type="button"
               onClick={() => setPreviewViewport("desktop")}
@@ -261,7 +263,7 @@ export default function LandingStudioPage() {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[var(--dash-accent)] text-white text-xs font-black hover:opacity-90 shadow-md transition-all active:scale-95"
           >
             <FaSyncAlt className="text-xs" />
-            <span>{syncLabel}</span>
+            <span className="hidden md:inline">{syncLabel}</span>
           </button>
           <button
             type="button"
@@ -301,10 +303,40 @@ export default function LandingStudioPage() {
         })}
       </div>
 
+      {/* Mobile Edit / Preview switch */}
+      <div className="lg:hidden flex gap-1 px-3 py-2 border-b border-[var(--dash-border)] bg-[var(--dash-panel)] shrink-0">
+        <button
+          type="button"
+          onClick={() => setMobilePane("edit")}
+          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+            mobilePane === "edit"
+              ? "bg-[var(--dash-accent)] text-white"
+              : "bg-[var(--dash-bg)] text-[var(--dash-text-60)]"
+          }`}
+        >
+          {isKn ? "ಸಂಪಾದಿಸಿ" : "Edit"}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMobilePane("preview")}
+          className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+            mobilePane === "preview"
+              ? "bg-[var(--dash-accent)] text-white"
+              : "bg-[var(--dash-bg)] text-[var(--dash-text-60)]"
+          }`}
+        >
+          {isKn ? "ಪೂರ್ವವೀಕ್ಷಣೆ" : "Preview"}
+        </button>
+      </div>
+
       {/* Main Studio Viewport Grid (100% Height) */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden">
         {/* Left Customization Inspector Dock */}
-        <aside className="w-full lg:w-[440px] xl:w-[480px] bg-[var(--dash-panel)] border-r border-[var(--dash-border)] p-4 space-y-4 overflow-y-auto shrink-0 shadow-lg">
+        <aside
+          className={`w-full lg:w-[440px] xl:w-[480px] bg-[var(--dash-panel)] border-r border-[var(--dash-border)] p-4 space-y-4 overflow-y-auto shrink-0 shadow-lg ${
+            mobilePane === "preview" ? "hidden lg:block" : ""
+          }`}
+        >
           <div className="flex items-center justify-between border-b border-[var(--dash-border-soft)] pb-2.5">
             <div>
               <span className="text-xs font-black uppercase tracking-widest text-[var(--dash-accent)] flex items-center gap-1.5">
@@ -357,7 +389,11 @@ export default function LandingStudioPage() {
         </aside>
 
         {/* Right Main Live Interactive Canvas Viewport */}
-        <main className="flex-1 bg-slate-950 p-2 sm:p-4 overflow-y-auto flex flex-col justify-start items-center">
+        <main
+          className={`flex-1 bg-slate-950 p-2 sm:p-4 overflow-y-auto flex flex-col justify-start items-center ${
+            mobilePane === "edit" ? "hidden lg:flex" : ""
+          }`}
+        >
           <div className="w-full max-w-[1400px] my-auto">
             <LandingCmsLiveCanvas
               content={draft}

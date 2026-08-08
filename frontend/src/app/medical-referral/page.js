@@ -409,15 +409,15 @@ export default function MedicalReferralPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans overflow-x-hidden">
       
       {/* 1. TOP HEADER NAVIGATION BAR (Full Width - Logos and Buttons at Ends) */}
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[#001438] via-[#002B7F] to-[#0055C4] border-b-4 border-[#FFD700] shadow-xl backdrop-blur-md">
-        <div className="w-full px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
+        <div className="w-full px-3 sm:px-8 lg:px-12 min-h-16 sm:h-20 py-2 sm:py-0 flex items-center justify-between gap-2">
           
-          <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-3 min-w-0 shrink">
             {/* 1. Official Circular MLA Logo */}
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[#FFD700] shadow-md shrink-0 bg-white">
+            <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[#FFD700] shadow-md shrink-0 bg-white">
               <Image
                 src="/mla_official_circle_logo.jpg"
                 alt="Dr. Srinivas N. T. MLA"
@@ -428,7 +428,7 @@ export default function MedicalReferralPage() {
             </div>
 
             {/* 2. Caduceus Medical Symbol Logo */}
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#FFD700] shadow-md shrink-0 bg-white p-1">
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#FFD700] shadow-md shrink-0 bg-white p-1 hidden sm:block">
               <Image
                 src="/caduceus_medical_symbol.png"
                 alt="Medical Caduceus Symbol"
@@ -439,7 +439,7 @@ export default function MedicalReferralPage() {
             </div>
 
             {/* 3. Congress Party Logo */}
-            <div className="relative w-9 h-9 sm:w-10 sm:h-10 filter drop-shadow-md shrink-0">
+            <div className="relative w-8 h-8 sm:w-10 sm:h-10 filter drop-shadow-md shrink-0 hidden sm:block">
               <Image
                 src="/party_logo_v2.png"
                 alt="INC Logo"
@@ -449,21 +449,21 @@ export default function MedicalReferralPage() {
               />
             </div>
 
-            <div className="flex flex-col text-left">
-              <span className="font-black text-xs sm:text-base text-white tracking-wide leading-tight">
-                {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಶಾಸಕರ ಆಸ್ಪತ್ರೆ ನೆರವು ಕೋಶ" : "Dr. Srinivas N. T. MLA Health Referral Cell"}
+            <div className="flex flex-col text-left min-w-0">
+              <span className="font-black text-[10px] sm:text-base text-white tracking-wide leading-tight truncate">
+                {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಆಸ್ಪತ್ರೆ ನೆರವು" : "MLA Health Referral Cell"}
               </span>
-              <span className="text-[#FFD700] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
-                Kudligi Constituency Medical Service Portal
+              <span className="text-[#FFD700] text-[7px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5 truncate">
+                Kudligi Medical Portal
               </span>
             </div>
           </Link>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <div className="flex items-center gap-1 bg-[#001438]/80 p-1 rounded-full border border-[#FFD700]/40">
               <button
                 onClick={() => setLang("en")}
-                className={`px-2.5 py-1 text-xs font-black rounded-full transition-all ${
+                className={`px-2 py-1 text-[10px] sm:text-xs font-black rounded-full transition-all ${
                   lang === "en" ? "bg-[#FFD700] text-slate-900 shadow-md" : "text-white/70 hover:text-white"
                 }`}
               >
@@ -471,7 +471,7 @@ export default function MedicalReferralPage() {
               </button>
               <button
                 onClick={() => setLang("kn")}
-                className={`px-2.5 py-1 text-xs font-black rounded-full transition-all ${
+                className={`px-2 py-1 text-[10px] sm:text-xs font-black rounded-full transition-all ${
                   lang === "kn" ? "bg-[#FFD700] text-slate-900 shadow-md" : "text-white/70 hover:text-white"
                 }`}
               >
@@ -481,10 +481,11 @@ export default function MedicalReferralPage() {
 
             <Link
               href="/"
-              className="px-4 py-2 text-xs sm:text-sm font-black bg-[#FFD700] text-slate-900 rounded-full hover:bg-white transition-all shadow-lg flex items-center gap-1.5 whitespace-nowrap"
+              className="px-2.5 sm:px-4 py-2 text-xs sm:text-sm font-black bg-[#FFD700] text-slate-900 rounded-full hover:bg-white transition-all shadow-lg flex items-center gap-1.5"
+              title={lang === "kn" ? "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ" : "Back to Home"}
             >
               <FaHome className="w-3.5 h-3.5" />
-              <span>{lang === "kn" ? "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ" : "Back to Home"}</span>
+              <span className="hidden sm:inline">{lang === "kn" ? "ಮುಖಪುಟ" : "Home"}</span>
             </Link>
           </div>
         </div>
@@ -527,8 +528,8 @@ export default function MedicalReferralPage() {
                 <span>{lang === "kn" ? "ವೈದ್ಯಕೀಯ ಶಾಸಕರ ಉಚಿತ ಆರೋಗ್ಯ ಸೇವೆ" : "Doctor MLA Special Healthcare Assistance"}</span>
               </div>
 
-              {/* Single Line Heading Title with Scaled Font Size */}
-              <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-black leading-tight text-[#001D56] tracking-tight whitespace-nowrap">
+              {/* Heading Title — wraps on small screens */}
+              <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-black leading-snug text-[#001D56] tracking-tight">
                 {lang === "kn"
                   ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರ ವೈದ್ಯಕೀಯ ನೆರವು & ಆಸ್ಪತ್ರೆ ಶಿಫಾರಸು ಕೋಶ"
                   : "Dr. Srinivas N. T. MLA Free Hospital Referral & Patient Assistance Cell"}
@@ -612,7 +613,7 @@ export default function MedicalReferralPage() {
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-200 pb-5">
             <div>
               {/* Single Line Heading Title Without Badge */}
-              <h2 className="text-base sm:text-lg md:text-xl font-black text-[#001D56] whitespace-nowrap">
+              <h2 className="text-base sm:text-lg md:text-xl font-black text-[#001D56] leading-snug">
                 {lang === "kn" ? "ಉನ್ನತ ಶಿಫಾರಸು ಆಸ್ಪತ್ರೆಗಳು ಹಾಗೂ ತಜ್ಞ ವೈದ್ಯರ ಪಟ್ಟಿ" : "Major Super-Specialty Hospitals & Specialist Directory"}
               </h2>
             </div>
@@ -842,7 +843,7 @@ export default function MedicalReferralPage() {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-black text-slate-700 mb-1">{lang === "kn" ? "ವಯಸ್ಸು *" : "Age *"}</label>
                     <input
@@ -1110,7 +1111,7 @@ export default function MedicalReferralPage() {
                       </span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-700 mb-4 bg-white p-3.5 rounded-2xl border border-slate-200">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-bold text-slate-700 mb-4 bg-white p-3.5 rounded-2xl border border-slate-200">
                       <div>👤 ರೋಗಿ: <strong className="text-slate-900">{item.patientName} ({item.age}ವ)</strong></div>
                       <div>📱 ಮೊಬೈಲ್: <strong className="text-slate-900">{item.mobile}</strong></div>
                       <div>🏥 ಆಸ್ಪತ್ರೆ: <strong className="text-[#0055C4]">{item.hospitalName}</strong></div>
@@ -1119,7 +1120,7 @@ export default function MedicalReferralPage() {
 
                     {/* Progress Bar Visual */}
                     <div className="my-4">
-                      <div className="flex items-center justify-between text-[10px] font-black text-slate-500 mb-1">
+                      <div className="hidden sm:flex items-center justify-between text-[10px] font-black text-slate-500 mb-1">
                         <span>ಅರ್ಜಿ ಸಲ್ಲಿಕೆ</span>
                         <span>ಪರಿಶೀಲನೆ</span>
                         <span>ಅನುಮೋದನೆ</span>
