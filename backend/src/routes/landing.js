@@ -122,6 +122,57 @@ function migrateLandingTagline(data) {
   return next;
 }
 
+const HERO_MLA_IMAGES = [
+  "/Picsart_24-11-21_17-11-01-713 (1).png",
+  "/Picsart_25-02-07_15-07-09-010.png",
+  "/Picsart_25-05-30_00-26-33-582.png",
+];
+
+const SITE_MLA_PORTRAIT = "/Picsart_26-02-05_14-31-10-288 (1).png";
+
+/** Restore preferred Picsart MLA portraits if CMS stored about-page cutouts */
+function migrateLandingHeroImages(data) {
+  if (!data || typeof data !== "object") return data;
+  const next = { ...data };
+  const site = next.site && typeof next.site === "object" ? { ...next.site } : {};
+  const portrait = String(site.mlaPortrait || "");
+  if (!portrait || /mla_about/i.test(portrait)) {
+    site.mlaPortrait = SITE_MLA_PORTRAIT;
+  }
+  next.site = site;
+
+  const hero = next.hero && typeof next.hero === "object" ? { ...next.hero } : {};
+  const slides = Array.isArray(hero.slides) ? hero.slides : [];
+  const valid = new Set(HERO_MLA_IMAGES);
+  const bad = (src) => {
+    const s = String(src || "");
+    if (!s) return true;
+    if (valid.has(s)) return false;
+    if (/mla_about/i.test(s)) return true;
+    if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:")) {
+      return /mla_about/i.test(s);
+    }
+    return !valid.has(s);
+  };
+  if (slides.length !== 3 || slides.some((s) => bad(s?.mlaImage))) {
+    // Preserve existing slide text; only restore image paths when possible
+    if (slides.length === 3) {
+      hero.slides = slides.map((s, i) => ({
+        ...s,
+        mlaImage: HERO_MLA_IMAGES[i] || HERO_MLA_IMAGES[0],
+      }));
+    } else {
+      hero.slides = HERO_MLA_IMAGES.map((mlaImage, i) => ({
+        ...(slides[i] && typeof slides[i] === "object" ? slides[i] : {}),
+        id: slides[i]?.id || `h${i + 1}`,
+        mlaImage,
+      }));
+    }
+  }
+  next.hero = hero;
+  return next;
+}
+
 /** Private bucket: sign landing videos (+ optional S3 keys stored beside URLs) */
 async function resolveLandingMediaUrls(data) {
   if (!data || typeof data !== "object") return data;
@@ -167,7 +218,7 @@ router.get(
     const data = row?.data
       ? deepMerge(DEFAULT_LANDING, row.data)
       : structuredClone(DEFAULT_LANDING);
-    const migrated = migrateLandingTagline(data);
+    const migrated = migrateLandingHeroImages(migrateLandingTagline(data));
     return ok(res, await resolveLandingMediaUrls(migrated));
   })
 );
@@ -180,7 +231,9 @@ router.put(
     if (!req.body || typeof req.body !== "object") {
       throw new AppError(400, "INVALID", "Body must be landing JSON object");
     }
-    const merged = migrateLandingTagline(deepMerge(DEFAULT_LANDING, req.body));
+    const merged = migrateLandingHeroImages(
+      migrateLandingTagline(deepMerge(DEFAULT_LANDING, req.body))
+    );
     const row = await prisma.landingContent.upsert({
       where: { id: "default" },
       create: { id: "default", data: merged },

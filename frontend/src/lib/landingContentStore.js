@@ -84,7 +84,7 @@ export function migrateLandingContent(content) {
     next.copy = { ...next.copy, kn: copyKn, en: copyEn };
   }
 
-  // Always enforce the 3 exact requested hero slides
+  // Always enforce the 3 exact requested hero slides (Picsart cutouts)
   if (isObject(next.hero)) {
     const slides = Array.isArray(next.hero.slides) ? next.hero.slides : [];
     const validImages = new Set([
@@ -92,11 +92,34 @@ export function migrateLandingContent(content) {
       "/Picsart_25-02-07_15-07-09-010.png",
       "/Picsart_25-05-30_00-26-33-582.png",
     ]);
-    const hasOldImages = slides.some((s) => !validImages.has(s.mlaImage));
+    const isBadHeroImage = (src) => {
+      const s = String(src || "");
+      if (!s) return true;
+      if (validImages.has(s)) return false;
+      // Reject about-page cutouts / accidental seed swaps
+      if (/mla_about/i.test(s)) return true;
+      // Keep admin-uploaded remote URLs, but still reject about cutouts above
+      if (s.startsWith("http://") || s.startsWith("https://") || s.startsWith("data:")) {
+        return /mla_about/i.test(s);
+      }
+      return !validImages.has(s);
+    };
+    const hasOldImages = slides.some((s) => isBadHeroImage(s?.mlaImage));
     if (slides.length !== 3 || hasOldImages) {
       next.hero = {
         ...next.hero,
         slides: structuredClone(landingContentSeed.hero.slides),
+      };
+    }
+  }
+
+  // Keep navbar/stats portrait on the preferred Picsart asset
+  if (isObject(next.site)) {
+    const portrait = String(next.site.mlaPortrait || "");
+    if (!portrait || /mla_about/i.test(portrait)) {
+      next.site = {
+        ...next.site,
+        mlaPortrait: landingContentSeed.site.mlaPortrait,
       };
     }
   }
