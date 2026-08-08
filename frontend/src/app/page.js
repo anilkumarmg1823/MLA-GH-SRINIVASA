@@ -629,8 +629,7 @@ export default function Home() {
               src={
                 (heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage ||
                 site.mlaPortrait ||
-                content.about?.portrait ||
-                "/mla_about_hd_cutout.png"
+                "/Picsart_24-11-21_17-11-01-713 (1).png"
               }
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
@@ -655,8 +654,7 @@ export default function Home() {
               src={
                 (heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage ||
                 site.mlaPortrait ||
-                content.about?.portrait ||
-                "/mla_about_hd_cutout.png"
+                "/Picsart_24-11-21_17-11-01-713 (1).png"
               }
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill

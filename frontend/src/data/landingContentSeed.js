@@ -37,7 +37,7 @@ export const landingContentSeed = {
     "dcmNameKn": "ಜಿ. ಪರಮೇಶ್ವರ್",
     "dcmTitleEn": "Deputy Chief Minister",
     "dcmTitleKn": "ಉಪಮುಖ್ಯಮಂತ್ರಿ",
-    "mlaPortrait": "/mla_about_hd_cutout.png"
+    "mlaPortrait": "/Picsart_26-02-05_14-31-10-288 (1).png"
   },
   "copy": {
     "en": {
@@ -212,7 +212,7 @@ export const landingContentSeed = {
         "slogan3En": "Public service and transparent governance is our core mission.",
         "subKn": "ಕೂಡ್ಲಿಗಿ ವಿಧಾನಸಭಾ ಕ್ಷೇತ್ರದ ೩೩ ಗ್ರಾಮ ಪಂಚಾಯತಿಗಳ ಸಾರ್ವಜನಿಕರ ಕುಂದುಕೊರತೆಗಳ ಶೀಘ್ರ ನಿವಾರಣೆ, ಜನಪರ ಸೌಲಭ್ಯಗಳು ಹಾಗೂ ಪಾರದರ್ಶಕ ಅಭಿವೃದ್ಧಿ ಕಾಮಗಾರಿಗಳ ಅನುಷ್ಠಾನ.",
         "subEn": "Ensuring swift grievance redressal across 33 Gram Panchayats, transparent development projects, and public welfare initiatives.",
-        "mlaImage": "/mla_about_hd_cutout.png"
+        "mlaImage": "/Picsart_24-11-21_17-11-01-713 (1).png"
       },
       {
         "id": "h2",
@@ -226,7 +226,7 @@ export const landingContentSeed = {
         "slogan3En": "Empowering farmers with water resources & crop support.",
         "subKn": "ತಾಲೂಕಿನ ಪ್ರಮುಖ ಕೆರೆಗಳಿಗೆ ನೀರು ತುಂಬಿಸುವ ಯೋಜನೆ, ಕೃಷಿ ಯಂತ್ರೋಪಕರಣ ವಿತರಣೆ ಹಾಗೂ ರೈತರಿಗೆ ಶಾಶ್ವತ ನೀರಾವರಿ ಸೌಲಭ್ಯ ಒದಗಿಸುವ ಕಾರ್ಯ.",
         "subEn": "Filling lakes through lift irrigation projects, distributing agricultural machinery, and expanding permanent water supply.",
-        "mlaImage": "/mla_about_cutout_v2.png"
+        "mlaImage": "/Picsart_25-02-07_15-07-09-010.png"
       },
       {
         "id": "h3",
@@ -240,7 +240,7 @@ export const landingContentSeed = {
         "slogan3En": "Comprehensive transformation of rural connectivity.",
         "subKn": "ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರದ ಪ್ರತಿ ಗ್ರಾಮವನ್ನೂ ಜೋಡಿಸುವ ಡಾಂಬರು ರಸ್ತೆಗಳ ನಿರ್ಮಾಣ, ಶುದ್ಧ ಕುಡಿಯುವ ನೀರಿನ ಘಟಕಗಳು ಹಾಗೂ ತಾಲೂಕು ವ್ಯಾಪ್ತಿಯ ಅಭಿವೃದ್ಧಿ.",
         "subEn": "Building all-weather asphalt roads connecting every remote village, installing clean drinking water units, and expanding civic amenities.",
-        "mlaImage": "/mla_about_photo.png"
+        "mlaImage": "/Picsart_25-05-30_00-26-33-582.png"
       }
     ]
   },
