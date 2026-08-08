@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { getSession, canAccessDemands, canDo } from "@/lib/auth";
@@ -19,10 +25,14 @@ import BedkeList from "@/components/bedke/BedkeList";
 import BedkeFormModal from "@/components/bedke/BedkeFormModal";
 import BedkeSearchModal from "@/components/bedke/BedkeSearchModal";
 import BedkeDownloadModal from "@/components/bedke/BedkeDownloadModal";
+import PageLoader from "@/components/ui/PageLoader";
+import KudligiLoader from "@/components/ui/KudligiLoader";
+import { useGlobalLoader } from "@/components/ui/GlobalLoaderProvider";
 
 export default function DemandsPage() {
   const router = useRouter();
   const { lang, t } = useLanguage();
+  const { withLoader } = useGlobalLoader();
   const [allowed, setAllowed] = useState(false);
   const [session, setSessionState] = useState(null);
   const [gramPanchayat, setGramPanchayat] = useState("");
@@ -30,10 +40,12 @@ export default function DemandsPage() {
   const [approachTab, setApproachTab] = useState("civil");
   const [rows, setRows] = useState([]);
   const [allRows, setAllRows] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingRow, setEditingRow] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const allRowsCache = useRef([]);
 
   useEffect(() => {
     const s = getSession();
@@ -45,23 +57,60 @@ export default function DemandsPage() {
     setAllowed(true);
   }, [router]);
 
-  const refresh = useCallback(async () => {
+  const ensureAllRows = useCallback(async () => {
+    if (allRowsCache.current.length) return allRowsCache.current;
     const all = await getAllBedke();
+    allRowsCache.current = all;
     setAllRows(all);
+    return all;
+  }, []);
+
+  const refresh = useCallback(async () => {
+    if (!gramPanchayat && !village) {
+      setRows([]);
+      setListLoading(true);
+      try {
+        await withLoader(() => ensureAllRows());
+      } finally {
+        setListLoading(false);
+      }
+      return;
+    }
     if (!gramPanchayat || !village) {
       setRows([]);
       return;
     }
-    setRows(
-      all.filter(
-        (d) => d.gramPanchayat === gramPanchayat && d.village === village
-      )
-    );
-  }, [gramPanchayat, village]);
+
+    setListLoading(true);
+    try {
+      await withLoader(async () => {
+        const villageRows = await getBedkeForVillage(gramPanchayat, village);
+        setRows(villageRows);
+        // keep search / extra village options warm in background cache
+        if (!allRowsCache.current.length) {
+          const all = await getAllBedke();
+          allRowsCache.current = all;
+          setAllRows(all);
+        }
+      });
+    } finally {
+      setListLoading(false);
+    }
+  }, [gramPanchayat, village, withLoader, ensureAllRows]);
 
   useEffect(() => {
+    if (!allowed) return;
     refresh();
-  }, [refresh]);
+  }, [allowed, refresh]);
+
+  const extraVillages = useMemo(() => {
+    if (!gramPanchayat) return [];
+    const set = new Set();
+    for (const d of allRows) {
+      if (d.gramPanchayat === gramPanchayat && d.village) set.add(d.village);
+    }
+    return [...set];
+  }, [allRows, gramPanchayat]);
 
   const civilRows = useMemo(
     () => rows.filter((r) => r.approach === "civil"),
@@ -76,41 +125,44 @@ export default function DemandsPage() {
   const handleGpChange = (gp) => {
     setGramPanchayat(gp);
     setVillage("");
+    setRows([]);
   };
 
   const handleClear = () => {
     setGramPanchayat("");
     setVillage("");
     setApproachTab("civil");
+    setRows([]);
   };
 
   const handleSave = async (payload) => {
-    if (payload.id) {
-      await updateBedke(payload.id, {
-        gramPanchayat: payload.gramPanchayat,
-        village: payload.village,
-        name: payload.name,
-        approach: payload.approach,
-        subject: payload.subject,
-        status: payload.status,
-      });
-    } else {
-      await addBedke(payload);
-    }
-    setFormOpen(false);
-    setEditingRow(null);
-    setApproachTab(payload.approach === "personal" ? "personal" : "civil");
-    setGramPanchayat(payload.gramPanchayat);
-    setVillage(payload.village);
-    const all = await getAllBedke();
-    setAllRows(all);
-    setRows(
-      all.filter(
-        (d) =>
-          d.gramPanchayat === payload.gramPanchayat &&
-          d.village === payload.village
-      )
-    );
+    await withLoader(async () => {
+      if (payload.id) {
+        await updateBedke(payload.id, {
+          gramPanchayat: payload.gramPanchayat,
+          village: payload.village,
+          name: payload.name,
+          approach: payload.approach,
+          subject: payload.subject,
+          status: payload.status,
+        });
+      } else {
+        await addBedke(payload);
+      }
+      allRowsCache.current = [];
+      setAllRows([]);
+      setFormOpen(false);
+      setEditingRow(null);
+      setApproachTab(payload.approach === "personal" ? "personal" : "civil");
+      setGramPanchayat(payload.gramPanchayat);
+      setVillage(payload.village);
+      const villageRows = await getBedkeForVillage(
+        payload.gramPanchayat,
+        payload.village
+      );
+      setRows(villageRows);
+      await ensureAllRows();
+    });
   };
 
   const handleSearchSelect = async (row) => {
@@ -118,17 +170,22 @@ export default function DemandsPage() {
     setGramPanchayat(row.gramPanchayat);
     setVillage(row.village);
     setApproachTab(row.approach === "personal" ? "personal" : "civil");
-    const villageRows = await getBedkeForVillage(
-      row.gramPanchayat,
-      row.village
-    );
-    setRows(villageRows);
+    setListLoading(true);
+    try {
+      await withLoader(async () => {
+        const villageRows = await getBedkeForVillage(
+          row.gramPanchayat,
+          row.village
+        );
+        setRows(villageRows);
+      });
+    } finally {
+      setListLoading(false);
+    }
   };
 
   if (!allowed) {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">Loading…</div>
-    );
+    return <PageLoader />;
   }
 
   const filtersReady = Boolean(gramPanchayat && village);
@@ -138,11 +195,20 @@ export default function DemandsPage() {
   const canDownload = canDo(session, "demands", "download");
 
   const handleArchive = async (row) => {
-    if (!window.confirm(t.archiveConfirm || "Archive this demand? It will be hidden, not deleted.")) {
+    if (
+      !window.confirm(
+        t.archiveConfirm ||
+          "Archive this demand? It will be hidden, not deleted."
+      )
+    ) {
       return;
     }
-    await deleteBedke(row.id);
-    await refresh();
+    await withLoader(async () => {
+      await deleteBedke(row.id);
+      allRowsCache.current = [];
+      setAllRows([]);
+      await refresh();
+    });
   };
 
   return (
@@ -152,7 +218,9 @@ export default function DemandsPage() {
           <h1 className="text-2xl font-black text-[var(--dash-text)] tracking-wide">
             {t.navDemands}
           </h1>
-          <p className="text-sm text-[var(--dash-text-50)] mt-1">{t.bedkePageDesc}</p>
+          <p className="text-sm text-[var(--dash-text-50)] mt-1">
+            {t.bedkePageDesc}
+          </p>
           {filtersReady && (
             <p className="text-sm text-[#CCBCA5] mt-1">
               {getGpLabel(gramPanchayat, lang)} ·{" "}
@@ -162,7 +230,10 @@ export default function DemandsPage() {
           )}
         </div>
         <QuickLinks
-          onSearch={() => setSearchOpen(true)}
+          onSearch={async () => {
+            await withLoader(() => ensureAllRows());
+            setSearchOpen(true);
+          }}
           onAdd={() => {
             setEditingRow(null);
             setFormOpen(true);
@@ -182,6 +253,7 @@ export default function DemandsPage() {
           onVillageChange={setVillage}
           onClear={handleClear}
           showExtraFilters={false}
+          extraVillages={extraVillages}
         />
       </div>
 
@@ -191,7 +263,15 @@ export default function DemandsPage() {
         </div>
       ) : null}
 
-      {filtersReady ? (
+      {filtersReady && listLoading ? (
+        <KudligiLoader
+          variant="block"
+          subKn="ಬೇಡಿಕೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…"
+          subEn="Loading demands…"
+        />
+      ) : null}
+
+      {filtersReady && !listLoading ? (
         <div className="space-y-4">
           <BedkeTabs
             value={approachTab}

@@ -130,34 +130,50 @@ export default function DashboardNavbar({ session, onMenuClick }) {
 
             <Link
               href={homePath}
-              className="flex items-center gap-2 sm:gap-3 shrink-0 min-w-0"
+              className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0 group"
             >
-              <div className="relative w-9 h-9 sm:w-11 sm:h-11 hidden md:block filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+              {/* Government Seal */}
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 hidden md:block filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src="/karnataka_logo.png"
                   alt="Government of Karnataka Seal"
                   fill
-                  sizes="(max-width: 640px) 36px, 44px"
+                  sizes="(max-width: 640px) 36px, 40px"
                   className="object-contain"
                   priority
                 />
               </div>
-              <div className="relative w-9 h-9 sm:w-11 sm:h-11 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
+
+              {/* Official Circular MLA Logo (In Middle) */}
+              <div className="relative w-9.5 h-9.5 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[var(--dash-accent)] shadow-md shrink-0 transition-transform group-hover:scale-105">
+                <Image
+                  src="/mla_official_circle_logo.jpg"
+                  alt="Dr. Srinivas N.T. MLA"
+                  fill
+                  sizes="(max-width: 640px) 38px, 44px"
+                  className="object-contain"
+                  priority
+                />
+              </div>
+
+              {/* INC Party Logo */}
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src="/party_logo_v2.png"
                   alt="Indian National Congress Hand Logo"
                   fill
-                  sizes="(max-width: 640px) 36px, 44px"
+                  sizes="(max-width: 640px) 36px, 40px"
                   className="object-contain"
                   priority
                 />
               </div>
-              <div className="flex flex-col text-left min-w-0">
+
+              <div className="flex flex-col text-left min-w-0 ml-0.5">
                 <span className="font-black text-xs sm:text-base tracking-wider uppercase text-[var(--dash-text)] leading-tight truncate">
                   {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ." : "DR. SRINIVAS N. T."}
                 </span>
-                <span className="text-[#CCBCA5] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
-                  Nimmondige | ನಿಮ್ಮೊಂದಿಗೆ
+                <span className="text-[var(--dash-accent)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
+                  MBBS, MD, AIIMS Delhi
                 </span>
               </div>
             </Link>
@@ -216,7 +232,7 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               onClick={toggleTheme}
               title={theme === "dark" ? t.themeLight : t.themeDark}
               aria-label={t.themeToggle}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-[#CCBCA5]/40 text-[#CCBCA5] hover:bg-[#CCBCA5]/15 transition-colors shrink-0"
+              className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-[var(--dash-border)] text-[var(--dash-accent)] hover:bg-[var(--dash-hover)] transition-colors shrink-0"
             >
               {theme === "dark" ? (
                 <FaSun className="text-sm" />
@@ -231,7 +247,7 @@ export default function DashboardNavbar({ session, onMenuClick }) {
                 onClick={() => setLang("en")}
                 className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
                   lang === "en"
-                    ? "bg-[#CCBCA5] text-[#1e2223] shadow-md"
+                    ? "bg-[var(--dash-accent)] text-white shadow-md"
                     : "text-[var(--dash-text-60)] hover:text-[var(--dash-text)]"
                 }`}
               >
@@ -242,7 +258,7 @@ export default function DashboardNavbar({ session, onMenuClick }) {
                 onClick={() => setLang("kn")}
                 className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
                   lang === "kn"
-                    ? "bg-[#CCBCA5] text-[#1e2223] shadow-md"
+                    ? "bg-[var(--dash-accent)] text-white shadow-md"
                     : "text-[var(--dash-text-60)] hover:text-[var(--dash-text)]"
                 }`}
               >
@@ -250,8 +266,8 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               </button>
             </div>
 
-            <div className="hidden md:flex items-center gap-2 bg-[var(--dash-bg)] px-3 py-1 rounded-full border border-[#CCBCA5]/40 shadow-sm h-fit">
-              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[#CCBCA5] bg-white shrink-0">
+            <div className="hidden md:flex items-center gap-2 bg-[var(--dash-panel)] px-3 py-1 rounded-full border border-[var(--dash-border)] shadow-sm h-fit">
+              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[var(--dash-border)] bg-white shrink-0">
                 <Image
                   src="/cm_photo.png"
                   alt="D.K. Shivakumar"
@@ -264,20 +280,20 @@ export default function DashboardNavbar({ session, onMenuClick }) {
                 <span className="text-[var(--dash-text)] font-extrabold text-[10px] leading-tight tracking-wide">
                   {lang === "kn" ? "ಡಿ.ಕೆ. ಶಿವಕುಮಾರ್" : "D.K. Shivakumar"}
                 </span>
-                <span className="text-[#CCBCA5] font-extrabold text-[8px] tracking-wide leading-normal">
-                  {lang === "kn" ? "ಮುಖ್ಯಮಂತ್ರಿ" : "Chief Minister"}
+                <span className="text-[var(--dash-text-70)] font-bold text-[8px] tracking-wide leading-normal">
+                  {lang === "kn" ? "ಉಪ ಮುಖ್ಯಮಂತ್ರಿ" : "Deputy Chief Minister"}
                 </span>
               </div>
             </div>
 
-            <span className="hidden xl:inline text-[10px] text-[var(--dash-text-50)] max-w-[100px] truncate">
+            <span className="hidden xl:inline text-[11px] font-bold text-[var(--dash-text-70)] max-w-[120px] truncate bg-[var(--dash-panel)] px-2.5 py-1 rounded-full border border-[var(--dash-border)]">
               {displayName}
             </span>
 
             <button
               type="button"
               onClick={() => setLogoutOpen(true)}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-black text-[#CCBCA5] border-2 border-[#CCBCA5] rounded-full hover:bg-[#CCBCA5] hover:text-[#1e2223] transition-all duration-300 shadow-md whitespace-nowrap"
+              className="px-3.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-bold text-[var(--dash-text)] border border-[var(--dash-border)] bg-[var(--dash-panel)] hover:bg-[var(--dash-hover)] rounded-full transition-all duration-300 shadow-sm whitespace-nowrap"
             >
               {t.logout}
             </button>

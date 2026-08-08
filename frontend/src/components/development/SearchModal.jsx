@@ -66,7 +66,7 @@ export default function SearchModal({ open, onClose, records, onSelect }) {
       />
       <div className="relative w-full max-w-2xl rounded-2xl border border-[var(--dash-border-soft)] bg-[var(--dash-panel-soft)] backdrop-blur-xl shadow-2xl overflow-hidden">
         <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--dash-border-faint)]">
-          <FaSearch className="text-[#CCBCA5] shrink-0" />
+          <FaSearch className="text-[var(--dash-text-60)] shrink-0" />
           <input
             ref={inputRef}
             type="search"

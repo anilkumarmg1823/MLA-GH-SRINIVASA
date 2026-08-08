@@ -1,0 +1,141 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { 
+  FaHospital, FaUserMd, FaPhoneAlt, FaFileAlt, FaCheckCircle, 
+  FaStethoscope, FaArrowRight, FaNotesMedical
+} from "react-icons/fa";
+
+export default function MedicalReferralGlimpseSection({ lang = "kn" }) {
+  return (
+    <section
+      id="medical-referral-glimpse"
+      className="relative py-16 bg-white shadow-xl overflow-hidden text-slate-900"
+    >
+      {/* Background 1: Caduceus Emblem Watermark on Left Background */}
+      <div className="absolute left-0 sm:left-10 top-1/2 -translate-y-1/2 z-0 opacity-10 pointer-events-none select-none">
+        <Image
+          src="/caduceus_medical_symbol.png"
+          alt="Medical Caduceus Symbol Watermark"
+          width={450}
+          height={450}
+          className="object-contain filter grayscale contrast-125"
+          unoptimized
+        />
+      </div>
+
+      {/* Background 2: Doctor MLA Photo (/mla_doctor_white_coat.png) Seamlessly Integrated on Right Background */}
+      <div className="absolute right-0 bottom-0 top-0 w-full sm:w-1/2 lg:w-5/12 z-0 opacity-20 pointer-events-none select-none">
+        <Image
+          src="/mla_doctor_white_coat.png"
+          alt="Dr. Srinivas N. T. Doctor MLA Background"
+          fill
+          sizes="(max-width: 1024px) 100vw, 40vw"
+          className="object-cover object-top mix-blend-multiply filter contrast-110"
+          priority
+        />
+      </div>
+
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex flex-col gap-6 max-w-3xl text-left">
+          
+          {/* Top Pill Badge */}
+          <div className="w-fit inline-flex items-center gap-2 bg-[#002B7F]/10 border border-[#002B7F]/30 text-[#002B7F] text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-wider shadow-sm">
+            <FaStethoscope className="w-4 h-4 text-[#002B7F]" />
+            <span>
+              {lang === "kn"
+                ? "ಶಾಸಕರ ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಕೋಶ"
+                : "MLA Medical Referral Cell"}
+            </span>
+          </div>
+
+          {/* Doctor Name & Designation Subhead */}
+          <div className="flex flex-col gap-0.5 border-l-4 border-[#FFD700] pl-3.5">
+            <h4 className="text-base sm:text-lg font-black text-[#002B7F] tracking-wide">
+              {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ." : "Dr. Srinivas N. T."}
+            </h4>
+            <p className="text-xs sm:text-sm font-black text-slate-800">
+              MBBS, MD (AIIMS Delhi)
+            </p>
+            <p className="text-xs font-bold text-slate-600">
+              {lang === "kn" ? "ಶಾಸಕರು, ಕೂಡ್ಲಿಗಿ ವಿಧಾನಸಭಾ ಕ್ಷೇತ್ರ" : "MLA, Kudligi Assembly Constituency"}
+            </p>
+          </div>
+
+          {/* Main Title */}
+          <h2 className="text-base sm:text-xl md:text-2xl lg:text-3xl font-black text-[#001D56] tracking-tight leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+            {lang === "kn"
+              ? "ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಪತ್ರ & ಉಚಿತ ಆಸ್ಪತ್ರೆ ಚಿಕಿತ್ಸಾ ನೆರವು"
+              : "Medical Referral Letters & Free Hospital Care Assistance"}
+          </h2>
+
+          {/* Gold Decorative Line */}
+          <div className="w-20 h-1.5 bg-[#FFD700] rounded-full shadow-sm" />
+
+          {/* Short Description */}
+          <p className="text-slate-700 text-xs sm:text-sm font-bold leading-relaxed">
+            {lang === "kn"
+              ? "ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರದ ಸಾರ್ವಜನಿಕರಿಗೆ ಜಯದೇವ, ಕಿದ್ವಾಯಿ, ನಿಮ್ಹಾನ್ಸ್, ವಿಕ್ಟೋರಿಯಾ ಹಾಗೂ ವಿಐಎಂಎಸ್ ಬಳ್ಳಾರಿ ಆಸ್ಪತ್ರೆಗಳಿಗೆ ಶಾಸಕರ ಕಚೇರಿಯಿಂದ ಉಚಿತ ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಪತ್ರ, ಸಿಎಂ ಪರಿಹಾರ ನಿಧಿ ಹಾಗೂ ಆದ್ಯತೆಯ ಚಿಕಿತ್ಸಾ ಮಾರ್ಗದರ್ಶನ."
+              : "Official MLA recommendation letters, CM Relief Fund financial aid, and direct hospital guidance for Kudligi constituency citizens."}
+          </p>
+
+          {/* 3 Clean Minimal Bullet Points */}
+          <div className="flex flex-col gap-2.5 my-1">
+            <div className="flex items-center gap-3 bg-slate-50/90 backdrop-blur-sm p-3 rounded-2xl border border-slate-200 shadow-sm">
+              <FaCheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-xs sm:text-sm font-black text-slate-800">
+                {lang === "kn"
+                  ? "ಜಯದೇವ, ಕಿದ್ವಾಯಿ & ನಿಮ್ಹಾನ್ಸ್ ಆಸ್ಪತ್ರೆಗಳಿಗೆ ಶಾಸಕರ ಕಚೇರಿ ಶಿಫಾರಸು ಪತ್ರ"
+                  : "Jayadeva, Kidwai & NIMHANS Hospitals Official MLA Referral Letter"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 bg-slate-50/90 backdrop-blur-sm p-3 rounded-2xl border border-slate-200 shadow-sm">
+              <FaCheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-xs sm:text-sm font-black text-slate-800">
+                {lang === "kn"
+                  ? "ಸಿಎಂ ಪರಿಹಾರ ನಿಧಿ ನೆರವು ಹಾಗೂ ಬಿಪಿಎಲ್ ಉಚಿತ ಚಿಕಿತ್ಸೆ ಸೌಲಭ್ಯ"
+                  : "CM Relief Fund Financial Assistance & Ayushman BPL Healthcare Aid"}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-3 bg-slate-50/90 backdrop-blur-sm p-3 rounded-2xl border border-slate-200 shadow-sm">
+              <FaCheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span className="text-xs sm:text-sm font-black text-slate-800">
+                {lang === "kn"
+                  ? "೨೪x೭ ತಾಲೂಕು ಸಹಾಯವಾಣಿ & ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಶಾಸಕರ ಪ್ರತಿನಿಧಿಗಳ ನೆರವು"
+                  : "24x7 Constituency Helpline & Hospital Nodal Staff Support"}
+              </span>
+            </div>
+          </div>
+
+          {/* CTA Buttons Row */}
+          <div className="flex items-center gap-3 pt-2 flex-wrap sm:flex-nowrap">
+            <Link
+              href="/medical-referral"
+              className="px-6 py-3.5 rounded-2xl bg-[#001D56] hover:bg-[#002B7F] text-[#FFD700] text-xs sm:text-sm font-black shadow-xl transition-all transform hover:-translate-y-0.5 border-2 border-[#FFD700] flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
+            >
+              <FaFileAlt className="w-4 h-4 text-[#FFD700]" />
+              <span>
+                {lang === "kn"
+                  ? "ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಪುಟಕ್ಕೆ ತೆರಳಿ ➔"
+                  : "Go to Medical Referral Page ➔"}
+              </span>
+            </Link>
+
+            <a
+              href="tel:9480498694"
+              className="px-5 py-3.5 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-900 text-xs font-black border border-slate-300 transition-all flex items-center justify-center gap-2 shrink-0"
+            >
+              <FaPhoneAlt className="w-3.5 h-3.5 text-[#002B7F]" />
+              <span>9480498694</span>
+            </a>
+          </div>
+
+        </div>
+      </div>
+    </section>
+  );
+}

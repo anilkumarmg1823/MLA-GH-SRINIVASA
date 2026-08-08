@@ -32,13 +32,10 @@ const TABS = [
   { id: "about", label: "About" },
   { id: "developments", label: "Developments" },
   { id: "tour", label: "Tour" },
-  { id: "leaders", label: "Leaders" },
   { id: "gallery", label: "Gallery" },
   { id: "grievance", label: "Grievance" },
   { id: "footer", label: "Footer" },
 ];
-
-const BADGE_TONES = ["gold", "rose", "emerald", "cyan"];
 
 const BRAND_LABELS = {
   blueDeep: "Blue Deep",
@@ -115,6 +112,7 @@ export default function LandingCmsEditor({
   onChange,
   activeTab: externalTab,
   onTabChange,
+  stepTabs,
 }) {
   const [internalTab, setInternalTab] = useState("brand");
   const tab = externalTab || internalTab;
@@ -133,20 +131,31 @@ export default function LandingCmsEditor({
   const stats = v.stats || {};
   const about = v.about || {};
   const media = v.media || {};
-  const leaders = v.leaders || { items: [] };
   const gallery = v.gallery || { items: [] };
   const grievance = v.grievance || { villages: [] };
   const contact = v.contact || {};
   const quickLinks = v.quickLinks || {};
 
-  const setCopy = (langKey, key, nextVal) => {
-    onChange({
-      ...v,
+  const update = (patch) => {
+    if (!onChange) return;
+    onChange({ ...v, ...patch });
+  };
+
+  const setBrand = (key, val) => {
+    update({ brand: { ...brand, [key]: val } });
+  };
+
+  const setSite = (key, val) => {
+    update({ site: { ...site, [key]: val } });
+  };
+
+  const setCopy = (langKey, field, val) => {
+    update({
       copy: {
         ...copy,
         [langKey]: {
           ...(copy[langKey] || {}),
-          [key]: nextVal,
+          [field]: val,
         },
       },
     });
@@ -172,18 +181,22 @@ export default function LandingCmsEditor({
     setCopy(langKey, "values", lines);
   };
 
+  const visibleTabs = stepTabs
+    ? TABS.filter((t) => stepTabs.includes(t.id))
+    : TABS;
+
   return (
     <div className="space-y-4 text-[var(--dash-text)]">
-      <div className="sticky top-0 z-30 bg-[var(--dash-panel-soft)]/95 backdrop-blur-md pb-2 pt-1 border-b border-[#CCBCA5]/20 flex flex-wrap gap-1.5 overflow-x-auto">
-        {TABS.map((t) => (
+      <div className="sticky top-0 z-30 bg-[var(--dash-panel)]/95 backdrop-blur-md pb-2.5 pt-1 border-b border-[var(--dash-border-soft)] flex flex-wrap gap-1.5 overflow-x-auto">
+        {visibleTabs.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => setTab(t.id)}
-            className={`px-3 py-1 rounded-full text-xs font-black transition-all ${
+            className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all ${
               tab === t.id
-                ? "bg-[#CCBCA5] text-[#1e2223] shadow-md scale-105"
-                : "border border-[#CCBCA5]/35 text-[#CCBCA5] hover:bg-[#CCBCA5]/15"
+                ? "bg-[var(--dash-accent)] text-white shadow-md scale-105"
+                : "border border-[var(--dash-border)] text-[var(--dash-text-70)] hover:bg-[var(--dash-hover)]"
             }`}
           >
             {t.label}
@@ -326,6 +339,20 @@ export default function LandingCmsEditor({
                 }
               />
               <MediaUpload
+                label="DCM photo"
+                value={site.dcmPhoto}
+                onChange={(val) =>
+                  onChange({ ...v, site: { ...site, dcmPhoto: val } })
+                }
+              />
+              <MediaUpload
+                label="MLA circle logo (navbar)"
+                value={site.mlaCircleLogo}
+                onChange={(val) =>
+                  onChange({ ...v, site: { ...site, mlaCircleLogo: val } })
+                }
+              />
+              <MediaUpload
                 label="MLA portrait"
                 value={site.mlaPortrait}
                 onChange={(val) =>
@@ -406,6 +433,34 @@ export default function LandingCmsEditor({
                   onChange({ ...v, site: { ...site, cmTitleKn: val } })
                 }
               />
+              <TextInput
+                label="DCM name (EN)"
+                value={site.dcmNameEn}
+                onChange={(val) =>
+                  onChange({ ...v, site: { ...site, dcmNameEn: val } })
+                }
+              />
+              <TextInput
+                label="DCM name (KN)"
+                value={site.dcmNameKn}
+                onChange={(val) =>
+                  onChange({ ...v, site: { ...site, dcmNameKn: val } })
+                }
+              />
+              <TextInput
+                label="DCM title (EN)"
+                value={site.dcmTitleEn}
+                onChange={(val) =>
+                  onChange({ ...v, site: { ...site, dcmTitleEn: val } })
+                }
+              />
+              <TextInput
+                label="DCM title (KN)"
+                value={site.dcmTitleKn}
+                onChange={(val) =>
+                  onChange({ ...v, site: { ...site, dcmTitleKn: val } })
+                }
+              />
             </div>
           </Section>
           <Section title="Navbar copy">
@@ -417,7 +472,6 @@ export default function LandingCmsEditor({
               {biCopy("navMedia")}
               {biCopy("navGallery")}
               {biCopy("navGrievance")}
-              {biCopy("navLeaders")}
               {biCopy("quickLinks")}
               {biCopy("medicalReferral")}
               {biCopy("photoGallery")}
@@ -959,191 +1013,6 @@ export default function LandingCmsEditor({
                 className="px-4 py-2 rounded-full bg-[#CCBCA5] text-[#1e2223] text-xs font-black"
               >
                 + Add daily schedule
-              </button>
-            </div>
-          </Section>
-        </div>
-      ) : null}
-
-      {tab === "leaders" ? (
-        <div className="space-y-4">
-          <Section title="Leaders copy">
-            <div className="space-y-3">
-              {biCopy("leadersBadge")}
-              {biCopy("leadersHeading")}
-              {biCopy("leadersDesc", { area: true })}
-              {biCopy("leadersViewAll")}
-              {biCopy("leadersDetails")}
-            </div>
-          </Section>
-          <Section title="Leaders watermark">
-            <MediaUpload
-              label="Watermark"
-              value={leaders.watermark}
-              onChange={(val) =>
-                onChange({ ...v, leaders: { ...leaders, watermark: val } })
-              }
-            />
-          </Section>
-          <Section title="Leader items">
-            <div className="space-y-4">
-              {(leaders.items || []).map((item, index) => (
-                <div
-                  key={item.id || index}
-                  className="rounded-xl border border-[#CCBCA5]/20 bg-[var(--dash-bg)] p-3 sm:p-4 space-y-3"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs font-black text-[#CCBCA5]">
-                      Leader {index + 1}
-                    </p>
-                    <ListControls
-                      index={index}
-                      total={(leaders.items || []).length}
-                      onUp={() =>
-                        onChange({
-                          ...v,
-                          leaders: {
-                            ...leaders,
-                            items: moveItem(leaders.items, index, -1),
-                          },
-                        })
-                      }
-                      onDown={() =>
-                        onChange({
-                          ...v,
-                          leaders: {
-                            ...leaders,
-                            items: moveItem(leaders.items, index, 1),
-                          },
-                        })
-                      }
-                      onRemove={() =>
-                        onChange({
-                          ...v,
-                          leaders: {
-                            ...leaders,
-                            items: leaders.items.filter((_, i) => i !== index),
-                          },
-                        })
-                      }
-                    />
-                  </div>
-                  <BiText
-                    labelEn="Name (EN)"
-                    labelKn="Name (KN)"
-                    valueEn={item.nameEn}
-                    valueKn={item.nameKn}
-                    onEn={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, nameEn: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                    onKn={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, nameKn: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                  />
-                  <BiText
-                    labelEn="Role (EN)"
-                    labelKn="Role (KN)"
-                    valueEn={item.roleEn}
-                    valueKn={item.roleKn}
-                    onEn={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, roleEn: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                    onKn={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, roleKn: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                  />
-                  <BiText
-                    labelEn="Category (EN)"
-                    labelKn="Category (KN)"
-                    valueEn={item.categoryEn}
-                    valueKn={item.categoryKn}
-                    onEn={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, categoryEn: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                    onKn={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, categoryKn: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                  />
-                  <MediaUpload
-                    label="Photo"
-                    value={item.photo}
-                    onChange={(val) => {
-                      const items = leaders.items.map((it, i) =>
-                        i === index ? { ...it, photo: val } : it
-                      );
-                      onChange({ ...v, leaders: { ...leaders, items } });
-                    }}
-                  />
-                  <label className="flex flex-col gap-1 min-w-0">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-[#CCBCA5]">
-                      Badge tone
-                    </span>
-                    <select
-                      value={item.badgeTone || "gold"}
-                      onChange={(e) => {
-                        const items = leaders.items.map((it, i) =>
-                          i === index
-                            ? { ...it, badgeTone: e.target.value }
-                            : it
-                        );
-                        onChange({ ...v, leaders: { ...leaders, items } });
-                      }}
-                      className="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-input)] text-[var(--dash-text)] text-sm px-3 py-2 outline-none focus:border-[#CCBCA5]"
-                    >
-                      {BADGE_TONES.map((tone) => (
-                        <option key={tone} value={tone}>
-                          {tone}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() =>
-                  onChange({
-                    ...v,
-                    leaders: {
-                      ...leaders,
-                      items: [
-                        ...(leaders.items || []),
-                        {
-                          id: uid("l"),
-                          nameKn: "",
-                          nameEn: "",
-                          roleKn: "",
-                          roleEn: "",
-                          categoryKn: "",
-                          categoryEn: "",
-                          photo: "",
-                          badgeTone: "gold",
-                        },
-                      ],
-                    },
-                  })
-                }
-                className="px-4 py-2 rounded-full bg-[#CCBCA5] text-[#1e2223] text-xs font-black"
-              >
-                + Add leader
               </button>
             </div>
           </Section>

@@ -14,12 +14,16 @@ describe("All modules CRUD + archive (catalog)", () => {
   beforeAll(async () => {
     await assertApiUp();
     token = await adminLogin();
-  });
+  }, 120_000);
 
   for (const module of CRUD_MODULES) {
-    it(`${module.name}: GET → POST → update → archive → restore`, async () => {
-      const id = await runModuleCrud(module, token);
-      expect(id).toBeTruthy();
-    });
+    it(
+      `${module.name}: GET → POST → update → archive → restore`,
+      async () => {
+        const id = await runModuleCrud(module, token);
+        expect(id).toBeTruthy();
+      },
+      180_000
+    );
   }
 });

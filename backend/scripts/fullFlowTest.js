@@ -11,25 +11,42 @@ import {
   adminLogin,
   apiBase,
   assertApiUp,
+  isRemoteApi,
   req,
 } from "../tests/helpers/http.js";
-
-const DEMO_OTP = process.env.DEMO_OTP || "123456";
+import {
+  DEMO_TOTP_SECRET,
+  currentTotpToken,
+} from "../src/lib/totp.js";
 
 let passed = 0;
 let failed = 0;
 
+function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function step(name, fn) {
-  try {
-    await fn();
-    passed += 1;
-    console.log(`PASS  ${name}`);
-  } catch (err) {
-    failed += 1;
-    console.error(`FAIL  ${name}`);
-    console.error(`      ${err.message}`);
-    throw err;
+  const attempts = isRemoteApi() ? 4 : 1;
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      await fn();
+      passed += 1;
+      console.log(`PASS  ${name}`);
+      return;
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts - 1) {
+        console.warn(`      retry step "${name}": ${err.message}`);
+        await sleep(2500);
+      }
+    }
   }
+  failed += 1;
+  console.error(`FAIL  ${name}`);
+  console.error(`      ${lastErr.message}`);
+  throw lastErr;
 }
 
 async function main() {
@@ -124,22 +141,16 @@ async function main() {
     if (!res.ok) throw new Error(`status ${res.status}: ${json?.error?.message}`);
   });
 
-  await step("Staff OTP request+verify", async () => {
+  await step("Staff TOTP verify", async () => {
     const phone = "9876543210";
-    const reqOtp = await req("/auth/staff/request-otp", {
+    const otp = currentTotpToken(DEMO_TOTP_SECRET);
+    const verify = await req("/auth/staff/verify-totp", {
       method: "POST",
-      body: { phone },
-    });
-    if (!reqOtp.res.ok) {
-      throw new Error(`request-otp ${reqOtp.res.status}`);
-    }
-    const verify = await req("/auth/staff/verify-otp", {
-      method: "POST",
-      body: { phone, otp: DEMO_OTP },
+      body: { phone, otp },
     });
     if (!verify.res.ok) {
       throw new Error(
-        `verify-otp ${verify.res.status}: ${verify.json?.error?.message}`
+        `verify-totp ${verify.res.status}: ${verify.json?.error?.message}`
       );
     }
     if (!verify.json?.data?.token) throw new Error("missing staff token");

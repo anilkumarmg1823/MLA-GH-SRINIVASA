@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrashAlt, FaRupeeSign, FaTimes, FaVideo } from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
 import { getGpLabel, getVillageLabel } from "@/data/gramPanchayats";
-import { getRecordMedia } from "@/lib/media";
+import { defaultDevelopmentCover, getRecordMedia } from "@/lib/media";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 function formatInr(amount) {
@@ -85,9 +85,18 @@ export default function DevelopmentDetailModal({
     lang === "kn" && record.locationNoteKn
       ? record.locationNoteKn
       : record.locationNote || "—";
-  const images = record.images || [];
   const media = getRecordMedia(record);
-  const active = media[activeImage] || media[0] || null;
+  const displayMedia =
+    media.length > 0
+      ? media
+      : [
+          {
+            id: "placeholder",
+            url: defaultDevelopmentCover(record),
+            type: "image",
+          },
+        ];
+  const active = displayMedia[activeImage] || displayMedia[0] || null;
   const isOngoing =
     record.status === "Ongoing" || record.statusKn === "ಚಾಲ್ತಿಯಲ್ಲಿದೆ";
 
@@ -145,9 +154,9 @@ export default function DevelopmentDetailModal({
                   {status}
                 </span>
               </div>
-              {media.length > 1 && (
+              {displayMedia.length > 1 && (
                 <div className="flex gap-2 overflow-x-auto pb-1">
-                  {media.map((m, i) => (
+                  {displayMedia.map((m, i) => (
                     <button
                       key={m.id || `${record.id}-thumb-${i}`}
                       type="button"

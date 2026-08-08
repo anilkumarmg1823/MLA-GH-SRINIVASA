@@ -1,27 +1,9 @@
 /**
  * Integration: frontend-shaped payloads hit live Demands API (POST/PUT/GET)
- * Requires API running: npm run start (or keep node src/index.js)
+ * Requires API running: npm run start (or API_BASE for remote)
  */
 import { beforeAll, describe, expect, it } from "vitest";
-
-const BASE = (process.env.API_BASE || "http://localhost:4000").replace(
-  /\/$/,
-  ""
-);
-const API = `${BASE}/api/v1`;
-
-async function req(path, { method = "GET", body, token } = {}) {
-  const headers = {};
-  if (token) headers.Authorization = `Bearer ${token}`;
-  if (body != null) headers["Content-Type"] = "application/json";
-  const res = await fetch(`${API}${path}`, {
-    method,
-    headers,
-    body: body == null ? undefined : JSON.stringify(body),
-  });
-  const json = await res.json().catch(() => null);
-  return { res, json };
-}
+import { adminLogin, assertApiUp, req } from "../helpers/http.js";
 
 describe("Demands API integration (civil + personal)", () => {
   let token;
@@ -29,19 +11,9 @@ describe("Demands API integration (civil + personal)", () => {
   let personalId;
 
   beforeAll(async () => {
-    const health = await fetch(`${BASE}/health`);
-    if (!health.ok) {
-      throw new Error(
-        `API not reachable at ${BASE}. Start backend before integration tests.`
-      );
-    }
-    const { res, json } = await req("/auth/admin/login", {
-      method: "POST",
-      body: { email: "admin@mla.local", password: "admin123" },
-    });
-    expect(res.ok).toBe(true);
-    token = json.data.token;
-  });
+    await assertApiUp();
+    token = await adminLogin();
+  }, 120_000);
 
   it("POST creates civil demand", async () => {
     const { res, json } = await req("/demands", {
@@ -84,12 +56,10 @@ describe("Demands API integration (civil + personal)", () => {
     const personal = await req("/demands?approach=personal", { token });
     expect(civil.res.ok).toBe(true);
     expect(personal.res.ok).toBe(true);
-    expect(
-      (civil.json.data || []).some((d) => d.id === civilId)
-    ).toBe(true);
-    expect(
-      (personal.json.data || []).some((d) => d.id === personalId)
-    ).toBe(true);
+    expect((civil.json.data || []).some((d) => d.id === civilId)).toBe(true);
+    expect((personal.json.data || []).some((d) => d.id === personalId)).toBe(
+      true
+    );
   });
 
   it("PUT edits civil demand status/subject", async () => {

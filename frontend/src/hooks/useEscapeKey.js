@@ -12,16 +12,20 @@ export function useEscapeKey(open, onClose, { lockScroll = true } = {}) {
     };
     window.addEventListener("keydown", onKey);
 
-    let prevOverflow = "";
+    let prevBody = "";
+    let prevHtml = "";
     if (lockScroll && typeof document !== "undefined") {
-      prevOverflow = document.body.style.overflow;
+      prevBody = document.body.style.overflow;
+      prevHtml = document.documentElement.style.overflow;
       document.body.style.overflow = "hidden";
+      document.documentElement.style.overflow = "hidden";
     }
 
     return () => {
       window.removeEventListener("keydown", onKey);
       if (lockScroll && typeof document !== "undefined") {
-        document.body.style.overflow = prevOverflow;
+        document.body.style.overflow = prevBody;
+        document.documentElement.style.overflow = prevHtml;
       }
     };
   }, [open, onClose, lockScroll]);

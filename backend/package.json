@@ -30,10 +30,14 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^1.4.5-lts.1",
+    "otplib": "^13.4.1",
     "pg": "^8.14.1",
+    "qrcode": "^1.5.4",
+    "xlsx": "^0.18.5",
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.6",
     "prisma": "^6.5.0",
     "vitest": "^3.2.7"
   }

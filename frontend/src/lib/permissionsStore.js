@@ -90,6 +90,22 @@ export async function deleteStaffAccess(id) {
   return true;
 }
 
+/** Admin: generate Authenticator QR for staff (returns secret once). */
+export async function enrollStaffTotp(id) {
+  const { data } = await api(`/staff-access/${id}/totp/enroll`, {
+    method: "POST",
+  });
+  return data;
+}
+
+/** Admin: rotate Authenticator secret + new QR. */
+export async function resetStaffTotp(id) {
+  const { data } = await api(`/staff-access/${id}/totp/reset`, {
+    method: "POST",
+  });
+  return data;
+}
+
 export function getModulePerms(session, moduleId) {
   if (!session) return emptyModulePerms();
   if (session.role === "admin") return fullModulePerms();

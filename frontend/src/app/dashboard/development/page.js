@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 import { getSession, canAccessDevelopment, canDo } from "@/lib/auth";
@@ -23,6 +29,9 @@ import DevelopmentCharts from "@/components/development/DevelopmentCharts";
 import QuickLinks from "@/components/development/QuickLinks";
 import DownloadModal from "@/components/development/DownloadModal";
 import SearchModal from "@/components/development/SearchModal";
+import PageLoader from "@/components/ui/PageLoader";
+import KudligiLoader from "@/components/ui/KudligiLoader";
+import { useGlobalLoader } from "@/components/ui/GlobalLoaderProvider";
 
 function sortRows(list, sortBy, lang) {
   const next = [...list];
@@ -56,6 +65,7 @@ function sortRows(list, sortBy, lang) {
 export default function DevelopmentPage() {
   const router = useRouter();
   const { lang, t } = useLanguage();
+  const { withLoader } = useGlobalLoader();
   const [allowed, setAllowed] = useState(false);
   const [gramPanchayat, setGramPanchayat] = useState("");
   const [village, setVillage] = useState("");
@@ -63,12 +73,14 @@ export default function DevelopmentPage() {
   const [sortBy, setSortBy] = useState("newest");
   const [rows, setRows] = useState([]);
   const [allRows, setAllRows] = useState([]);
+  const [listLoading, setListLoading] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [detailRecord, setDetailRecord] = useState(null);
   const [session, setSessionState] = useState(null);
+  const allRowsCache = useRef([]);
 
   useEffect(() => {
     const s = getSession();
@@ -80,23 +92,49 @@ export default function DevelopmentPage() {
     setAllowed(true);
   }, [router]);
 
-  const refresh = useCallback(async () => {
-    const all = await getAllDevelopments();
+  const ensureAllRows = useCallback(async () => {
+    if (allRowsCache.current.length) return allRowsCache.current;
+    const all = await getAllDevelopments({ light: true });
+    allRowsCache.current = all;
     setAllRows(all);
+    return all;
+  }, []);
+
+  const refresh = useCallback(async () => {
+    // Overview: load light summary once for charts (not every village click)
+    if (!gramPanchayat && !village) {
+      setRows([]);
+      setListLoading(true);
+      try {
+        await withLoader(() => ensureAllRows());
+      } finally {
+        setListLoading(false);
+      }
+      return;
+    }
     if (!gramPanchayat || !village) {
       setRows([]);
       return;
     }
-    setRows(
-      all.filter(
-        (d) => d.gramPanchayat === gramPanchayat && d.village === village
-      )
-    );
-  }, [gramPanchayat, village]);
+    // Village view: only that village (fast) + branded loader
+    setListLoading(true);
+    try {
+      await withLoader(async () => {
+        const villageRows = await getDevelopmentsForVillage(
+          gramPanchayat,
+          village
+        );
+        setRows(villageRows);
+      });
+    } finally {
+      setListLoading(false);
+    }
+  }, [gramPanchayat, village, ensureAllRows, withLoader]);
 
   useEffect(() => {
+    if (!allowed) return;
     refresh();
-  }, [refresh]);
+  }, [allowed, refresh]);
 
   const displayRows = useMemo(() => {
     let list = rows;
@@ -110,6 +148,7 @@ export default function DevelopmentPage() {
     setGramPanchayat(gp);
     setVillage("");
     setStatusFilter("all");
+    setRows([]);
   };
 
   const handleClearFilters = () => {
@@ -117,6 +156,7 @@ export default function DevelopmentPage() {
     setVillage("");
     setStatusFilter("all");
     setSortBy("newest");
+    setRows([]);
   };
 
   const handleAdd = () => {
@@ -129,16 +169,28 @@ export default function DevelopmentPage() {
     setDetailRecord(row);
   };
 
+  const handleOpenSearch = async () => {
+    await withLoader(() => ensureAllRows());
+    setSearchOpen(true);
+  };
+
   const handleSearchSelect = async (row) => {
     setSearchOpen(false);
     setGramPanchayat(row.gramPanchayat);
     setVillage(row.village);
     setStatusFilter("all");
-    const villageRows = await getDevelopmentsForVillage(
-      row.gramPanchayat,
-      row.village
-    );
-    setRows(villageRows);
+    setListLoading(true);
+    try {
+      await withLoader(async () => {
+        const villageRows = await getDevelopmentsForVillage(
+          row.gramPanchayat,
+          row.village
+        );
+        setRows(villageRows);
+      });
+    } finally {
+      setListLoading(false);
+    }
     setDetailRecord(row);
   };
 
@@ -150,37 +202,39 @@ export default function DevelopmentPage() {
 
   const handleDeleteFromDetail = async (row) => {
     if (!window.confirm(t.confirmDelete)) return;
-    await deleteDevelopment(row.id);
-    setDetailRecord(null);
-    await refresh();
+    await withLoader(async () => {
+      await deleteDevelopment(row.id);
+      setDetailRecord(null);
+      allRowsCache.current = [];
+      setAllRows([]);
+      await refresh();
+    });
   };
 
   const handleSave = async (payload) => {
-    if (editing) {
-      await updateDevelopment(editing.id, payload);
-    } else {
-      await addDevelopment(payload);
-    }
-    setFormOpen(false);
-    setEditing(null);
-    setGramPanchayat(payload.gramPanchayat);
-    setVillage(payload.village);
-    setStatusFilter("all");
-    const all = await getAllDevelopments();
-    setAllRows(all);
-    setRows(
-      all.filter(
-        (d) =>
-          d.gramPanchayat === payload.gramPanchayat &&
-          d.village === payload.village
-      )
-    );
+    await withLoader(async () => {
+      if (editing) {
+        await updateDevelopment(editing.id, payload);
+      } else {
+        await addDevelopment(payload);
+      }
+      setFormOpen(false);
+      setEditing(null);
+      setGramPanchayat(payload.gramPanchayat);
+      setVillage(payload.village);
+      setStatusFilter("all");
+      allRowsCache.current = [];
+      setAllRows([]);
+      const villageRows = await getDevelopmentsForVillage(
+        payload.gramPanchayat,
+        payload.village
+      );
+      setRows(villageRows);
+    });
   };
 
   if (!allowed) {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">Loading…</div>
-    );
+    return <PageLoader />;
   }
 
   const filtersReady = Boolean(gramPanchayat && village);
@@ -201,7 +255,7 @@ export default function DevelopmentPage() {
             {t.development}
           </h1>
           {filtersReady && (
-            <p className="text-sm text-[#CCBCA5] mt-1">
+            <p className="text-sm text-[var(--dash-text-70)] font-medium mt-1">
               {getGpLabel(gramPanchayat, lang)} ·{" "}
               {getVillageLabel(gramPanchayat, village, lang)}
               {displayRows.length > 0 ? ` · ${displayRows.length}` : ""}
@@ -209,7 +263,7 @@ export default function DevelopmentPage() {
           )}
         </div>
         <QuickLinks
-          onSearch={() => setSearchOpen(true)}
+          onSearch={handleOpenSearch}
           onAdd={handleAdd}
           onDownload={() => setDownloadOpen(true)}
           canAdd={canAdd}
@@ -239,7 +293,15 @@ export default function DevelopmentPage() {
         </div>
       )}
 
-      {filtersReady ? (
+      {filtersReady && listLoading ? (
+        <KudligiLoader
+          variant="block"
+          subKn="ಕಾಮಗಾರಿಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗುತ್ತಿದೆ…"
+          subEn="Loading developments…"
+        />
+      ) : null}
+
+      {filtersReady && !listLoading ? (
         isFilteredEmpty ? (
           <div className="rounded-2xl border border-dashed border-[#CCBCA5]/40 bg-[var(--dash-panel-soft)] backdrop-blur-sm px-6 py-14 text-center space-y-3">
             <p className="text-[var(--dash-text-50)]">{t.noRowsFiltered}</p>

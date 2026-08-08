@@ -3,7 +3,12 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { signToken } from "../lib/jwt.js";
-import { env } from "../config/env.js";
+import {
+  buildOtpauthUrl,
+  generateTotpSecret,
+  otpauthToQrDataUrl,
+  verifyTotpToken,
+} from "../lib/totp.js";
 import { AppError, asyncHandler, ok } from "../middleware/error.js";
 import { requireAuth } from "../middleware/auth.js";
 
@@ -18,7 +23,17 @@ function publicUser(user) {
     name: user.name,
     nameKn: user.nameKn,
     permissions: user.permissions?.modules || null,
+    totpEnabled: Boolean(user.totpEnabled),
   };
+}
+
+async function findRegisteredStaff(phone) {
+  const user = await prisma.user.findUnique({
+    where: { phone },
+    include: { permissions: true },
+  });
+  if (!user || user.role === "admin") return null;
+  return user;
 }
 
 router.post(
@@ -47,8 +62,14 @@ router.post(
   })
 );
 
+/**
+ * Step 1 — registered staff only.
+ * Unregistered phone → 404 (no QR).
+ * First login → create Authenticator secret + return QR once.
+ * Later logins → needsScan false (code only).
+ */
 router.post(
-  "/staff/request-otp",
+  "/staff/begin-login",
   asyncHandler(async (req, res) => {
     const body = z
       .object({
@@ -56,45 +77,44 @@ router.post(
       })
       .parse(req.body);
 
-    const staff = await prisma.user.findUnique({
-      where: { phone: body.phone },
-      include: { permissions: true },
-    });
-    if (!staff || staff.role === "admin") {
+    const user = await findRegisteredStaff(body.phone);
+    if (!user) {
       throw new AppError(404, "NOT_FOUND", "Staff phone not registered");
     }
 
-    // rate limit: max 5 open challenges in last 15 min
-    const recent = await prisma.otpChallenge.count({
-      where: {
-        phone: body.phone,
-        createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) },
-      },
-    });
-    if (recent >= 5) {
-      throw new AppError(429, "RATE_LIMIT", "Too many OTP requests. Try later.");
+    if (user.totpEnabled && user.totpSecret) {
+      return ok(res, {
+        phone: user.phone,
+        name: user.name,
+        totpEnabled: true,
+        needsScan: false,
+      });
     }
 
-    const code = env.demoOtp;
-    const codeHash = await bcrypt.hash(code, 8);
-    await prisma.otpChallenge.create({
-      data: {
-        phone: body.phone,
-        codeHash,
-        expiresAt: new Date(Date.now() + 10 * 60 * 1000),
-      },
+    const secret = generateTotpSecret();
+    const otpauthUrl = buildOtpauthUrl(user.phone, secret);
+    const qrDataUrl = await otpauthToQrDataUrl(otpauthUrl);
+
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { totpSecret: secret, totpEnabled: true },
     });
 
     return ok(res, {
-      sent: true,
-      // demo only — remove in production SMS flow
-      demoOtp: env.nodeEnv === "development" ? code : undefined,
+      phone: user.phone,
+      name: user.name,
+      totpEnabled: true,
+      needsScan: true,
+      qrDataUrl,
+      secret,
+      otpauthUrl,
     });
   })
 );
 
+/** Step 2 — phone + Authenticator TOTP (no SMS). Registered staff only. */
 router.post(
-  "/staff/verify-otp",
+  "/staff/verify-totp",
   asyncHandler(async (req, res) => {
     const body = z
       .object({
@@ -104,36 +124,20 @@ router.post(
       })
       .parse(req.body);
 
-    const challenge = await prisma.otpChallenge.findFirst({
-      where: { phone: body.phone },
-      orderBy: { createdAt: "desc" },
-    });
-    if (!challenge) {
-      throw new AppError(400, "OTP_MISSING", "Request OTP first");
+    const user = await findRegisteredStaff(body.phone);
+    if (!user) {
+      throw new AppError(404, "NOT_FOUND", "Staff phone not registered");
     }
-    if (challenge.expiresAt < new Date()) {
-      throw new AppError(400, "OTP_EXPIRED", "OTP expired");
+    if (!user.totpEnabled || !user.totpSecret) {
+      throw new AppError(
+        403,
+        "TOTP_NOT_ENROLLED",
+        "Scan the QR code first, then enter the authenticator code."
+      );
     }
-    if (challenge.attempts >= 5) {
-      throw new AppError(400, "OTP_LOCKED", "Too many attempts");
+    if (!verifyTotpToken(user.totpSecret, body.otp)) {
+      throw new AppError(401, "OTP_INVALID", "Invalid authenticator code");
     }
-
-    const good = await bcrypt.compare(body.otp, challenge.codeHash);
-    await prisma.otpChallenge.update({
-      where: { id: challenge.id },
-      data: { attempts: { increment: 1 } },
-    });
-    if (!good) {
-      throw new AppError(401, "OTP_INVALID", "Invalid OTP");
-    }
-
-    const user = await prisma.user.findUnique({
-      where: { phone: body.phone },
-      include: { permissions: true },
-    });
-    if (!user) throw new AppError(404, "NOT_FOUND", "Staff not found");
-
-    await prisma.otpChallenge.deleteMany({ where: { phone: body.phone } });
 
     const token = signToken({ sub: user.id, role: user.role });
     return ok(res, { token, user: publicUser(user) });

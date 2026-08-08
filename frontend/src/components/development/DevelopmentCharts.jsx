@@ -78,7 +78,7 @@ export default function DevelopmentCharts({ rows }) {
 
   return (
     <div className="mb-5 space-y-3">
-      <p className="text-[10px] font-black uppercase tracking-widest text-[#CCBCA5]">
+      <p className="text-[10px] font-black uppercase tracking-widest text-[var(--dash-text-70)]">
         {t.chartsTitle}
       </p>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -87,13 +87,13 @@ export default function DevelopmentCharts({ rows }) {
           return (
             <div
               key={card.label}
-              className="rounded-2xl bg-[var(--dash-panel)]/85 backdrop-blur-sm border border-[#CCBCA5]/25 p-4 sm:p-5 shadow-lg flex items-start gap-3"
+              className="rounded-2xl bg-[var(--dash-panel)] backdrop-blur-sm border border-[var(--dash-border)] p-4 sm:p-5 shadow-md flex items-start gap-3"
             >
-              <div className="w-10 h-10 rounded-xl bg-[#CCBCA5]/15 border border-[#CCBCA5]/30 flex items-center justify-center shrink-0 text-[#CCBCA5]">
+              <div className="w-10 h-10 rounded-xl bg-[var(--dash-hover)] border border-[var(--dash-border)] flex items-center justify-center shrink-0 text-[var(--dash-text-70)]">
                 <Icon className="text-base" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1.5">
+                <p className="text-[10px] font-black uppercase tracking-widest text-[var(--dash-text-70)] mb-1.5">
                   {card.label}
                 </p>
                 <p className="text-xl sm:text-2xl font-black text-[var(--dash-text)] truncate">

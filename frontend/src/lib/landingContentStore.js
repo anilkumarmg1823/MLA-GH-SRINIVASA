@@ -29,6 +29,81 @@ export function mergeLandingContent(saved, seed = landingContentSeed) {
   return out;
 }
 
+const NEW_TAGLINE = "MBBS, MD, AIIMS Delhi";
+
+function isLegacyTagline(value) {
+  const t = String(value || "").trim().toLowerCase();
+  if (!t) return true;
+  if (t === NEW_TAGLINE.toLowerCase()) return false;
+  return (
+    t.includes("nimmondige") ||
+    t.includes("ನಿಮ್ಮೊಂದಿಗೆ") ||
+    t.includes("aims delhi") ||
+    t.includes("mbbs, md aims")
+  );
+}
+
+/** Replace retired taglines that may still live in CMS / API / localStorage */
+export function migrateLandingContent(content) {
+  if (!isObject(content)) return content;
+  const next = { ...content };
+  const site = isObject(next.site) ? { ...next.site } : {};
+  if (isLegacyTagline(site.taglineEn)) site.taglineEn = NEW_TAGLINE;
+  if (isLegacyTagline(site.taglineKn)) site.taglineKn = NEW_TAGLINE;
+  next.site = site;
+
+  if (isObject(next.copy) && isObject(next.copy.kn)) {
+    const orbit = String(next.copy.kn.footerOrbit || "");
+    if (
+      orbit.includes("ನಿಮ್ಮೊಂದಿಗೆ") ||
+      /nimmondige/i.test(orbit) ||
+      /AIMS Delhi/i.test(orbit)
+    ) {
+      next.copy = {
+        ...next.copy,
+        kn: {
+          ...next.copy.kn,
+          footerOrbit: orbit
+            .replaceAll(/Nimmondige/gi, NEW_TAGLINE)
+            .replaceAll("ನಿಮ್ಮೊಂದಿಗೆ", NEW_TAGLINE)
+            .replaceAll(/MBBS,\s*MD\s*AIMS Delhi/gi, NEW_TAGLINE),
+        },
+      };
+    }
+  }
+
+  if (isObject(next.copy)) {
+    const copyKn = isObject(next.copy.kn) ? { ...next.copy.kn } : {};
+    const copyEn = isObject(next.copy.en) ? { ...next.copy.en } : {};
+    if (!copyKn.grievancesTab || copyKn.grievancesTab === "Grievances" || copyKn.grievancesTab === "ದೂರುಗಳು" || copyKn.grievancesTab === "Complaint") {
+      copyKn.grievancesTab = "ದೂರು / ಸಲಹೆಗಳು";
+    }
+    if (!copyEn.grievancesTab || copyEn.grievancesTab === "Grievances" || copyEn.grievancesTab === "Complaint" || copyEn.grievancesTab === "Grievance") {
+      copyEn.grievancesTab = "Complaint / Suggestion";
+    }
+    next.copy = { ...next.copy, kn: copyKn, en: copyEn };
+  }
+
+  // Always enforce the 3 exact requested hero slides
+  if (isObject(next.hero)) {
+    const slides = Array.isArray(next.hero.slides) ? next.hero.slides : [];
+    const validImages = new Set([
+      "/Picsart_24-11-21_17-11-01-713 (1).png",
+      "/Picsart_25-02-07_15-07-09-010.png",
+      "/Picsart_25-05-30_00-26-33-582.png",
+    ]);
+    const hasOldImages = slides.some((s) => !validImages.has(s.mlaImage));
+    if (slides.length !== 3 || hasOldImages) {
+      next.hero = {
+        ...next.hero,
+        slides: structuredClone(landingContentSeed.hero.slides),
+      };
+    }
+  }
+
+  return next;
+}
+
 export function getDefaultLandingContent() {
   return structuredClone(landingContentSeed);
 }
@@ -47,26 +122,34 @@ function notifyLandingSync(content) {
 export async function loadLandingContent() {
   try {
     const { data } = await api("/landing", { token: null });
-    return mergeLandingContent(data, landingContentSeed);
+    return migrateLandingContent(
+      mergeLandingContent(data, landingContentSeed)
+    );
   } catch {
     if (typeof window !== "undefined") {
       try {
         const raw = localStorage.getItem(LANDING_STORAGE_KEY);
         if (raw) {
-          return mergeLandingContent(JSON.parse(raw), landingContentSeed);
+          return migrateLandingContent(
+            mergeLandingContent(JSON.parse(raw), landingContentSeed)
+          );
         }
       } catch {
         /* ignore */
       }
     }
-    return getDefaultLandingContent();
+    return migrateLandingContent(getDefaultLandingContent());
   }
 }
 
 export async function saveLandingContent(next) {
-  const merged = mergeLandingContent(next, landingContentSeed);
+  const merged = migrateLandingContent(
+    mergeLandingContent(next, landingContentSeed)
+  );
   const { data } = await api("/landing", { method: "PUT", body: merged });
-  const result = mergeLandingContent(data || merged, landingContentSeed);
+  const result = migrateLandingContent(
+    mergeLandingContent(data || merged, landingContentSeed)
+  );
   try {
     localStorage.setItem(LANDING_STORAGE_KEY, JSON.stringify(result));
   } catch {
@@ -84,7 +167,9 @@ export async function syncLandingContent(next) {
 
 export async function resetLandingContent() {
   const { data } = await api("/landing/reset", { method: "POST" });
-  const defaults = mergeLandingContent(data, landingContentSeed);
+  const defaults = migrateLandingContent(
+    mergeLandingContent(data, landingContentSeed)
+  );
   try {
     localStorage.removeItem(LANDING_STORAGE_KEY);
   } catch {

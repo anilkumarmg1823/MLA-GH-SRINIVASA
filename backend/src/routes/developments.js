@@ -3,13 +3,31 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { uploadBuffer, deleteS3Object, withResolvedUrl } from "../lib/s3.js";
 
-async function mapDevelopment(row) {
+async function mapDevelopment(row, { resolveMedia = true } = {}) {
   if (!row) return row;
-  const media = await Promise.all(
-    (row.media || []).map((m) => withResolvedUrl(m))
-  );
+  const rawMedia = row.media || [];
+  // Skip S3 signing when empty or light list — big win for bulk imports with no photos
+  const media =
+    resolveMedia && rawMedia.length
+      ? await Promise.all(rawMedia.map((m) => withResolvedUrl(m)))
+      : rawMedia.map((m) => ({ ...m }));
   const images = media.filter((m) => m.type === "image").map((m) => m.url);
   return { ...row, media, images };
+}
+
+function listQueryOptions(req) {
+  const gp = req.query.gramPanchayat;
+  const village = req.query.village;
+  const status = req.query.status;
+  const page = Math.max(1, Number(req.query.page) || 1);
+  const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 50));
+  // light=1 → no media join (charts/search/overview)
+  const light = String(req.query.light || "") === "1";
+  const where = activeWhere();
+  if (gp) where.gramPanchayat = String(gp);
+  if (village) where.village = String(village);
+  if (status) where.status = String(status);
+  return { where, page, limit, light };
 }
 import { AppError, asyncHandler, ok } from "../middleware/error.js";
 import {
@@ -25,27 +43,20 @@ const router = Router();
 router.get(
   "/public",
   asyncHandler(async (req, res) => {
-    const gp = req.query.gramPanchayat;
-    const village = req.query.village;
-    const status = req.query.status;
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
-    const where = activeWhere();
-    if (gp) where.gramPanchayat = String(gp);
-    if (village) where.village = String(village);
-    if (status) where.status = String(status);
-
+    const { where, page, limit, light } = listQueryOptions(req);
     const [total, rows] = await Promise.all([
       prisma.development.count({ where }),
       prisma.development.findMany({
         where,
-        include: { media: true },
+        ...(light ? {} : { include: { media: true } }),
         orderBy: { updatedAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
     ]);
-    const data = await Promise.all(rows.map(mapDevelopment));
+    const data = await Promise.all(
+      rows.map((r) => mapDevelopment(r, { resolveMedia: !light }))
+    );
     return ok(res, data, { total, page, limit });
   })
 );
@@ -56,27 +67,20 @@ router.get(
   "/",
   requirePermission("development", "view"),
   asyncHandler(async (req, res) => {
-    const gp = req.query.gramPanchayat;
-    const village = req.query.village;
-    const status = req.query.status;
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
-    const where = activeWhere();
-    if (gp) where.gramPanchayat = String(gp);
-    if (village) where.village = String(village);
-    if (status) where.status = String(status);
-
+    const { where, page, limit, light } = listQueryOptions(req);
     const [total, rows] = await Promise.all([
       prisma.development.count({ where }),
       prisma.development.findMany({
         where,
-        include: { media: true },
+        ...(light ? {} : { include: { media: true } }),
         orderBy: { updatedAt: "desc" },
         skip: (page - 1) * limit,
         take: limit,
       }),
     ]);
-    const data = await Promise.all(rows.map(mapDevelopment));
+    const data = await Promise.all(
+      rows.map((r) => mapDevelopment(r, { resolveMedia: !light }))
+    );
     return ok(res, data, { total, page, limit });
   })
 );

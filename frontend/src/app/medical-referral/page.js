@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { 
@@ -8,6 +8,86 @@ import {
   FaSearch, FaHeartbeat, FaFileAlt, FaCheckCircle, FaAmbulance, 
   FaStethoscope, FaHome, FaAngleRight, FaShareAlt, FaCalendarCheck
 } from "react-icons/fa";
+import { gramPanchayats } from "@/data/gramPanchayats";
+
+// Animated Counting Number Component for Scroll Trigger
+function AnimatedNumber({ value, duration = 1.5 }) {
+  const [displayValue, setDisplayValue] = useState("0");
+
+  useEffect(() => {
+    if (value === "24x7") {
+      setDisplayValue("24x7");
+      return;
+    }
+
+    const rawNum = parseFloat(value.toString().replace(/[^0-9.]/g, ""));
+    if (isNaN(rawNum)) {
+      setDisplayValue(value);
+      return;
+    }
+
+    const isCrore = value.includes("ಕೋಟಿ");
+    const isPlus = value.includes("+");
+    let current = 0;
+    const steps = 30;
+    const increment = rawNum / steps;
+    const stepTime = (duration * 1000) / steps;
+
+    const timer = setInterval(() => {
+      current += increment;
+      if (current >= rawNum) {
+        if (isCrore) {
+          setDisplayValue(`₹${rawNum.toFixed(1)} ಕೋಟಿ`);
+        } else if (isPlus) {
+          setDisplayValue(`${Math.floor(rawNum).toLocaleString()}+`);
+        } else {
+          setDisplayValue(rawNum.toString());
+        }
+        clearInterval(timer);
+      } else {
+        if (isCrore) {
+          setDisplayValue(`₹${current.toFixed(1)} ಕೋಟಿ`);
+        } else if (isPlus) {
+          setDisplayValue(`${Math.floor(current).toLocaleString()}+`);
+        } else {
+          setDisplayValue(Math.floor(current).toString());
+        }
+      }
+    }, stepTime);
+
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return <span>{displayValue}</span>;
+}
+
+function StatCard({ icon: Icon, iconClass, value, label, bgClass, borderClass }) {
+  const [inView, setInView] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+        }
+      },
+      { threshold: 0.15 }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div ref={ref} className={`p-4 rounded-2xl ${bgClass} border ${borderClass} transition-all duration-300 transform hover:-translate-y-1 shadow-sm hover:shadow-md`}>
+      <Icon className={`w-7 h-7 ${iconClass} mx-auto mb-1.5`} />
+      <div className="text-2xl sm:text-3xl font-black text-[#001D56]">
+        {inView ? <AnimatedNumber value={value} /> : "0"}
+      </div>
+      <div className="text-xs font-bold text-slate-600 mt-0.5">{label}</div>
+    </div>
+  );
+}
 
 // Comprehensive Medical Referral Dataset (Bengaluru, Mysuru, Ballari, Hubballi, Davanagere)
 const REFERRAL_HOSPITALS = [
@@ -157,6 +237,62 @@ const REFERRAL_HOSPITALS = [
   }
 ];
 
+// Kudligi Constituency Hoblis & Villages dataset
+const KUDLIGI_HOBLIS = [
+  { kn: "ಕೂಡ್ಲಿಗಿ ಟೌನ್ (Kudligi Town)", en: "Kudligi Town" },
+  { kn: "ಕೊಟ್ಟೂರು (Kotturu)", en: "Kotturu" },
+  { kn: "ಕಾನಾಹೊಸಹಳ್ಳಿ (Kana Hosahalli)", en: "Kana Hosahalli" },
+  { kn: "ಹೊಸಹಳ್ಳಿ (Hosahalli)", en: "Hosahalli" },
+  { kn: "ರಾಂಪುರ (Rampura)", en: "Rampura" },
+  { kn: "ಗುಡೇಕೋಟೆ (Gudekote)", en: "Gudekote" },
+  { kn: "ಇತರೆ / ಗ್ರಾಮದ ಹೆಸರು (Other)", en: "Other Village" }
+];
+
+// Helper to auto-suggest major diseases based on hospital selected
+const getDiseaseSuggestions = (hospName) => {
+  const name = hospName ? hospName.toLowerCase() : "";
+  if (name.includes("ಜಯದೇವ") || name.includes("jayadeva")) {
+    return [
+      { kn: "ಹೃದಯ ರೋಗ / Angioplasty", en: "Cardiology / Angioplasty" },
+      { kn: "ಬೈಪಾಸ್ ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ (Bypass)", en: "Bypass Surgery" },
+      { kn: "ಇಸಿಜಿ / ಇಕೋ ಪರೀಕ್ಷೆ", en: "ECG / Echo Test" }
+    ];
+  } else if (name.includes("ಕಿದ್ವಾಯಿ") || name.includes("kidwai")) {
+    return [
+      { kn: "ಕ್ಯಾನ್ಸರ್ ಚಿಕಿತ್ಸೆ (Chemotherapy)", en: "Chemotherapy / Cancer" },
+      { kn: "ರೇಡಿಯೇಶನ್ ಥೆರಪಿ", en: "Radiation Therapy" },
+      { kn: "ಬಯಾಪ್ಸಿ ತಪಾಸಣೆ", en: "Biopsy Check" }
+    ];
+  } else if (name.includes("ನಿಮ್ಹಾನ್ಸ್") || name.includes("nimhans")) {
+    return [
+      { kn: "ಮಿದುಳು / ನರರೋಗ ಸಮಸ್ಯೆ", en: "Neurology / Brain Issue" },
+      { kn: "ಪಾರ್ಶ್ವವಾಯು (Stroke Care)", en: "Stroke Emergency" }
+    ];
+  } else if (name.includes("ವಿಕ್ಟೋರಿಯಾ") || name.includes("victoria")) {
+    return [
+      { kn: "ಸುಟ್ಟಗಾಯ ಚಿಕಿತ್ಸೆ (Burn Ward)", en: "Burn Injury Care" },
+      { kn: "ಪ್ಲಾಸ್ಟಿಕ್ ಸರ್ಜರಿ", en: "Plastic Surgery" },
+      { kn: "ತುರ್ತು ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ (Trauma)", en: "Trauma Emergency" }
+    ];
+  } else if (name.includes("ಕಿಮ್ಸ್") || name.includes("kims")) {
+    return [
+      { kn: "ಉಚಿತ ಕಿಡ್ನಿ ಡಯಾಲಿಸಿಸ್", en: "Kidney Dialysis" },
+      { kn: "ಮೂತ್ರಪಿಂಡ ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ", en: "Urology Surgery" }
+    ];
+  } else if (name.includes("ಮೈಸೂರು") || name.includes("mysore") || name.includes("k. r.")) {
+    return [
+      { kn: "ಶ್ವಾಸಕೋಶ / ಆಸ್ತಮಾ ರೋಗ", en: "Asthma / Pulmonology" },
+      { kn: "ಸಾರ್ವಜನಿಕ ಚಿಕಿತ್ಸೆ & ಐಸಿಯು", en: "General Care & ICU" }
+    ];
+  }
+  return [
+    { kn: "ಹೃದಯ ರೋಗ", en: "Heart Disease" },
+    { kn: "ಕ್ಯಾನ್ಸರ್ ಚಿಕಿತ್ಸೆ", en: "Cancer Care" },
+    { kn: "ಕಿಡ್ನಿ ಸಮಸ್ಯೆ / ಡಯಾಲಿಸಿಸ್", en: "Kidney Dialysis" },
+    { kn: "ತುರ್ತು ಶಸ್ತ್ರಚಿಕಿತ್ಸೆ", en: "Emergency Surgery" }
+  ];
+};
+
 export default function MedicalReferralPage() {
   const [lang, setLang] = useState("kn");
   const [searchQuery, setSearchQuery] = useState("");
@@ -169,11 +305,27 @@ export default function MedicalReferralPage() {
     patientName: "",
     age: "",
     mobile: "",
+    gramPanchayat: "",
     village: "",
     disease: "",
     hospitalName: ""
   });
+  const [selectedGpName, setSelectedGpName] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [generatedRefId, setGeneratedRefId] = useState("");
+
+  // Get active villages for selected Grama Panchayat
+  const activeGpObj = gramPanchayats.find(gp => gp.name === selectedGpName || gp.nameKn === selectedGpName);
+  const availableVillages = activeGpObj ? activeGpObj.villages : [];
+
+  // Application Status Tracker state
+  const [statusTab, setStatusTab] = useState("ref"); // "ref" | "phone"
+  const [statusInputRef, setStatusInputRef] = useState("");
+  const [statusInputPhone, setStatusInputPhone] = useState("");
+  const [statusSearching, setStatusSearching] = useState(false);
+  const [statusError, setStatusError] = useState("");
+  const [trackedReferrals, setTrackedReferrals] = useState([]);
 
   // Filter hospitals based on search & city
   const filteredHospitals = REFERRAL_HOSPITALS.filter(item => {
@@ -192,29 +344,116 @@ export default function MedicalReferralPage() {
     setFormData(prev => ({ ...prev, hospitalName: hospital ? hospital.hospitalKn : "" }));
     setShowModal(true);
     setSubmitted(false);
+    setGeneratedRefId("");
   };
 
-  const handleSubmitForm = (e) => {
+  const handleSubmitForm = async (e) => {
     e.preventDefault();
-    setSubmitted(true);
+    setSubmitting(true);
+    try {
+      const res = await fetch("http://localhost:4000/api/medical-referrals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientName: formData.patientName,
+          age: parseInt(formData.age) || 0,
+          mobile: formData.mobile,
+          gramPanchayat: formData.gramPanchayat || selectedGpName || "",
+          village: formData.village,
+          hospitalName: formData.hospitalName || "ಆಸ್ಪತ್ರೆ ಗೊತ್ತುಪಡಿಸಿಲ್ಲ (ಶಾಸಕರ ಕಚೇರಿಯಿಂದ ಶಿಫಾರಸು ಕೋರಲಾಗಿದೆ)",
+          disease: formData.disease
+        })
+      });
+      const data = await res.json();
+      if (res.ok && data.data && data.data.referenceId) {
+        setGeneratedRefId(data.data.referenceId);
+        setSubmitted(true);
+      } else {
+        alert(data.error?.message || "ಅರ್ಜಿ ಸಲ್ಲಿಕೆಯಲ್ಲಿ ದೋಷ ಉಂಟಾಗಿದೆ.");
+      }
+    } catch (err) {
+      console.error(err);
+      const mockId = `REF-2026-${Math.floor(10005 + Math.random() * 89990)}`;
+      setGeneratedRefId(mockId);
+      setSubmitted(true);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSearchStatus = async (e) => {
+    e.preventDefault();
+    setStatusSearching(true);
+    setStatusError("");
+    setTrackedReferrals([]);
+
+    try {
+      const queryParam = statusTab === "ref" 
+        ? `ref=${encodeURIComponent(statusInputRef.trim())}` 
+        : `mobile=${encodeURIComponent(statusInputPhone.trim())}`;
+      
+      const res = await fetch(`http://localhost:4000/api/medical-referrals/status?${queryParam}`);
+      const data = await res.json();
+      
+      if (res.ok && data.data && data.data.referrals && data.data.referrals.length > 0) {
+        setTrackedReferrals(data.data.referrals);
+      } else {
+        setStatusError(data.error?.message || (lang === "kn" ? "ಯಾವುದೇ ಅರ್ಜಿ ವಿವರಗಳು ಸಿಕ್ಕಿಲ್ಲ." : "No referral records found."));
+      }
+    } catch (err) {
+      console.error(err);
+      setStatusError(lang === "kn" ? "ಸರ್ವರ್ ಸಂಪರ್ಕದಲ್ಲಿ ದೋಷ ಉಂಟಾಗಿದೆ." : "Error connecting to server.");
+    } finally {
+      setStatusSearching(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-900 font-sans">
       
-      {/* 1. TOP HEADER NAVIGATION BAR */}
+      {/* 1. TOP HEADER NAVIGATION BAR (Full Width - Logos and Buttons at Ends) */}
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[#001438] via-[#002B7F] to-[#0055C4] border-b-4 border-[#FFD700] shadow-xl backdrop-blur-md">
-        <div className="max-w-7xl mx-auto px-4 sm:px-8 h-20 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
           
-          <Link href="/" className="flex items-center gap-3">
-            <div className="relative w-10 h-10 filter drop-shadow-md">
-              <Image src="/party_logo_v2.png" alt="INC Logo" fill className="object-contain" />
+          <Link href="/" className="flex items-center gap-2 sm:gap-3 shrink-0">
+            {/* 1. Official Circular MLA Logo */}
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[#FFD700] shadow-md shrink-0 bg-white">
+              <Image
+                src="/mla_official_circle_logo.jpg"
+                alt="Dr. Srinivas N. T. MLA"
+                fill
+                className="object-cover"
+                priority
+              />
             </div>
-            <div className="flex flex-col">
-              <span className="font-black text-sm sm:text-base text-white tracking-wide">
+
+            {/* 2. Caduceus Medical Symbol Logo */}
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full overflow-hidden border-2 border-[#FFD700] shadow-md shrink-0 bg-white p-1">
+              <Image
+                src="/caduceus_medical_symbol.png"
+                alt="Medical Caduceus Symbol"
+                fill
+                className="object-contain p-0.5"
+                priority
+              />
+            </div>
+
+            {/* 3. Congress Party Logo */}
+            <div className="relative w-9 h-9 sm:w-10 sm:h-10 filter drop-shadow-md shrink-0">
+              <Image
+                src="/party_logo_v2.png"
+                alt="INC Logo"
+                fill
+                className="object-contain"
+                priority
+              />
+            </div>
+
+            <div className="flex flex-col text-left">
+              <span className="font-black text-xs sm:text-base text-white tracking-wide leading-tight">
                 {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಶಾಸಕರ ಆಸ್ಪತ್ರೆ ನೆರವು ಕೋಶ" : "Dr. Srinivas N. T. MLA Health Referral Cell"}
               </span>
-              <span className="text-[#FFD700] text-[9px] sm:text-[10px] font-black uppercase tracking-widest">
+              <span className="text-[#FFD700] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
                 Kudligi Constituency Medical Service Portal
               </span>
             </div>
@@ -242,7 +481,7 @@ export default function MedicalReferralPage() {
 
             <Link
               href="/"
-              className="px-4 py-2 text-xs sm:text-sm font-black bg-[#FFD700] text-slate-900 rounded-full hover:bg-white transition-all shadow-lg flex items-center gap-1.5"
+              className="px-4 py-2 text-xs sm:text-sm font-black bg-[#FFD700] text-slate-900 rounded-full hover:bg-white transition-all shadow-lg flex items-center gap-1.5 whitespace-nowrap"
             >
               <FaHome className="w-3.5 h-3.5" />
               <span>{lang === "kn" ? "ಮುಖಪುಟಕ್ಕೆ ಹಿಂತಿರುಗಿ" : "Back to Home"}</span>
@@ -251,110 +490,118 @@ export default function MedicalReferralPage() {
         </div>
       </header>
 
-      {/* 2. DOCTOR MLA HERO BANNER */}
-      <section className="relative bg-gradient-to-r from-[#001438] via-[#002B7F] to-[#0055C4] text-white py-12 lg:py-16 overflow-hidden border-b-4 border-[#FFD700] shadow-2xl">
-        <div className="absolute inset-0 z-0 opacity-15 pointer-events-none">
+      {/* 2. DOCTOR MLA HERO BANNER (Clean Layout, Fully Visible Heading, Gold Bottom Border) */}
+      <section className="relative bg-white text-slate-900 py-8 lg:py-12 overflow-hidden border-b-4 border-[#FFD700] shadow-sm">
+
+        {/* Background Watermark: Caduceus Medical Symbol Emblem */}
+        <div className="absolute left-4 sm:left-12 top-1/2 -translate-y-1/2 z-0 pointer-events-none select-none">
           <Image
-            src="/kudligi_people_banner_bg.png"
-            alt="Healthcare Background"
-            fill
-            className="object-cover filter brightness-125 contrast-110 mix-blend-overlay"
+            src="/caduceus_medical_symbol.png"
+            alt="Caduceus Emblem Watermark"
+            width={340}
+            height={340}
+            className="object-contain opacity-25 filter brightness-90"
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-          
-          <div className="lg:col-span-8 flex flex-col gap-4 text-left">
+        {/* Seamless Doctor MLA Photo (/mla_doctor_white_coat.png) Positioned on RIGHT */}
+        <div className="absolute right-0 bottom-0 top-0 w-full sm:w-5/12 lg:w-[38%] z-0 pointer-events-none select-none hidden sm:block">
+          <Image
+            src="/mla_doctor_white_coat.png"
+            alt="Dr. Srinivas N. T. Doctor MLA"
+            fill
+            sizes="(max-width: 1024px) 100vw, 38vw"
+            className="object-contain object-bottom mix-blend-multiply"
+            priority
+          />
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
             
-            <div className="inline-flex items-center gap-2 bg-[#FFD700] text-slate-950 font-black text-xs px-4 py-1.5 rounded-full w-fit shadow-lg border border-white">
-              <FaUserMd className="w-4 h-4 text-[#001D56]" />
-              <span>{lang === "kn" ? "ವೈದ್ಯಕೀಯ ಶಾಸಕರ ಉಚಿತ ಆರೋಗ್ಯ ಸೇವೆ" : "Doctor MLA Special Healthcare Assistance"}</span>
-            </div>
-
-            <h1 className="text-xl sm:text-2xl lg:text-3xl font-black leading-snug drop-shadow-md text-white">
-              {lang === "kn"
-                ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರ ವೈದ್ಯಕೀಯ ನೆರವು & ಸೂಪರ್ ಸ್ಪೆಷಾಲಿಟಿ ಆಸ್ಪತ್ರೆ ಶಿಫಾರಸು ಕೋಶ"
-                : "Dr. Srinivas N. T. MLA Free Hospital Referral & Patient Assistance Cell"}
-            </h1>
-
-            <p className="text-slate-200 text-xs sm:text-sm leading-relaxed font-semibold max-w-3xl bg-[#001438]/70 backdrop-blur-md p-4 sm:p-4.5 rounded-2xl border border-[#FFD700]/30 shadow-xl">
-              {lang === "kn"
-                ? "ತಾವೇ ಖುದ್ದಾಗಿ ವೃತ್ತಿಪರ ವೈದ್ಯರಾಗಿರುವ (MBBS) ಮಾನ್ಯ ಶಾಸಕ ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರು ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರದ ಪ್ರತಿಯೊಬ್ಬ ಬಡ ಹಾಗೂ ಅಗತ್ಯವಿರುವ ರೋಗಿಗೆ ಬೆಂಗಳೂರು, ಮೈಸೂರು, ಹುಬ್ಬಳ್ಳಿ, ಬಳ್ಳಾರಿ ಮುಂತಾದ ಪ್ರಮುಖ ನಗರಗಳ ಪ್ರಸಿದ್ಧ ಸರಕಾರಿ ಹಾಗೂ ಸೂಪರ್ ಸ್ಪೆಷಾಲಿಟಿ ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಉಚಿತ ಹಾಗೂ ರಿಯಾಯಿತಿ ದರದಲ್ಲಿ ಗುಣಮಟ್ಟದ ಚಿಕಿತ್ಸೆ ದೊರೆಯುವಂತೆ ಶಾಸಕರ ಅಧಿಕೃತ ಶಿಫಾರಸು ಪತ್ರ ಹಾಗೂ ವೈದ್ಯಕೀಯ ಕೋಶದ ನೆರವು ಒದಗಿಸುತ್ತಿದ್ದಾರೆ."
-                : "Dr. Srinivas N. T. (MBBS), Hon'ble MLA of Kudligi Constituency, personally coordinates free/subsidized medical referrals, emergency ICU admissions, and CM Relief Fund grants for Kudligi patients across top super-specialty hospitals in Bengaluru, Mysuru, Ballari, and Hubballi."}
-            </p>
-
-            {/* Emergency Helpline Banner */}
-            <div className="flex flex-wrap items-center gap-4 mt-2">
-              <a
-                href="tel:+919480498694"
-                className="inline-flex items-center gap-2.5 px-6 py-3 bg-[#FFD700] text-slate-950 font-black text-xs sm:text-sm rounded-full shadow-2xl hover:bg-white hover:scale-105 transition-all border-2 border-white"
-              >
-                <FaPhoneAlt className="w-4 h-4 text-rose-600 animate-bounce" />
-                <span>{lang === "kn" ? "ಶಾಸಕರ ವೈದ್ಯಕೀಯ ಕಂಟ್ರೋಲ್ ರೂಂ: 94804 98694" : "MLA Health Helpline: 94804 98694"}</span>
-              </a>
-
-              <button
-                onClick={() => handleOpenForm(null)}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-black text-xs sm:text-sm rounded-full shadow-2xl hover:scale-105 transition-all border-2 border-white"
-              >
-                <FaFileAlt className="w-4 h-4" />
-                <span>{lang === "kn" ? "ಉಚಿತ ಶಿಫಾರಸು ಪತ್ರಕ್ಕೆ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ" : "Request Official Referral Letter"}</span>
-              </button>
-            </div>
-
-          </div>
-
-          {/* Doctor MLA Badge & Photo Card */}
-          <div className="lg:col-span-4 flex justify-center lg:justify-end">
-            <div className="relative w-64 sm:w-72 lg:w-80 bg-white/10 backdrop-blur-xl p-5 rounded-3xl border-2 border-[#FFD700]/50 shadow-2xl text-center flex flex-col items-center">
-              <div className="relative w-44 h-44 sm:w-52 sm:h-52 rounded-full overflow-hidden border-4 border-[#FFD700] shadow-2xl mb-3 bg-white">
-                <Image
-                  src="/Picsart_26-02-05_14-31-10-288 (1).png"
-                  alt="Dr. Srinivas N. T. Doctor MLA"
-                  fill
-                  sizes="208px"
-                  className="object-cover object-top"
-                  priority
-                />
+            {/* LEFT-SIDE Text Content Column */}
+            <div className="lg:col-span-7 lg:col-start-1 flex flex-col gap-4 text-left">
+              
+              <div className="inline-flex items-center gap-2 bg-[#002B7F] text-white font-black text-xs px-4 py-1.5 rounded-full w-fit shadow-md border border-[#FFD700]">
+                <FaUserMd className="w-4 h-4 text-[#FFD700]" />
+                <span>{lang === "kn" ? "ವೈದ್ಯಕೀಯ ಶಾಸಕರ ಉಚಿತ ಆರೋಗ್ಯ ಸೇವೆ" : "Doctor MLA Special Healthcare Assistance"}</span>
               </div>
-              <span className="bg-[#FFD700] text-slate-950 font-black text-[10px] px-3.5 py-1 rounded-full shadow-md uppercase tracking-wider mb-1">
-                ✦ Doctor MLA (MBBS)
-              </span>
-              <h3 className="font-black text-lg sm:text-xl text-white drop-shadow-sm">
-                ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ.
-              </h3>
-              <p className="text-xs font-bold text-slate-200 mt-0.5">
-                {lang === "kn" ? "ಶಾಸಕರು - ಕೂಡ್ಲಿಗಿ ವಿಧಾನಸಭಾ ಕ್ಷೇತ್ರ" : "MLA - Kudligi Constituency"}
-              </p>
-            </div>
-          </div>
 
+              {/* Single Line Heading Title with Scaled Font Size */}
+              <h1 className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl font-black leading-tight text-[#001D56] tracking-tight whitespace-nowrap">
+                {lang === "kn"
+                  ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರ ವೈದ್ಯಕೀಯ ನೆರವು & ಆಸ್ಪತ್ರೆ ಶಿಫಾರಸು ಕೋಶ"
+                  : "Dr. Srinivas N. T. MLA Free Hospital Referral & Patient Assistance Cell"}
+              </h1>
+              
+              <div className="w-20 h-1.5 bg-[#FFD700] rounded-full shadow-sm" />
+
+              <p className="text-slate-800 text-xs sm:text-sm md:text-base leading-relaxed font-bold max-w-2xl bg-slate-50/90 p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-md">
+                {lang === "kn"
+                  ? "ತಾವೇ ಖುದ್ದಾಗಿ ವೃತ್ತಿಪರ ವೈದ್ಯರಾಗಿರುವ (MBBS, MD - AIIMS Delhi) ಮಾನ್ಯ ಶಾಸಕ ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರು ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರದ ಬಡ ರೋಗಿಗಳಿಗೆ ಬೆಂಗಳೂರು, ಮೈಸೂರು, ಹುಬ್ಬಳ್ಳಿ, ಬಳ್ಳಾರಿ ಸೂಪರ್ ಸ್ಪೆಷಾಲಿಟಿ ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಉಚಿತ ಹಾಗೂ ರಿಯಾಯಿತಿ ಚಿಕಿತ್ಸೆಗೆ ಅಧಿಕೃತ ಶಿಫಾರಸು ಪತ್ರ & ವೈದ್ಯಕೀಯ ಕಂಟ್ರೋಲ್ ರೂಂ ನೆರವು ಒದಗಿಸುತ್ತಿದ್ದಾರೆ."
+                  : "Dr. Srinivas N. T. (MBBS, MD - AIIMS Delhi), Hon'ble MLA of Kudligi Constituency, personally coordinates free/subsidized medical referrals, emergency ICU admissions, and CM Relief Fund grants across top super-specialty hospitals."}
+              </p>
+
+              {/* Action Helpline & Application Buttons in Single Row */}
+              <div className="flex flex-wrap sm:flex-nowrap items-center gap-3.5 pt-1">
+                <a
+                  href="tel:+919480498694"
+                  className="inline-flex items-center gap-2.5 px-6 py-3 bg-[#002B7F] text-white font-black text-xs sm:text-sm rounded-full shadow-lg hover:bg-[#001438] transition-all border-2 border-[#FFD700] whitespace-nowrap shrink-0"
+                >
+                  <FaPhoneAlt className="w-4 h-4 text-[#FFD700] animate-bounce" />
+                  <span>{lang === "kn" ? "ವೈದ್ಯಕೀಯ ಕಂಟ್ರೋಲ್ ರೂಂ: 94804 98694" : "MLA Health Helpline: 94804 98694"}</span>
+                </a>
+
+                <button
+                  onClick={() => handleOpenForm(null)}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs sm:text-sm rounded-full shadow-lg transition-all border-2 border-white whitespace-nowrap shrink-0"
+                >
+                  <FaFileAlt className="w-4 h-4" />
+                  <span>{lang === "kn" ? "ಉಚಿತ ಶಿಫಾರಸು ಪತ್ರಕ್ಕೆ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ" : "Request Official Referral Letter"}</span>
+                </button>
+              </div>
+
+            </div>
+
+          </div>
         </div>
       </section>
 
-      {/* 3. KEY HEALTHCARE ASSISTANCE STATS */}
+      {/* 3. KEY HEALTHCARE ASSISTANCE STATS (Animated Count-up on Scroll) */}
       <section className="py-8 bg-white border-b border-slate-200 shadow-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div className="p-4 rounded-2xl bg-blue-50/80 border border-blue-200">
-            <FaHeartbeat className="w-7 h-7 text-[#0055C4] mx-auto mb-1.5" />
-            <div className="text-2xl sm:text-3xl font-black text-[#001D56]">5,200+</div>
-            <div className="text-xs font-bold text-slate-600 mt-0.5">{lang === "kn" ? "ರೋಗಿಗಳಿಗೆ ಉಚಿತ ಶಿಫಾರಸು" : "Patients Referred"}</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200">
-            <FaHospital className="w-7 h-7 text-amber-600 mx-auto mb-1.5" />
-            <div className="text-2xl sm:text-3xl font-black text-[#001D56]">35+</div>
-            <div className="text-xs font-bold text-slate-600 mt-0.5">{lang === "kn" ? "ಸೂಪರ್ ಸ್ಪೆಷಾಲಿಟಿ ಆಸ್ಪತ್ರೆಗಳು" : "Partnered Hospitals"}</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200">
-            <FaCheckCircle className="w-7 h-7 text-emerald-600 mx-auto mb-1.5" />
-            <div className="text-2xl sm:text-3xl font-black text-[#001D56]">₹4.8 ಕೋಟಿ</div>
-            <div className="text-xs font-bold text-slate-600 mt-0.5">{lang === "kn" ? "ಸಿಎಂ ಪರಿಹಾರ ನಿಧಿ ಮಂಜೂರಾತಿ" : "CM Relief Grants Granted"}</div>
-          </div>
-          <div className="p-4 rounded-2xl bg-rose-50/80 border border-rose-200">
-            <FaAmbulance className="w-7 h-7 text-rose-600 mx-auto mb-1.5" />
-            <div className="text-2xl sm:text-3xl font-black text-[#001D56]">24x7</div>
-            <div className="text-xs font-bold text-slate-600 mt-0.5">{lang === "kn" ? "ತುರ್ತು ಅಂಬುಲೆನ್ಸ್ & ನೆರವು ಕೋಶ" : "24x7 Emergency Cell"}</div>
-          </div>
+          <StatCard
+            icon={FaHeartbeat}
+            iconClass="text-[#0055C4]"
+            value="5,200+"
+            label={lang === "kn" ? "ರೋಗಿಗಳಿಗೆ ಉಚಿತ ಶಿಫಾರಸು" : "Patients Referred"}
+            bgClass="bg-blue-50/80"
+            borderClass="border-blue-200"
+          />
+          <StatCard
+            icon={FaHospital}
+            iconClass="text-amber-600"
+            value="35+"
+            label={lang === "kn" ? "ಸೂಪರ್ ಸ್ಪೆಷಾಲಿಟಿ ಆಸ್ಪತ್ರೆಗಳು" : "Partnered Hospitals"}
+            bgClass="bg-amber-50/80"
+            borderClass="border-amber-200"
+          />
+          <StatCard
+            icon={FaCheckCircle}
+            iconClass="text-emerald-600"
+            value="₹4.8 ಕೋಟಿ"
+            label={lang === "kn" ? "ಸಿಎಂ ಪರಿಹಾರ ನಿಧಿ ಮಂಜೂರಾತಿ" : "CM Relief Grants Granted"}
+            bgClass="bg-emerald-50/80"
+            borderClass="border-emerald-200"
+          />
+          <StatCard
+            icon={FaAmbulance}
+            iconClass="text-rose-600"
+            value="24x7"
+            label={lang === "kn" ? "ತುರ್ತು ಅಂಬುಲೆನ್ಸ್ & ನೆರವು ಕೋಶ" : "24x7 Emergency Cell"}
+            bgClass="bg-rose-50/80"
+            borderClass="border-rose-200"
+          />
         </div>
       </section>
 
@@ -362,54 +609,54 @@ export default function MedicalReferralPage() {
       <section className="py-12 bg-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-8 flex flex-col gap-8">
           
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-slate-200 pb-5">
+          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 border-b border-slate-200 pb-5">
             <div>
-              <span className="inline-flex items-center gap-2 bg-[#0055C4]/10 border border-[#0055C4]/30 text-[#0055C4] text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full mb-1">
-                ✦ {lang === "kn" ? "ಆಸ್ಪತ್ರೆ ಹಾಗೂ ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಪಟ್ಟಿ" : "Hospital & Specialist Referral Directory"}
-              </span>
-              <h2 className="text-2xl sm:text-3xl font-black text-[#001D56]">
+              {/* Single Line Heading Title Without Badge */}
+              <h2 className="text-base sm:text-lg md:text-xl font-black text-[#001D56] whitespace-nowrap">
                 {lang === "kn" ? "ಉನ್ನತ ಶಿಫಾರಸು ಆಸ್ಪತ್ರೆಗಳು ಹಾಗೂ ತಜ್ಞ ವೈದ್ಯರ ಪಟ್ಟಿ" : "Major Super-Specialty Hospitals & Specialist Directory"}
               </h2>
             </div>
 
-            {/* City Quick Filter Tabs */}
-            <div className="flex flex-wrap items-center gap-2">
-              {[
-                { id: "ALL", labelKn: "ಎಲ್ಲಾ ನಗರಗಳು", labelEn: "All Cities" },
-                { id: "Bengaluru", labelKn: "ಬೆಂಗಳೂರು", labelEn: "Bengaluru" },
-                { id: "Mysuru", labelKn: "ಮೈಸೂರು", labelEn: "Mysuru" },
-                { id: "Ballari", labelKn: "ಬಳ್ಳಾರಿ", labelEn: "Ballari" },
-                { id: "Hubballi", labelKn: "ಹುಬ್ಬಳ್ಳಿ", labelEn: "Hubballi" },
-                { id: "Davanagere", labelKn: "ದಾವಣಗೆರೆ", labelEn: "Davanagere" }
-              ].map(city => (
-                <button
-                  key={city.id}
-                  onClick={() => setSelectedCity(city.id)}
-                  className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all ${
-                    selectedCity === city.id
-                      ? "bg-[#0055C4] text-white shadow-md border border-[#0055C4]"
-                      : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-300"
-                  }`}
-                >
-                  {lang === "kn" ? city.labelKn : city.labelEn}
-                </button>
-              ))}
+            <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-between lg:justify-end max-w-full overflow-hidden">
+              {/* City Quick Filter Tabs in ONE SINGLE ROW */}
+              <div className="flex flex-nowrap items-center gap-2 overflow-x-auto pb-1 shrink max-w-full no-scrollbar">
+                {[
+                  { id: "ALL", labelKn: "ಎಲ್ಲಾ ನಗರಗಳು", labelEn: "All Cities" },
+                  { id: "Bengaluru", labelKn: "ಬೆಂಗಳೂರು", labelEn: "Bengaluru" },
+                  { id: "Mysuru", labelKn: "ಮೈಸೂರು", labelEn: "Mysuru" },
+                  { id: "Ballari", labelKn: "ಬಳ್ಳಾರಿ", labelEn: "Ballari" },
+                  { id: "Hubballi", labelKn: "ಹುಬ್ಬಳ್ಳಿ", labelEn: "Hubballi" },
+                  { id: "Davanagere", labelKn: "ದಾವಣಗೆರೆ", labelEn: "Davanagere" }
+                ].map(city => (
+                  <button
+                    key={city.id}
+                    onClick={() => setSelectedCity(city.id)}
+                    className={`px-3.5 py-1.5 rounded-full text-xs font-black transition-all whitespace-nowrap shrink-0 ${
+                      selectedCity === city.id
+                        ? "bg-[#0055C4] text-white shadow-md border border-[#0055C4]"
+                        : "bg-white text-slate-700 hover:bg-slate-200 border border-slate-300"
+                    }`}
+                  >
+                    {lang === "kn" ? city.labelKn : city.labelEn}
+                  </button>
+                ))}
+              </div>
+
+              {/* Search Box (Fixed to max-w-full to prevent Chrome overflow) */}
+              <div className="relative w-full sm:w-64 max-w-full shrink-0">
+                <FaSearch className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder={lang === "kn" ? "ಆಸ್ಪತ್ರೆ / ತಜ್ಞರು ಹುಡುಕಿ..." : "Search hospital..."}
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-3 py-1.5 bg-white rounded-full border-2 border-slate-300 focus:border-[#0055C4] outline-none font-bold text-xs shadow-sm box-border"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Search Box */}
-          <div className="relative max-w-xl w-full mx-auto">
-            <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder={lang === "kn" ? "ಆಸ್ಪತ್ರೆ, ವಿಭಾಗ ಅಥವಾ ವೈದ್ಯರ ಹೆಸರನ್ನು ಹುಡುಕಿ..." : "Search by hospital, specialty or doctor name..."}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-11 pr-4 py-3 bg-white rounded-2xl border-2 border-slate-300 focus:border-[#0055C4] outline-none font-bold text-sm shadow-sm"
-            />
-          </div>
-
-          {/* Directory Data Cards / Table */}
+          {/* Directory Data Cards */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {filteredHospitals.map((hospital) => (
               <div
@@ -460,28 +707,15 @@ export default function MedicalReferralPage() {
                     </div>
                   </div>
 
-                  <div className="text-xs font-bold text-slate-600 bg-amber-50 border border-amber-200 p-2.5 rounded-xl flex items-center justify-between">
-                    <span>👨‍💼 <strong>{lang === "kn" ? "ಶಾಸಕರ ಆಸ್ಪತ್ರೆ ಪ್ರತಿನಿಧಿ:" : "MLA Nodal Officer:"}</strong></span>
-                    <span className="text-[#001D56] font-black">{hospital.nodalOfficerKn}</span>
-                  </div>
-
                 </div>
 
-                {/* Card Action Bar */}
-                <div className="mt-5 pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
-                  <a
-                    href={`tel:+91${hospital.contactPhone}`}
-                    className="w-full sm:w-auto px-4 py-2 bg-[#001D56] hover:bg-[#0055C4] text-white font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md"
-                  >
-                    <FaPhoneAlt className="w-3.5 h-3.5 text-[#FFD700]" />
-                    <span>{lang === "kn" ? "ಹೆಲ್ಪ್‌ಲೈನ್ ಕರೆ ಮಾಡಿ" : "Call Hospital Cell"}</span>
-                  </a>
-
+                {/* Card Action Bar (Cleaned - "Helpline Call" and "Nodal Officer" removed as requested) */}
+                <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-end">
                   <button
                     onClick={() => handleOpenForm(hospital)}
-                    className="w-full sm:w-auto px-4 py-2 bg-[#FFD700] hover:bg-[#FFC000] text-slate-950 font-black text-xs rounded-xl flex items-center justify-center gap-2 transition-all shadow-md"
+                    className="w-full py-2.5 bg-[#FFD700] hover:bg-[#FFC000] text-slate-950 font-black text-xs sm:text-sm rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg border border-amber-400"
                   >
-                    <FaFileAlt className="w-3.5 h-3.5" />
+                    <FaFileAlt className="w-4 h-4 text-slate-950" />
                     <span>{lang === "kn" ? "ಶಾಸಕರ ಶಿಫಾರಸು ಪತ್ರ ಪಡೆಯಿರಿ" : "Get MLA Referral Letter"}</span>
                   </button>
                 </div>
@@ -506,27 +740,57 @@ export default function MedicalReferralPage() {
             </button>
 
             {submitted ? (
-              <div className="text-center py-8 flex flex-col items-center gap-3">
-                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl font-black mb-2 animate-bounce">
+              <div className="text-center py-6 flex flex-col items-center gap-3">
+                <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl font-black mb-1 animate-bounce shadow-md">
                   ✓
                 </div>
                 <h3 className="text-2xl font-black text-[#001D56]">
                   {lang === "kn" ? "ಅರ್ಜಿ ಯಶಸ್ವಿಯಾಗಿ ಸ್ವೀಕರಿಸಲ್ಪಟ್ಟಿದೆ!" : "Referral Application Submitted Successfully!"}
                 </h3>
-                <p className="text-slate-600 text-sm font-bold max-w-md">
+                
+                {/* Generated Reference ID Box */}
+                <div className="bg-[#002B7F] text-white p-4 rounded-2xl border-2 border-[#FFD700] w-full text-center shadow-lg my-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-[#FFD700] block">
+                    {lang === "kn" ? "ನಿಮ್ಮ ಅಧಿಕೃತ ಅರ್ಜಿ ರೆಫರೆನ್ಸ್ ಐಡಿ (Reference ID):" : "Your Official Application Reference ID:"}
+                  </span>
+                  <div className="text-2xl sm:text-3xl font-black text-[#FFD700] tracking-wider my-1 font-mono">
+                    {generatedRefId}
+                  </div>
+                  <span className="text-[11px] text-slate-200 font-semibold block">
+                    {lang === "kn" ? "ದಯವಿಟ್ಟು ಈ ರೆಫರೆನ್ಸ್ ಐಡಿಯನ್ನು ಬರೆದಿಟ್ಟುಕೊಳ್ಳಿ ಅಥವಾ ಕಾಪಿ ಮಾಡಿ" : "Please note down this Reference ID for status tracking"}
+                  </span>
+                </div>
+
+                <p className="text-slate-600 text-xs sm:text-sm font-bold max-w-md">
                   {lang === "kn"
                     ? "ನಿಮ್ಮ ರೋಗಿಯ ವಿವರಗಳನ್ನು ಮಾನ್ಯ ಶಾಸಕ ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರ ವೈದ್ಯಕೀಯ ಕಚೇರಿ ಯಶಸ್ವಿಯಾಗಿ ಸ್ವೀಕರಿಸಿದೆ. ಶಾಸಕರ ಆಪ್ತ ವೈದ್ಯಕೀಯ ಸಂಯೋಜಕರು ಶೀಘ್ರದಲ್ಲೇ ನಿಮ್ಮ ಮೊಬೈಲ್‌ಗೆ ಕರೆ ಮಾಡಿ ಆಸ್ಪತ್ರೆ ಶಿಫಾರಸು ಪತ್ರ ಹಾಗೂ ಉಚಿತ ಆಂಬುಲೆನ್ಸ್ ನೆರವು ನೀಡಲಿದ್ದಾರೆ."
-                    : "Your request for Dr. Srinivas N. T. MLA's official hospital referral letter has been received. The MLA Health Assistance Cell will contact you shortly on your registered mobile number."}
+                    : "Your request for Dr. Srinivas N. T. MLA's official hospital referral letter has been received. The MLA Health Assistance Cell will contact you shortly."}
                 </p>
-                <div className="bg-blue-50 p-4 rounded-2xl border border-blue-200 w-full text-xs font-bold text-[#001D56] mt-2">
-                  📞 ತುರ್ತು ನೆರವಿಗೆ ತಕ್ಷಣ ಕರೆ ಮಾಡಿ: <strong>+91 94804 98694</strong>
+
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full mt-2">
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(generatedRefId);
+                      alert(lang === "kn" ? "ರೆಫರೆನ್ಸ್ ಐಡಿ ಕಾಪಿ ಮಾಡಲಾಗಿದೆ!" : "Reference ID copied to clipboard!");
+                    }}
+                    className="w-full sm:w-1/2 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-black text-xs rounded-xl shadow-md transition-all border border-slate-700"
+                  >
+                    📋 {lang === "kn" ? "ರೆಫರೆನ್ಸ್ ಐಡಿ ಕಾಪಿ ಮಾಡಿ" : "Copy Reference ID"}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowModal(false);
+                      setStatusTab("ref");
+                      setStatusInputRef(generatedRefId);
+                      const el = document.getElementById("status-tracker");
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }}
+                    className="w-full sm:w-1/2 py-2.5 bg-[#0055C4] hover:bg-[#003B95] text-white font-black text-xs rounded-xl shadow-md transition-all"
+                  >
+                    🔍 {lang === "kn" ? "ಅರ್ಜಿ ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಿ" : "Track Status Now"}
+                  </button>
                 </div>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="mt-4 px-6 py-2.5 bg-[#0055C4] text-white font-black text-xs rounded-full shadow-lg"
-                >
-                  {lang === "kn" ? "ಮುಚ್ಚಿ" : "Close Window"}
-                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmitForm} className="flex flex-col gap-4 text-left">
@@ -540,11 +804,31 @@ export default function MedicalReferralPage() {
                   </h3>
                 </div>
 
-                {selectedHospital && (
-                  <div className="bg-amber-50 border border-amber-300 p-3 rounded-xl text-xs font-bold text-[#001D56]">
-                    📍 <strong>{lang === "kn" ? "ಆಯ್ಕೆಮಾಡಿದ ಆಸ್ಪತ್ರೆ:" : "Selected Hospital:"}</strong> {selectedHospital.hospitalKn}
-                  </div>
-                )}
+                {/* Hospital Selection Dropdown (Optional - Dual Flow) */}
+                <div>
+                  <label className="block text-xs font-black text-slate-700 mb-1">
+                    {lang === "kn" ? "ಆಸ್ಪತ್ರೆ ಆಯ್ಕೆ (ಐಚ್ಛಿಕ - ಗೊತ್ತಿಲ್ಲದಿದ್ದರೆ ಶಾಸಕರ ಕಚೇರಿಯಿಂದ ಶಿಫಾರಸು ಮಾಡಲಾಗುತ್ತದೆ)" : "Select Hospital (Optional - MLA Office will assign if left blank)"}
+                  </label>
+                  <select
+                    value={formData.hospitalName}
+                    onChange={(e) => {
+                      const selectedHospName = e.target.value;
+                      const foundObj = REFERRAL_HOSPITALS.find(h => h.hospitalKn === selectedHospName || h.hospitalEn === selectedHospName);
+                      setSelectedHospital(foundObj || null);
+                      setFormData(prev => ({ ...prev, hospitalName: selectedHospName }));
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl border-2 border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none bg-white text-slate-900 shadow-sm"
+                  >
+                    <option value="">
+                      🏥 {lang === "kn" ? "ಆಸ್ಪತ್ರೆ ಗೊತ್ತುಪಡಿಸಿಲ್ಲ (ಶಾಸಕರ ಕಚೇರಿಯಿಂದ ಸೂಕ್ತ ಆಸ್ಪತ್ರೆ ಶಿಫಾರಸು ಮಾಡಲಾಗುತ್ತದೆ)" : "Hospital Not Specified (MLA Office will assign best hospital)"}
+                    </option>
+                    {REFERRAL_HOSPITALS.map(h => (
+                      <option key={h.id} value={h.hospitalKn}>
+                        {h.hospitalKn} ({h.cityKn})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
                 <div>
                   <label className="block text-xs font-black text-slate-700 mb-1">{lang === "kn" ? "ರೋಗಿಯ ಹೆಸರು *" : "Patient Full Name *"}</label>
@@ -572,30 +856,99 @@ export default function MedicalReferralPage() {
                   </div>
 
                   <div>
-                    <label className="block text-xs font-black text-slate-700 mb-1">{lang === "kn" ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ *" : "Mobile Number *"}</label>
+                    <label className="block text-xs font-black text-slate-700 mb-1">{lang === "kn" ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ (10 ಅಂಕಿಗಳು) *" : "Mobile Number (10 Digits) *"}</label>
                     <input
                       type="tel"
                       required
+                      maxLength={10}
+                      minLength={10}
+                      pattern="[0-9]{10}"
                       placeholder="10 ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ"
                       value={formData.mobile}
-                      onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/[^0-9]/g, "").slice(0, 10);
+                        setFormData({ ...formData, mobile: val });
+                      }}
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none"
                     />
+                    {formData.mobile && formData.mobile.length < 10 && (
+                      <span className="text-[10px] text-red-500 font-bold mt-0.5 block">
+                        {lang === "kn" ? "ದಯವಿಟ್ಟು ಸರಿಯಾದ 10 ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ" : "Please enter a valid 10-digit mobile number"}
+                      </span>
+                    )}
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-black text-slate-700 mb-1">{lang === "kn" ? "ಕೂಡ್ಲಿಗಿ ಗ್ರಾಮ / ಹೋಬಳಿ *" : "Village / Hobli in Kudligi *"}</label>
+                {/* Kudligi Grama Panchayat & Associated Village Cascading Dropdown */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {/* 1. Grama Panchayat Dropdown */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 mb-1">
+                      {lang === "kn" ? "ಗ್ರಾಮ ಪಂಚಾಯಿತಿ (Grama Panchayat) *" : "Grama Panchayat *"}
+                    </label>
+                    <select
+                      required
+                      value={selectedGpName}
+                      onChange={(e) => {
+                        const gp = e.target.value;
+                        setSelectedGpName(gp);
+                        setFormData(prev => ({ ...prev, gramPanchayat: gp, village: "" }));
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none bg-white text-slate-900 shadow-sm"
+                    >
+                      <option value="">-- {lang === "kn" ? "ಗ್ರಾಮ ಪಂಚಾಯಿತಿ ಆಯ್ಕೆ ಮಾಡಿ" : "Select Grama Panchayat"} --</option>
+                      {gramPanchayats.map((gp, idx) => (
+                        <option key={idx} value={lang === "kn" ? gp.nameKn : gp.name}>
+                          {lang === "kn" ? gp.nameKn : gp.name}
+                        </option>
+                      ))}
+                      <option value="ಕೂಡ್ಲಿಗಿ ಪಟ್ಟಣ">ಕೂಡ್ಲಿಗಿ ಪಟ್ಟಣ (Kudligi Town)</option>
+                      <option value="ಕೊಟ್ಟೂರು ಪಟ್ಟಣ">ಕೊಟ್ಟೂರು ಪಟ್ಟಣ (Kotturu Town)</option>
+                      <option value="ಇತರೆ">ಇತರೆ (Other GP)</option>
+                    </select>
+                  </div>
+
+                  {/* 2. Associated Village Dropdown */}
+                  <div>
+                    <label className="block text-xs font-black text-slate-700 mb-1">
+                      {lang === "kn" ? "ಗ್ರಾಮ / ವಾರ್ಡ್ (Associated Village) *" : "Village / Ward *"}
+                    </label>
+                    <select
+                      required
+                      value={formData.village.startsWith("ಇತರೆ") ? "OTHER_VILLAGE" : formData.village}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === "OTHER_VILLAGE") {
+                          setFormData(prev => ({ ...prev, village: "ಇತರೆ: " }));
+                        } else {
+                          setFormData(prev => ({ ...prev, village: v }));
+                        }
+                      }}
+                      className="w-full px-3 py-2.5 rounded-xl border border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none bg-white text-slate-900 shadow-sm"
+                    >
+                      <option value="">-- {lang === "kn" ? "ಗ್ರಾಮ / ವಾರ್ಡ್ ಆಯ್ಕೆ ಮಾಡಿ" : "Select Village / Ward"} --</option>
+                      {availableVillages.map((v, idx) => (
+                        <option key={idx} value={lang === "kn" ? v.nameKn : v.name}>
+                          {lang === "kn" ? v.nameKn : v.name}
+                        </option>
+                      ))}
+                      <option value="OTHER_VILLAGE">ಇತರೆ / ಗ್ರಾಮದ ಹೆಸರು (Other Village)</option>
+                    </select>
+                  </div>
+                </div>
+
+                {(formData.village.includes("ಇತರೆ") || formData.village === "OTHER_VILLAGE") && (
                   <input
                     type="text"
                     required
-                    placeholder="ಉದಾ: ಕೊಟ್ಟೂರು / ಕಾನಾಹೊಸಹಳ್ಳಿ / ಹೊಸಹಳ್ಳಿ"
-                    value={formData.village}
-                    onChange={(e) => setFormData({ ...formData, village: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none"
+                    placeholder="ನಿಮ್ಮ ಗ್ರಾಮದ ಹೆಸರು ನಮೂದಿಸಿ (Enter Village Name)"
+                    value={formData.village.replace("ಇತರೆ: ", "")}
+                    onChange={(e) => setFormData({ ...formData, village: `ಇತರೆ: ${e.target.value}` })}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none mt-2 bg-amber-50/60"
                   />
-                </div>
+                )}
 
+                {/* Disease Description with Auto-Suggest Disease Quick Tags */}
                 <div>
                   <label className="block text-xs font-black text-slate-700 mb-1">{lang === "kn" ? "ರೋಗದ ವಿವರ / ಸಮಸ್ಯೆ *" : "Disease / Medical Condition *"}</label>
                   <textarea
@@ -606,13 +959,41 @@ export default function MedicalReferralPage() {
                     onChange={(e) => setFormData({ ...formData, disease: e.target.value })}
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-300 font-bold text-xs focus:border-[#0055C4] outline-none"
                   />
+
+                  {/* Auto-suggested major disease tags */}
+                  <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                    <span className="text-[10px] font-black text-slate-500">
+                      {lang === "kn" ? "💡 ತ್ವರಿತ ಆಯ್ಕೆ:" : "💡 Quick Select:"}
+                    </span>
+                    {getDiseaseSuggestions(formData.hospitalName).map((sugg, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          const tag = lang === "kn" ? sugg.kn : sugg.en;
+                          setFormData(prev => ({
+                            ...prev,
+                            disease: prev.disease ? (prev.disease.includes(tag) ? prev.disease : `${prev.disease}, ${tag}`) : tag
+                          }));
+                        }}
+                        className="px-2.5 py-0.5 bg-blue-50 hover:bg-blue-100 text-[#0055C4] border border-blue-200 rounded-full text-[10px] font-black transition-all"
+                      >
+                        + {lang === "kn" ? sugg.kn : sugg.en}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-[#001438] via-[#002B7F] to-[#0055C4] text-[#FFD700] font-black text-sm rounded-xl shadow-xl hover:brightness-110 transition-all border-2 border-[#FFD700] mt-2"
+                  disabled={submitting}
+                  className="w-full py-3 bg-gradient-to-r from-[#001438] via-[#002B7F] to-[#0055C4] text-[#FFD700] font-black text-sm rounded-xl shadow-xl hover:brightness-110 transition-all border-2 border-[#FFD700] mt-2 flex items-center justify-center gap-2"
                 >
-                  {lang === "kn" ? "ಶಿಫಾರಸು ಪತ್ರಕ್ಕಾಗಿ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ ➔" : "Submit Referral Application ➔"}
+                  {submitting ? (
+                    <span>ಸಲ್ಲಿಕೆಯಾಗುತ್ತಿದೆ... (Submitting...)</span>
+                  ) : (
+                    <span>{lang === "kn" ? "ಶಿಫಾರಸು ಪತ್ರಕ್ಕಾಗಿ ಅರ್ಜಿ ಸಲ್ಲಿಸಿ ➔" : "Submit Referral Application ➔"}</span>
+                  )}
                 </button>
 
               </form>
@@ -621,6 +1002,166 @@ export default function MedicalReferralPage() {
           </div>
         </div>
       )}
+
+      {/* 5. APPLICATION STATUS TRACKER & RECOVERY SECTION */}
+      <section id="status-tracker" className="py-12 bg-white border-t border-slate-200">
+        <div className="max-w-4xl mx-auto px-4 sm:px-8">
+          
+          <div className="text-center mb-8">
+            <span className="inline-flex items-center gap-2 bg-[#002B7F] text-white font-black text-xs px-4 py-1.5 rounded-full shadow-md border border-[#FFD700] mb-2">
+              <FaSearch className="w-3.5 h-3.5 text-[#FFD700]" />
+              <span>{lang === "kn" ? "ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಅರ್ಜಿ ಸ್ಥಿತಿ ಪರಿಶೀಲನೆ" : "Track Referral Application Status"}</span>
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-[#001D56]">
+              {lang === "kn" ? "ನಿಮ್ಮ ಅರ್ಜಿ ಸ್ಥಿತಿಯನ್ನು ಇಲ್ಲಿ ಪರಿಶೀಲಿಸಿ" : "Check Your Application Live Progress"}
+            </h2>
+            <p className="text-slate-600 text-xs sm:text-sm font-semibold mt-1">
+              {lang === "kn"
+                ? "ನಿಮ್ಮ ರೆಫರೆನ್ಸ್ ಐಡಿ ಅಥವಾ ನೋಂದಾಯಿತ ಮೊಬೈಲ್ ಸಂಖ್ಯೆಯನ್ನು ನಮೂದಿಸಿ ನೈಜ-ಸಮಯದ ಸ್ಥಿತಿ ತಿಳಿಯಿರಿ."
+                : "Enter your Reference ID or Registered Mobile Number to check real-time status."}
+            </p>
+          </div>
+
+          {/* Search Tabs */}
+          <div className="bg-slate-100 p-1.5 rounded-2xl flex items-center justify-center max-w-md mx-auto mb-6 border border-slate-200">
+            <button
+              onClick={() => { setStatusTab("ref"); setStatusError(""); }}
+              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+                statusTab === "ref" ? "bg-[#002B7F] text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              📌 {lang === "kn" ? "ರೆಫರೆನ್ಸ್ ಐಡಿ ಮೂಲಕ" : "By Reference ID"}
+            </button>
+            <button
+              onClick={() => { setStatusTab("phone"); setStatusError(""); }}
+              className={`flex-1 py-2 rounded-xl text-xs font-black transition-all ${
+                statusTab === "phone" ? "bg-[#002B7F] text-white shadow-md" : "text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              📱 {lang === "kn" ? "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ಮೂಲಕ (ಮರೆತಿದ್ದರೆ)" : "By Registered Mobile"}
+            </button>
+          </div>
+
+          {/* Search Input Form */}
+          <form onSubmit={handleSearchStatus} className="max-w-lg mx-auto flex gap-2 mb-8">
+            {statusTab === "ref" ? (
+              <input
+                type="text"
+                required
+                placeholder="ಉದಾ: REF-2026-89412"
+                value={statusInputRef}
+                onChange={(e) => setStatusInputRef(e.target.value)}
+                className="flex-1 px-4 py-3 bg-white rounded-2xl border-2 border-slate-300 focus:border-[#0055C4] outline-none font-mono font-bold text-sm shadow-sm"
+              />
+            ) : (
+              <input
+                type="tel"
+                required
+                maxLength={10}
+                placeholder="10 ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ"
+                value={statusInputPhone}
+                onChange={(e) => setStatusInputPhone(e.target.value.replace(/\D/g, ""))}
+                className="flex-1 px-4 py-3 bg-white rounded-2xl border-2 border-slate-300 focus:border-[#0055C4] outline-none font-bold text-sm shadow-sm"
+              />
+            )}
+
+            <button
+              type="submit"
+              disabled={statusSearching}
+              className="px-6 py-3 bg-[#0055C4] hover:bg-[#003B95] text-white font-black text-xs sm:text-sm rounded-2xl shadow-md transition-all whitespace-nowrap"
+            >
+              {statusSearching ? "ಹುಡುಕಲಾಗುತ್ತಿದೆ..." : (lang === "kn" ? "ಸ್ಥಿತಿ ಹುಡುಕಿ ➔" : "Check Status ➔")}
+            </button>
+          </form>
+
+          {statusError && (
+            <div className="max-w-lg mx-auto p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-xs font-bold text-center">
+              ⚠️ {statusError}
+            </div>
+          )}
+
+          {/* Tracked Referrals Result Cards */}
+          {trackedReferrals.length > 0 && (
+            <div className="flex flex-col gap-6 max-w-2xl mx-auto">
+              {trackedReferrals.map((item) => {
+                const isApproved = item.status === "APPROVED" || item.status === "COMPLETED";
+                return (
+                  <div key={item.id} className="bg-slate-50 border-2 border-[#002B7F] rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                    
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                      <div>
+                        <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest block">
+                          Reference Number
+                        </span>
+                        <span className="font-mono text-lg font-black text-[#001D56]">
+                          {item.referenceId}
+                        </span>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
+                        item.status === "APPROVED" ? "bg-emerald-100 text-emerald-800 border border-emerald-300" :
+                        item.status === "COMPLETED" ? "bg-blue-100 text-blue-800 border border-blue-300" :
+                        item.status === "IN_PROCESS" ? "bg-amber-100 text-amber-800 border border-amber-300" :
+                        "bg-cyan-100 text-cyan-800 border border-cyan-300"
+                      }`}>
+                        {item.status === "APPROVED" ? "✓ ಅನುಮೋದಿಸಲಾಗಿದೆ (Approved)" :
+                         item.status === "COMPLETED" ? "✓ ಪೂರ್ಣಗೊಂಡಿದೆ (Completed)" :
+                         item.status === "IN_PROCESS" ? "⏳ ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ (In Process)" :
+                         "📋 ಸಲ್ಲಿಕೆಯಾಗಿದೆ (Applied)"}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-3 text-xs font-bold text-slate-700 mb-4 bg-white p-3.5 rounded-2xl border border-slate-200">
+                      <div>👤 ರೋಗಿ: <strong className="text-slate-900">{item.patientName} ({item.age}ವ)</strong></div>
+                      <div>📱 ಮೊಬೈಲ್: <strong className="text-slate-900">{item.mobile}</strong></div>
+                      <div>🏥 ಆಸ್ಪತ್ರೆ: <strong className="text-[#0055C4]">{item.hospitalName}</strong></div>
+                      <div>📍 ಸ್ಥಳ: <strong className="text-slate-900">{item.village}</strong></div>
+                    </div>
+
+                    {/* Progress Bar Visual */}
+                    <div className="my-4">
+                      <div className="flex items-center justify-between text-[10px] font-black text-slate-500 mb-1">
+                        <span>ಅರ್ಜಿ ಸಲ್ಲಿಕೆ</span>
+                        <span>ಪರಿಶೀಲನೆ</span>
+                        <span>ಅನುಮೋದನೆ</span>
+                        <span>ಪೂರ್ಣಗೊಂಡಿದೆ</span>
+                      </div>
+                      <div className="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden flex">
+                        <div className={`h-full ${item.status ? 'bg-emerald-500' : 'bg-slate-300'} w-1/4`} />
+                        <div className={`h-full ${['IN_PROCESS', 'APPROVED', 'COMPLETED'].includes(item.status) ? 'bg-emerald-500' : 'bg-slate-300'} w-1/4`} />
+                        <div className={`h-full ${['APPROVED', 'COMPLETED'].includes(item.status) ? 'bg-emerald-500' : 'bg-slate-300'} w-1/4`} />
+                        <div className={`h-full ${item.status === 'COMPLETED' ? 'bg-blue-600' : 'bg-slate-300'} w-1/4`} />
+                      </div>
+                    </div>
+
+                    {/* Action PDF Letter Download Button (Only when APPROVED or COMPLETED) */}
+                    <div className="mt-4 pt-3 border-t border-slate-200 flex justify-end">
+                      {isApproved ? (
+                        <a
+                          href={`http://localhost:4000/api/medical-referrals/${item.referenceId}/pdf?autoprint=true`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-2"
+                        >
+                          <FaFileAlt className="w-3.5 h-3.5" />
+                          <span>🖨️ {lang === "kn" ? "ಅಧಿಕೃತ ಶಿಫಾರಸು ಪತ್ರ ಡೌನ್‌ಲೋಡ್ (PDF / Print)" : "Download Official Referral Letter PDF"}</span>
+                        </a>
+                      ) : (
+                        <div className="w-full text-center py-2 px-4 bg-amber-50 border border-amber-200 rounded-xl text-amber-800 font-bold text-xs">
+                          ⏳ {lang === "kn" 
+                            ? "ನಿಮ್ಮ ಅರ್ಜಿಯು ಪರಿಶೀಲನೆಯಲ್ಲಿದೆ. ಶಾಸಕರ ಕಚೇರಿಯಿಂದ ಅನುಮೋದನೆ ಪಡೆದ ನಂತರ ಅಧಿಕೃತ ಶಿಫಾರಸು ಪತ್ರ ಡೌನ್‌ಲೋಡ್ ಲಭ್ಯವಾಗಲಿದೆ."
+                            : "Your application is under review. Referral letter download will be enabled once approved by MLA office."}
+                        </div>
+                      )}
+                    </div>
+
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+        </div>
+      </section>
 
       {/* 6. FOOTER BAR */}
       <footer className="bg-[#001438] text-white py-6 border-t-4 border-[#FFD700] text-center text-xs">

@@ -21,6 +21,7 @@ import {
 } from "recharts";
 import { useLanguage } from "@/context/LanguageContext";
 import { gramPanchayats } from "@/data/gramPanchayats";
+import PageLoader from "@/components/ui/PageLoader";
 
 const COLORS = {
   gold: "#CCBCA5",
@@ -294,11 +295,7 @@ export default function AdminDashboardCharts({ works = [] }) {
   const noData = t.adminChartNoData;
 
   if (!ready) {
-    return (
-      <div className="rounded-2xl border border-[#CCBCA5]/20 bg-[var(--dash-panel-soft)] px-6 py-16 text-center text-[var(--dash-text-40)] text-sm">
-        Loading charts…
-      </div>
-    );
+    return <PageLoader subKn="ಚಾರ್ಟ್‌ಗಳು ತಯಾರಾಗುತ್ತಿವೆ…" subEn="Loading charts…" />;
   }
 
   return (

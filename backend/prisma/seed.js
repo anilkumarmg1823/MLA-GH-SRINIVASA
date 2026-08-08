@@ -4,6 +4,7 @@ import { fileURLToPath } from "url";
 import { dirname, join } from "path";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
+import { DEMO_TOTP_SECRET } from "../src/lib/totp.js";
 
 const prisma = new PrismaClient();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -51,14 +52,22 @@ const FALLBACK_LANDING = {
   site: {
     nameEn: "DR. SRINIVAS N. T.",
     nameKn: "DR. SRINIVAS N. T.",
-    taglineEn: "Nimmondige",
-    taglineKn: "Nimmondige",
+    "taglineEn": "MBBS, MD, AIIMS Delhi",
+    "taglineKn": "MBBS, MD, AIIMS Delhi",
   },
   copy: { en: {}, kn: {} },
-  hero: { slides: [] },
+  hero: {
+    slides: [],
+    video:
+      "https://kudligi-mla.s3.us-east-1.amazonaws.com/kudligi-mla/landing/hero_nrega_video.mp4",
+    videoS3Key: "kudligi-mla/landing/hero_nrega_video.mp4",
+  },
   media: {
     tourScheduleImage: "/tour_schedule_sheet_v10.png",
     tourSchedules: [],
+    developmentsVideo:
+      "https://kudligi-mla.s3.us-east-1.amazonaws.com/kudligi-mla/landing/developments_bg_video.mp4",
+    developmentsVideoS3Key: "kudligi-mla/landing/developments_bg_video.mp4",
   },
   leaders: { items: [] },
   gallery: { items: [] },
@@ -123,182 +132,63 @@ const TOUR_SCHEDULES = [
   },
 ];
 
-const DEVELOPMENTS = [
-  {
-    gramPanchayat: "Kudligi Town",
-    village: "Kudligi",
-    name: "CC Road — Main Market",
-    nameKn: "CC Road — Main Market",
-    description: "Concrete road improvement in market area",
-    amountSanctioned: 4500000,
-    status: "Ongoing",
-    department: "PWD",
-    yojane: "NREGA / State",
-    beneficiaries: "Local traders & residents",
-    startDate: "2025-11-01",
-    locationNote: "Near bus stand",
-  },
-  {
-    gramPanchayat: "Kudligi Town",
-    village: "Kudligi",
-    name: "Drinking water pipeline",
-    nameKn: "Drinking water pipeline",
-    description: "New distribution line for ward 3-5",
-    amountSanctioned: 2800000,
-    status: "Completed",
-    department: "RDPR",
-    yojane: "Jal Jeevan",
-    beneficiaries: "1200 households",
-    startDate: "2025-04-01",
-  },
-  {
-    gramPanchayat: "Kottur",
-    village: "Kottur",
-    name: "Anganwadi renovation",
-    nameKn: "Anganwadi renovation",
-    description: "Roof and flooring upgrade",
-    amountSanctioned: 950000,
-    status: "Ongoing",
-    department: "Women & Child",
-    yojane: "ICDS",
-    beneficiaries: "Children & mothers",
-    startDate: "2026-01-15",
-  },
-  {
-    gramPanchayat: "Kottur",
-    village: "Salhunse",
-    name: "Check dam repair",
-    nameKn: "Check dam repair",
-    description: "Irrigation support structure",
-    amountSanctioned: 1600000,
-    status: "Ongoing",
-    department: "Minor Irrigation",
-    yojane: "State MI",
-    beneficiaries: "Farmers",
-    startDate: "2025-12-01",
-  },
-  {
-    gramPanchayat: "Hosahalli",
-    village: "Hosahalli",
-    name: "GP office compound wall",
-    nameKn: "GP office compound wall",
-    description: "Security compound for GP premises",
-    amountSanctioned: 720000,
-    status: "Completed",
-    department: "RDPR",
-    yojane: "14th FC",
-    beneficiaries: "Public",
-    startDate: "2025-06-01",
-  },
-  {
-    gramPanchayat: "Hosahalli",
-    village: "Kanamadugu",
-    name: "Street lights — solar",
-    nameKn: "Street lights — solar",
-    description: "40 solar street lights",
-    amountSanctioned: 1100000,
-    status: "Ongoing",
-    department: "Energy",
-    yojane: "Gram Jyoti",
-    beneficiaries: "Village residents",
-    startDate: "2026-02-01",
-  },
-  {
-    gramPanchayat: "Gudekote",
-    village: "Gudekote",
-    name: "School classroom block",
-    nameKn: "School classroom block",
-    description: "Additional classrooms for high school",
-    amountSanctioned: 5200000,
-    status: "Ongoing",
-    department: "Education",
-    yojane: "Samagra Shiksha",
-    beneficiaries: "Students",
-    startDate: "2025-09-01",
-  },
-  {
-    gramPanchayat: "Ujjini",
-    village: "Ujjini",
-    name: "Community hall",
-    nameKn: "Community hall",
-    description: "Multi-purpose hall for GP",
-    amountSanctioned: 3500000,
-    status: "Proposed",
-    department: "RDPR",
-    yojane: "State Grant",
-    beneficiaries: "Public",
-    startDate: "2026-06-01",
-  },
-  {
-    gramPanchayat: "Choranur",
-    village: "Choranur",
-    name: "Drainage channel",
-    nameKn: "Drainage channel",
-    description: "Storm water drain along main road",
-    amountSanctioned: 1900000,
-    status: "Ongoing",
-    department: "PWD",
-    yojane: "NREGA",
-    beneficiaries: "Households",
-    startDate: "2026-01-01",
-  },
-  {
-    gramPanchayat: "Kudligi Town",
-    village: "Kudligi",
-    name: "Park & walking track",
-    nameKn: "Park & walking track",
-    description: "Public recreation space",
-    amountSanctioned: 2100000,
-    status: "Completed",
-    department: "Urban Development",
-    yojane: "AMRUT / Local",
-    beneficiaries: "Citizens",
-    startDate: "2024-10-01",
-  },
-];
+function loadDevelopmentsFromXlsx() {
+  const jsonPath = join(__dirname, "../data/developmentsFromXlsx.json");
+  const rows = JSON.parse(readFileSync(jsonPath, "utf8"));
+  return rows.map((d) => ({
+    gramPanchayat: d.gramPanchayat,
+    village: d.village,
+    name: d.name,
+    nameKn: d.nameKn || d.name || "",
+    description: d.description || d.nameKn || d.name || "",
+    descriptionKn: d.descriptionKn || d.nameKn || "",
+    details: d.details || d.shara || "",
+    detailsKn: d.detailsKn || d.shara || "",
+    amountSanctioned: Number(d.amountSanctioned) || 0,
+    status: d.status || "Ongoing",
+    statusKn: d.statusKn || "",
+    beneficiaries: d.beneficiaries || "",
+    beneficiariesKn: d.beneficiariesKn || "",
+    department: d.department || "",
+    departmentKn: d.departmentKn || "",
+    startDate: d.startDate || null,
+    locationNote: d.locationNote || "",
+    locationNoteKn: d.locationNoteKn || "",
+    yojane: d.yojane || "",
+    yojaneKn: d.yojaneKn || "",
+  }));
+}
 
-const DEMANDS = [
-  {
-    gramPanchayat: "Kudligi Town",
-    village: "Kudligi",
-    name: "Ramesh K",
-    approach: "civil",
-    subject: "Street light near temple",
-    status: "Pending",
-  },
-  {
-    gramPanchayat: "Kottur",
-    village: "Kottur",
-    name: "Lakshmi Devi",
-    approach: "personal",
-    subject: "Pension document assistance",
-    status: "InProgress",
-  },
-  {
-    gramPanchayat: "Hosahalli",
-    village: "Hosahalli",
-    name: "Basavaraj",
-    approach: "civil",
-    subject: "Road repair after rains",
-    status: "Pending",
-  },
-  {
-    gramPanchayat: "Gudekote",
-    village: "Gudekote",
-    name: "Manjula",
-    approach: "civil",
-    subject: "Drinking water shortage",
-    status: "Completed",
-  },
-  {
-    gramPanchayat: "Ujjini",
-    village: "Ujjini",
-    name: "Suresh N",
-    approach: "personal",
-    subject: "Medical referral letter",
-    status: "Pending",
-  },
-];
+const DEVELOPMENTS = loadDevelopmentsFromXlsx();
+
+function loadDemandsFromXlsx() {
+  const jsonPath = join(__dirname, "../data/demandsFromXlsx.json");
+  try {
+    const rows = JSON.parse(readFileSync(jsonPath, "utf8"));
+    return rows.map((d) => ({
+      gramPanchayat: d.gramPanchayat,
+      village: d.village,
+      name: d.name || "ಸಾರ್ವಜನಿಕರು",
+      approach: d.approach === "personal" ? "personal" : "civil",
+      subject: d.subject,
+      status: d.status || "Pending",
+    }));
+  } catch {
+    console.warn("demandsFromXlsx.json missing — using small fallback DEMANDS");
+    return [
+      {
+        gramPanchayat: "Kudligi Town",
+        village: "Kudligi",
+        name: "ಸಾರ್ವಜನಿಕರು",
+        approach: "civil",
+        subject: "Street light near temple",
+        status: "Pending",
+      },
+    ];
+  }
+}
+
+const DEMANDS = loadDemandsFromXlsx();
 
 const DEPT_DOCS = [
   {
@@ -383,78 +273,67 @@ const DEPT_DOCS = [
   },
 ];
 
-const ASSEMBLY_QA = [
-  {
-    questionNo: "Q-12",
-    sessionLabel: "Budget Session 2026",
-    sessionDate: "2026-03-12",
-    askedBy: "mla",
-    askedByName: "Dr. Srinivas N. T.",
-    partyName: "INC",
-    question: "Steps taken for drinking water in Kudligi taluk?",
-    questionKn: "Steps taken for drinking water in Kudligi taluk?",
-    answer: "Jal Jeevan Mission works sanctioned for 18 GPs; 9 completed.",
-    answerKn: "Jal Jeevan Mission works sanctioned for 18 GPs; 9 completed.",
-    status: "answered",
-    uploadedBy: "Admin",
-  },
-  {
-    questionNo: "Q-18",
-    sessionLabel: "Budget Session 2026",
-    sessionDate: "2026-03-14",
-    askedBy: "mla",
-    askedByName: "Dr. Srinivas N. T.",
-    partyName: "INC",
-    question: "Status of CC roads under NREGA?",
-    questionKn: "Status of CC roads under NREGA?",
-    answer: "Works ongoing in 6 GPs; completion targeted before monsoon.",
-    answerKn: "Works ongoing in 6 GPs; completion targeted before monsoon.",
-    status: "answered",
-    uploadedBy: "Admin",
-  },
-  {
-    questionNo: "Q-31",
-    sessionLabel: "Monsoon Session 2026",
-    sessionDate: "2026-07-08",
-    askedBy: "other",
-    askedByName: "Opposition Member",
-    partyName: "BJP",
-    question: "Details of irrigation tank desilting?",
-    questionKn: "Details of irrigation tank desilting?",
-    answer: "",
-    answerKn: "",
-    status: "pending",
-    uploadedBy: "Assembly Q&A Officer",
-  },
-  {
-    questionNo: "Q-33",
-    sessionLabel: "Monsoon Session 2026",
-    sessionDate: "2026-07-10",
-    askedBy: "mla",
-    askedByName: "Dr. Srinivas N. T.",
-    partyName: "INC",
-    question: "Update on school infrastructure grants?",
-    questionKn: "Update on school infrastructure grants?",
-    answer: "Two classroom blocks sanctioned; tender stage.",
-    answerKn: "Two classroom blocks sanctioned; tender stage.",
-    status: "answered",
-    uploadedBy: "Admin",
-  },
-  {
-    questionNo: "Q-40",
-    sessionLabel: "Monsoon Session 2026",
-    sessionDate: "2026-07-15",
-    askedBy: "other",
-    askedByName: "Other MLA",
-    partyName: "JD(S)",
-    question: "Bus connectivity to remote villages?",
-    questionKn: "Bus connectivity to remote villages?",
-    answer: "",
-    answerKn: "",
-    status: "pending",
-    uploadedBy: "Assembly Q&A Officer",
-  },
-];
+function loadAssemblyQaFromImport() {
+  const jsonPath = join(__dirname, "../data/assemblyQaFromFolder.json");
+  try {
+    const rows = JSON.parse(readFileSync(jsonPath, "utf8"));
+    return rows.map((q) => ({
+      questionNo: q.questionNo || "",
+      sessionLabel: q.sessionLabel || "",
+      sessionDate: q.sessionDate || null,
+      askedBy: q.askedBy === "other" ? "other" : "mla",
+      askedByName: q.askedByName || "",
+      partyName: q.partyName || "",
+      question: q.question,
+      questionKn: q.questionKn || q.question || "",
+      answer: q.answer || "",
+      answerKn: q.answerKn || "",
+      status: q.status === "pending" ? "pending" : "answered",
+      uploadedBy: q.uploadedBy || "Import",
+      files: (q.files || []).map((f) => ({
+        fileName: f.fileName,
+        mimeType: f.mimeType || "application/pdf",
+        size: Number(f.size) || 0,
+        url: f.url,
+        s3Key: f.s3Key || null,
+      })),
+    }));
+  } catch {
+    console.warn(
+      "assemblyQaFromFolder.json missing — run: node scripts/importAssemblyQaAndHeroVideo.js"
+    );
+    return [];
+  }
+}
+
+const ASSEMBLY_QA = loadAssemblyQaFromImport();
+
+function loadHeroVideoMeta() {
+  const jsonPath = join(__dirname, "../data/landingHeroVideo.json");
+  try {
+    const meta = JSON.parse(readFileSync(jsonPath, "utf8"));
+    return {
+      video: meta.video || "",
+      videoS3Key: meta.s3Key || "kudligi-mla/landing/hero_nrega_video.mp4",
+    };
+  } catch {
+    return { video: "", videoS3Key: "" };
+  }
+}
+
+function loadDevelopmentsVideoMeta() {
+  const jsonPath = join(__dirname, "../data/landingDevelopmentsVideo.json");
+  try {
+    const meta = JSON.parse(readFileSync(jsonPath, "utf8"));
+    return {
+      video: meta.video || "",
+      developmentsVideoS3Key:
+        meta.s3Key || "kudligi-mla/landing/developments_bg_video.mp4",
+    };
+  } catch {
+    return { video: "", developmentsVideoS3Key: "" };
+  }
+}
 
 const COMPLAINTS = [
   {
@@ -635,6 +514,8 @@ async function main() {
         name: s.name,
         nameKn: s.nameKn,
         role: s.role,
+        totpSecret: DEMO_TOTP_SECRET,
+        totpEnabled: true,
         permissions: {
           upsert: {
             create: { modules: s.modules },
@@ -647,6 +528,8 @@ async function main() {
         name: s.name,
         nameKn: s.nameKn,
         role: s.role,
+        totpSecret: DEMO_TOTP_SECRET,
+        totpEnabled: true,
         permissions: { create: { modules: s.modules } },
       },
     });
@@ -687,56 +570,43 @@ async function main() {
     create: { id: "default", data: landingData },
   });
 
-  const existingDevKeys = new Set(
-    (
-      await prisma.development.findMany({
-        select: { gramPanchayat: true, village: true, name: true },
-      })
-    ).map((r) => `${r.gramPanchayat}|${r.village}|${r.name}`)
-  );
-  for (const d of DEVELOPMENTS) {
-    const key = `${d.gramPanchayat}|${d.village}|${d.name}`;
-    if (existingDevKeys.has(key)) continue;
-    await prisma.development.create({
-      data: {
-        ...d,
-        descriptionKn: d.descriptionKn || "",
-        details: d.details || "",
-        detailsKn: d.detailsKn || "",
-        statusKn: d.statusKn || "",
-        beneficiariesKn: d.beneficiariesKn || "",
-        departmentKn: d.departmentKn || "",
-        locationNote: d.locationNote || "",
-        locationNoteKn: d.locationNoteKn || "",
-        yojaneKn: d.yojaneKn || "",
-        media: {
-          create: [
-            {
-              url: "/gp_building_3d_v2.png",
-              mimeType: "image/png",
-              type: "image",
-            },
-          ],
-        },
-      },
-    });
+  // Replace developments with constituency kamagari master (xlsx import)
+  await prisma.developmentMedia.deleteMany({});
+  await prisma.development.deleteMany({});
+  const BATCH = 100;
+  for (let i = 0; i < DEVELOPMENTS.length; i += BATCH) {
+    const chunk = DEVELOPMENTS.slice(i, i + BATCH).map((d) => ({
+      gramPanchayat: d.gramPanchayat,
+      village: d.village,
+      name: d.name,
+      nameKn: d.nameKn || "",
+      description: d.description || "",
+      descriptionKn: d.descriptionKn || "",
+      details: d.details || "",
+      detailsKn: d.detailsKn || "",
+      amountSanctioned: d.amountSanctioned || 0,
+      status: d.status || "Ongoing",
+      statusKn: d.statusKn || "",
+      beneficiaries: d.beneficiaries || "",
+      beneficiariesKn: d.beneficiariesKn || "",
+      department: d.department || "",
+      departmentKn: d.departmentKn || "",
+      startDate: d.startDate || null,
+      locationNote: d.locationNote || "",
+      locationNoteKn: d.locationNoteKn || "",
+      yojane: d.yojane || "",
+      yojaneKn: d.yojaneKn || "",
+    }));
+    await prisma.development.createMany({ data: chunk });
   }
 
-  const existingDemandKeys = new Set(
-    (
-      await prisma.demand.findMany({
-        select: { gramPanchayat: true, village: true, name: true, subject: true },
-      })
-    ).map((r) => `${r.gramPanchayat}|${r.village}|${r.name}|${r.subject}`)
-  );
-  const demandsToCreate = DEMANDS.filter(
-    (d) =>
-      !existingDemandKeys.has(
-        `${d.gramPanchayat}|${d.village}|${d.name}|${d.subject}`
-      )
-  );
-  if (demandsToCreate.length) {
-    await prisma.demand.createMany({ data: demandsToCreate });
+  // Replace demands with village-visit petitions (Village*.xlsx import)
+  await prisma.demand.deleteMany({});
+  const DEMAND_BATCH = 200;
+  for (let i = 0; i < DEMANDS.length; i += DEMAND_BATCH) {
+    await prisma.demand.createMany({
+      data: DEMANDS.slice(i, i + DEMAND_BATCH),
+    });
   }
 
   const existingDocKeys = new Set(
@@ -754,16 +624,47 @@ async function main() {
     await prisma.departmentDocument.createMany({ data: docsToCreate });
   }
 
-  const existingQaKeys = new Set(
-    (
-      await prisma.assemblyQa.findMany({
-        select: { question: true, askedByName: true },
-      })
-    ).map((r) => `${r.askedByName}|${r.question}`)
-  );
+  // Replace assembly Q&A with imported session PDFs (S3-backed)
+  await prisma.assemblyQaFile.deleteMany({});
+  await prisma.assemblyQa.deleteMany({});
   for (const qa of ASSEMBLY_QA) {
-    if (existingQaKeys.has(`${qa.askedByName || ""}|${qa.question}`)) continue;
-    await prisma.assemblyQa.create({ data: qa });
+    const { files, ...rest } = qa;
+    await prisma.assemblyQa.create({
+      data: {
+        ...rest,
+        files: files?.length ? { create: files } : undefined,
+      },
+    });
+  }
+
+  // Prefer S3 landing videos when available
+  const heroMeta = loadHeroVideoMeta();
+  const devMeta = loadDevelopmentsVideoMeta();
+  if (heroMeta.video || devMeta.video) {
+    const landingRow = await prisma.landingContent.findUnique({
+      where: { id: "default" },
+    });
+    if (landingRow?.data) {
+      const data = structuredClone(landingRow.data);
+      if (heroMeta.video) {
+        data.hero = {
+          ...(data.hero || {}),
+          video: heroMeta.video,
+          videoS3Key: heroMeta.videoS3Key,
+        };
+      }
+      if (devMeta.video) {
+        data.media = {
+          ...(data.media || {}),
+          developmentsVideo: devMeta.video,
+          developmentsVideoS3Key: devMeta.developmentsVideoS3Key,
+        };
+      }
+      await prisma.landingContent.update({
+        where: { id: "default" },
+        data: { data },
+      });
+    }
   }
 
   const existingComplaintKeys = new Set(
@@ -781,7 +682,7 @@ async function main() {
   }
 
   console.log(
-    "Seed complete: admin@mla.local / admin123, staff 9876543210 OTP 123456"
+    `Seed complete: admin@mla.local / admin123, staff 9876543210 Authenticator secret ${DEMO_TOTP_SECRET}`
   );
   console.log(
     `Dummy data: developments=${await prisma.development.count()}, demands=${await prisma.demand.count()}, docs=${await prisma.departmentDocument.count()}, qa=${await prisma.assemblyQa.count()}, complaints=${await prisma.complaint.count()}, tourSchedules=${TOUR_SCHEDULES.length}`

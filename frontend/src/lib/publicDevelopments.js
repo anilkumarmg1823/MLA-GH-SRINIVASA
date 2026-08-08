@@ -7,10 +7,10 @@ export function mapDevToProject(row, index = 0) {
   const status = row.status || "Ongoing";
   const statusLabel =
     status === "Completed"
-      ? "ಪೂರ್ಣಗೊಂಡಿದೆ (Completed)"
+      ? "ಪೂರ್ಣಗೊಂಡಿದೆ"
       : status === "Proposed"
-        ? "ಪ್ರಸ್ತಾವಿತ (Proposed)"
-        : "ಕಾಮಗಾರಿ ಪ್ರಗತಿಯಲ್ಲಿದೆ (In Progress)";
+        ? "ಪ್ರಸ್ತಾವಿತ"
+        : "ಕಾಮಗಾರಿ ಪ್ರಗತಿಯಲ್ಲಿದೆ";
   const images = Array.isArray(row.images)
     ? row.images
     : (row.media || [])
@@ -43,16 +43,17 @@ export function mapDevToProject(row, index = 0) {
 
 export function filterDevelopmentsByVillage(rows, { gp, village, query } = {}) {
   const q = String(query || "").toLowerCase().trim();
+  const gpKey = String(gp || "").toLowerCase().trim();
+  const villageKey = String(village || "").toLowerCase().trim();
   return (rows || []).filter((p) => {
+    // GP chip/pin must match gramPanchayat only (not village name)
     const matchesGp =
-      !gp ||
-      gp === "All" ||
-      p.gp?.toLowerCase() === gp.toLowerCase() ||
-      p.destGp?.toLowerCase() === gp.toLowerCase();
+      !gpKey ||
+      gpKey === "all" ||
+      String(p.gp || "").toLowerCase() === gpKey;
     const matchesVillage =
-      !village ||
-      p.destGp?.toLowerCase() === village.toLowerCase() ||
-      p.gp?.toLowerCase() === village.toLowerCase();
+      !villageKey ||
+      String(p.destGp || "").toLowerCase() === villageKey;
     const matchesSearch =
       !q ||
       p.name?.toLowerCase().includes(q) ||
@@ -69,11 +70,29 @@ export async function loadPublicDevelopments(params = {}) {
   const cleaned = Object.fromEntries(
     Object.entries(params).filter(([, v]) => v != null && v !== "" && v !== "All")
   );
-  const qs = new URLSearchParams({ limit: "100", ...cleaned });
+  const all = [];
+  let page = 1;
+  const pageSize = 200;
   try {
-    const { data } = await api(`/developments/public?${qs}`, { token: null });
-    const rows = Array.isArray(data) ? data : [];
-    return rows.map(mapDevToProject);
+    while (page <= 40) {
+      const qs = new URLSearchParams({
+        limit: String(pageSize),
+        page: String(page),
+        light: "1",
+        ...cleaned,
+      });
+      const { data, meta } = await api(`/developments/public?${qs}`, {
+        token: null,
+      });
+      const rows = Array.isArray(data) ? data : [];
+      all.push(...rows);
+      const total = Number(meta?.total) || 0;
+      if (!rows.length) break;
+      if (total > 0 && all.length >= total) break;
+      if (rows.length < pageSize) break;
+      page += 1;
+    }
+    return all.map(mapDevToProject);
   } catch {
     return [];
   }

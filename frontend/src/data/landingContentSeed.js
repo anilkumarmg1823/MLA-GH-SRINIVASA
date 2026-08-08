@@ -22,15 +22,21 @@ export const landingContentSeed = {
     "nameKn": "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ.",
     "nameShortEn": "Dr. Srinivas N. T.",
     "nameShortKn": "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ.",
-    "taglineEn": "Nimmondige",
-    "taglineKn": "ನಿಮ್ಮೊಂದಿಗೆ",
+    "taglineEn": "MBBS, MD, AIIMS Delhi",
+    "taglineKn": "MBBS, MD, AIIMS Delhi",
     "karnatakaLogo": "/karnataka_logo.png",
     "partyLogo": "/party_logo_v2.png",
+    "mlaCircleLogo": "/mla_official_circle_logo.jpg",
     "cmPhoto": "/cm_photo.png",
     "cmNameEn": "D.K. Shivakumar",
     "cmNameKn": "ಡಿ.ಕೆ. ಶಿವಕುಮಾರ್",
     "cmTitleEn": "Chief Minister",
     "cmTitleKn": "ಮುಖ್ಯಮಂತ್ರಿ",
+    "dcmPhoto": "/dcm_g_parameshwar.png",
+    "dcmNameEn": "G. Parameshwar",
+    "dcmNameKn": "ಜಿ. ಪರಮೇಶ್ವರ್",
+    "dcmTitleEn": "Deputy Chief Minister",
+    "dcmTitleKn": "ಉಪಮುಖ್ಯಮಂತ್ರಿ",
     "mlaPortrait": "/Picsart_26-02-05_14-31-10-288 (1).png"
   },
   "copy": {
@@ -42,6 +48,7 @@ export const landingContentSeed = {
       "navMedia": "Media",
       "navGallery": "Gallery",
       "navGrievance": "Grievances",
+      "grievancesTab": "Complaint / Suggestion",
       "navLeaders": "Leaders",
       "quickLinks": "Quick Links",
       "medicalReferral": "Medical Referral",
@@ -79,7 +86,7 @@ export const landingContentSeed = {
       "farmersHeading": "Kudligi's Agricultural Crops",
       "farmersDesc": "The Kudligi region is known for its commercial crops including groundnut, cotton, and chilli. MLA Dr. Srinivas actively works to ensure government agricultural schemes reach every farmer in the constituency.",
       "formBadge": "Public Grievance & Suggestion Portal",
-      "formHeading": "SUGGESTIONS & COMPLAINTS",
+      "formHeading": "COMPLAINTS & SUGGESTIONS PORTAL",
       "formSub": "Connect with your MLA. Log your suggestions or grievances directly.",
       "formName": "Full Name",
       "formPhone": "Mobile / WhatsApp Number",
@@ -89,7 +96,7 @@ export const landingContentSeed = {
       "formSubmit": "SUBMIT COMPLAINT",
       "formSuccess": "Thank you! Your grievance has been recorded successfully.",
       "formVillagePlaceholder": "-- Select Village --",
-      "grievancesTab": "Grievances",
+      "grievancesTab": "Complaint / Suggestion",
       "gpLabel": "Gram Panchayats",
       "villagesLabel": "Revenue Villages",
       "hoblisLabel": "Revenue Hoblis",
@@ -165,7 +172,7 @@ export const landingContentSeed = {
       "formSubmit": "ದೂರು ಸಲ್ಲಿಸಿ",
       "formSuccess": "ಧನ್ಯವಾದಗಳು! ನಿಮ್ಮ ದೂರು ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಾಗಿದೆ.",
       "formVillagePlaceholder": "-- Select Village / --",
-      "grievancesTab": "ದೂರುಗಳು",
+      "grievancesTab": "ದೂರು / ಸಲಹೆಗಳು",
       "gpLabel": "ಗ್ರಾಮ ಪಂಚಾಯಿತಿಗಳು",
       "villagesLabel": "ಕಂದಾಯ ಗ್ರಾಮಗಳು",
       "hoblisLabel": "ಹೋಬಳಿಗಳು",
@@ -177,7 +184,7 @@ export const landingContentSeed = {
       "footerContact": "ಸಂಪರ್ಕ ಮಾಡಿ",
       "footerRole": "ಶಾಸಕರು, ಕೂಡ್ಲಿಗಿ",
       "footerAddress": "ಶಾಸಕರ ಕಚೇರಿ, ಕೂಡ್ಲಿಗಿ ತಾಲೂಕ್, ವಿಜಯನಗರ ಜಿಲ್ಲೆ, ಕರ್ನಾಟಕ",
-      "footerOrbit": "✦ ಕೂಡ್ಲಿಗಿ ವಿಧಾನಸಭಾ ✦ ಅಭಿವೃದ್ಧಿ ಮತ್ತು ಬದಲಾವಣೆ ✦ ನಿಮ್ಮೊಂದಿಗೆ",
+      "footerOrbit": "✦ ಕೂಡ್ಲಿಗಿ ವಿಧಾನಸಭಾ ✦ ಅಭಿವೃದ್ಧಿ ಮತ್ತು ಬದಲಾವಣೆ ✦ MBBS, MD, AIIMS Delhi",
       "values": [
         "ಜನರೇ ಮೊದಲು",
         "ಪಾರದರ್ಶಕತೆ",
@@ -188,7 +195,8 @@ export const landingContentSeed = {
     }
   },
   "hero": {
-    "video": "/hero_nrega_video.mp4",
+    "video": "https://kudligi-mla.s3.us-east-1.amazonaws.com/kudligi-mla/landing/hero_nrega_video.mp4",
+    "videoS3Key": "kudligi-mla/landing/hero_nrega_video.mp4",
     "backgroundImage": "",
     "overlayOpacity": 0.65,
     "slides": [
@@ -204,38 +212,10 @@ export const landingContentSeed = {
         "slogan3En": "Public service and transparent governance is our core mission.",
         "subKn": "ಕೂಡ್ಲಿಗಿ ವಿಧಾನಸಭಾ ಕ್ಷೇತ್ರದ ೩೩ ಗ್ರಾಮ ಪಂಚಾಯತಿಗಳ ಸಾರ್ವಜನಿಕರ ಕುಂದುಕೊರತೆಗಳ ಶೀಘ್ರ ನಿವಾರಣೆ, ಜನಪರ ಸೌಲಭ್ಯಗಳು ಹಾಗೂ ಪಾರದರ್ಶಕ ಅಭಿವೃದ್ಧಿ ಕಾಮಗಾರಿಗಳ ಅನುಷ್ಠಾನ.",
         "subEn": "Ensuring swift grievance redressal across 33 Gram Panchayats, transparent development projects, and public welfare initiatives.",
-        "mlaImage": "/Picsart_26-02-05_14-31-10-288 (1).png"
-      },
-      {
-        "id": "h2",
-        "badgeTitleKn": "🏥 ಉಚಿತ ಆರೋಗ್ಯ ಸೇವೆಗಳು | ನಮಸ್ತೆ ಕೂಡ್ಲಿಗಿ",
-        "badgeTitleEn": "🏥 FREE HEALTHCARE SERVICES | NAMASTE KUDLIGI",
-        "slogan1Kn": "ಉಚಿತ ಚಿಕಿತ್ಸೆ • ಆರೋಗ್ಯಪೂರ್ಣ ಕೂಡ್ಲಿಗಿ",
-        "slogan2Kn": "ಪ್ರತಿಯೊಬ್ಬ ಪ್ರಜೆಯ ಆರೋಗ್ಯ ರಕ್ಷಣೆಗೆ ಮೊದಲ ಆದ್ಯತೆ",
-        "slogan3Kn": "ಉಚಿತ ವೈದ್ಯಕೀಯ ಶಿಬಿರಗಳು ಹಾಗೂ ತುರ್ತು ಆಂಬುಲೆನ್ಸ್ ಸೇವೆ",
-        "slogan1En": "FREE TREATMENT • HEALTHY KUDLIGI",
-        "slogan2En": "FIRST PRIORITY TO EVERY CITIZEN'S HEALTHCARE",
-        "slogan3En": "Free medical camps and 24/7 emergency health assistance.",
-        "subKn": "ಗ್ರಾಮೀಣ ಭಾಗದ ಪ್ರತಿಯೊಂದು ಕುಟುಂಬಕ್ಕೂ ಉಚಿತ ಆರೋಗ್ಯ ತಪಾಸಣೆ, ಉಚಿತ ಔಷಧಿ ಪೂರೈಕೆ ಹಾಗೂ ತಾಲೂಕು ಆಸ್ಪತ್ರೆಗಳ ಮೂಲಸೌಕರ್ಯ ಆಧುನೀಕರಣ.",
-        "subEn": "Providing free health checkups, free medicines to every rural family, and modernizing Taluk hospital infrastructure.",
-        "mlaImage": "/Picsart_24-10-06_16-56-21-680.png"
-      },
-      {
-        "id": "h3",
-        "badgeTitleKn": "🎓 ಶಿಕ್ಷಣ ಮತ್ತು ಯುವಜನ ಸಬಲೀಕರಣ",
-        "badgeTitleEn": "🎓 EDUCATION & YOUTH EMPOWERMENT",
-        "slogan1Kn": "ಗುಣಮಟ್ಟದ ಶಿಕ್ಷಣ • ಯುವಜನತೆಗೆ ಉಜ್ವಲ ಭವಿಷ್ಯ",
-        "slogan2Kn": "ಸರ್ಕಾರಿ ಶಾಲೆ ಮತ್ತು ಕಾಲೇಜುಗಳ ಕಾಯಕಲ್ಪ",
-        "slogan3Kn": "ಡಿಜಿಟಲ್ ಕಂಪ್ಯೂಟರ್ ಲ್ಯಾಬ್ ಹಾಗೂ ಸೂರು ಸೌಲಭ್ಯ",
-        "slogan1En": "QUALITY EDUCATION • BRIGHT FUTURE FOR YOUTH",
-        "slogan2En": "TRANSFORMING GOVERNMENT SCHOOLS & COLLEGES",
-        "slogan3En": "Digital computer labs and modern classroom facilities.",
-        "subKn": "ಕೂಡ್ಲಿಗಿ ತಾಲೂಕಿನ ಸರ್ಕಾರಿ ಶಾಲಾ-ಕಾಲೇಜುಗಳ ಕೊಠಡಿಗಳ ನಿರ್ಮಾಣ, ಕಂಪ್ಯೂಟರ್ ಶಿಕ್ಷಣ ಹಾಗೂ ಬಡ ವಿದ್ಯಾರ್ಥಿಗಳಿಗೆ ಶೈಕ್ಷಣಿಕ ಪ್ರೋತ್ಸಾಹ.",
-        "subEn": "Constructing modern classrooms, setting up computer labs, and providing scholarships for deserving students.",
         "mlaImage": "/Picsart_24-11-21_17-11-01-713 (1).png"
       },
       {
-        "id": "h4",
+        "id": "h2",
         "badgeTitleKn": "🌾 ರೈತರ ಕಲ್ಯಾಣ ಮತ್ತು ನೀರಾವರಿ ಯೋಜನೆಗಳು",
         "badgeTitleEn": "🌾 FARMER WELFARE & IRRIGATION PROJECTS",
         "slogan1Kn": "ರೈತರ ಏಳಿಗೆ • ಕೃಷಿಯ ಸಮಗ್ರ ಪ್ರಗತಿ",
@@ -249,7 +229,7 @@ export const landingContentSeed = {
         "mlaImage": "/Picsart_25-02-07_15-07-09-010.png"
       },
       {
-        "id": "h5",
+        "id": "h3",
         "badgeTitleKn": "🛣️ ಗ್ರಾಮೀಣ ರಸ್ತೆಗಳು ಮತ್ತು ಮೂಲಸೌಕರ್ಯ",
         "badgeTitleEn": "🛣️ RURAL ROADS & INFRASTRUCTURE",
         "slogan1Kn": "ಉತ್ತಮ ರಸ್ತೆಗಳು • ಸುಗಮ ಸಾರಿಗೆ ಸಂಪರ್ಕ",
@@ -260,7 +240,7 @@ export const landingContentSeed = {
         "slogan3En": "Comprehensive transformation of rural connectivity.",
         "subKn": "ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರದ ಪ್ರತಿ ಗ್ರಾಮವನ್ನೂ ಜೋಡಿಸುವ ಡಾಂಬರು ರಸ್ತೆಗಳ ನಿರ್ಮಾಣ, ಶುದ್ಧ ಕುಡಿಯುವ ನೀರಿನ ಘಟಕಗಳು ಹಾಗೂ ತಾಲೂಕು ವ್ಯಾಪ್ತಿಯ ಅಭಿವೃದ್ಧಿ.",
         "subEn": "Building all-weather asphalt roads connecting every remote village, installing clean drinking water units, and expanding civic amenities.",
-        "mlaImage": "/Picsart_25-05-30_00-27-50-672.png"
+        "mlaImage": "/Picsart_25-05-30_00-26-33-582.png"
       }
     ]
   },
@@ -276,11 +256,13 @@ export const landingContentSeed = {
   },
   "about": {
     "watermark": "/vidhana_soudha_bg.png",
-    "portrait": "/MAP_WITH_MLA.png"
+    "portrait": "/mla_about_hd_cutout.png"
   },
   "media": {
     "watermark": "/vidhana_soudha_bg.png",
     "tourScheduleImage": "/tour_schedule_sheet_v10.png",
+    "developmentsVideo": "https://kudligi-mla.s3.us-east-1.amazonaws.com/kudligi-mla/landing/developments_bg_video.mp4",
+    "developmentsVideoS3Key": "kudligi-mla/landing/developments_bg_video.mp4",
     "tourSchedules": [
       {
         "id": "ts1",

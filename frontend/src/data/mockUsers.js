@@ -1,4 +1,5 @@
-export const MOCK_OTP = "123456";
+/** Demo Authenticator base32 secret (must match backend DEMO_TOTP_SECRET / seed). */
+export const DEMO_TOTP_SECRET = "BTRSABHTAOR7A2U4DZLNIQI6H5OZSNDT";
 
 export const mockAdmin = {
   email: "admin@mla.local",

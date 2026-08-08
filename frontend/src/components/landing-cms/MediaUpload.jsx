@@ -25,11 +25,11 @@ export default function MediaUpload({ label, value, onChange, accept = "image/*"
 
   return (
     <div className="flex flex-col gap-2 min-w-0">
-      <span className="text-[10px] font-black uppercase tracking-wider text-[#CCBCA5]">
+      <span className="text-xs font-bold uppercase tracking-wider text-[var(--dash-text-70)]">
         {label}
       </span>
       <div className="flex flex-col sm:flex-row gap-3 items-start">
-        <div className="relative w-28 h-20 rounded-xl overflow-hidden border border-[#CCBCA5]/30 bg-[var(--dash-bg)] shrink-0">
+        <div className="relative w-28 h-20 rounded-xl overflow-hidden border border-[var(--dash-border)] bg-[var(--dash-panel)] shadow-sm shrink-0 flex items-center justify-center">
           {accept.includes("video") && value && !String(value).startsWith("data:image") ? (
             <video src={value} className="absolute inset-0 w-full h-full object-cover" muted />
           ) : (
@@ -42,14 +42,14 @@ export default function MediaUpload({ label, value, onChange, accept = "image/*"
             value={value ?? ""}
             onChange={(e) => onChange(e.target.value)}
             placeholder="/path or data URL"
-            className="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-input)] text-[var(--dash-text)] text-xs px-3 py-2 outline-none focus:border-[#CCBCA5]"
+            className="w-full rounded-xl border border-[var(--dash-border)] bg-[var(--dash-input)] text-[var(--dash-text)] text-xs px-3.5 py-2 outline-none focus:border-[var(--dash-accent)] shadow-sm"
           />
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
               disabled={busy}
               onClick={() => inputRef.current?.click()}
-              className="px-3 py-1.5 rounded-full bg-[#CCBCA5] text-[#1e2223] text-xs font-black hover:bg-[#d9cbb8] disabled:opacity-60"
+              className="px-3.5 py-1.5 rounded-full bg-[var(--dash-accent)] text-white text-xs font-bold hover:opacity-90 shadow-sm transition-all disabled:opacity-60"
             >
               {busy ? "Uploading…" : "Upload"}
             </button>
@@ -57,13 +57,13 @@ export default function MediaUpload({ label, value, onChange, accept = "image/*"
               <button
                 type="button"
                 onClick={() => onChange("")}
-                className="px-3 py-1.5 rounded-full border border-[#CCBCA5]/40 text-[#CCBCA5] text-xs font-black"
+                className="px-3.5 py-1.5 rounded-full border border-[var(--dash-border)] text-[var(--dash-text-70)] text-xs font-bold hover:bg-[var(--dash-hover)] transition-all"
               >
                 Clear
               </button>
             ) : null}
           </div>
-          {error ? <p className="text-xs text-rose-400 font-bold">{error}</p> : null}
+          {error ? <p className="text-xs text-rose-500 font-bold">{error}</p> : null}
         </div>
       </div>
       <input

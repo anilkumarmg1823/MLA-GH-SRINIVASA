@@ -15,6 +15,7 @@ import {
   downloadComplaintsPdf,
 } from "@/lib/exportComplaints";
 import ListDownloadModal from "@/components/shared/ListDownloadModal";
+import PageLoader from "@/components/ui/PageLoader";
 
 const STATUS_OPTS = ["new", "read", "closed"];
 
@@ -79,11 +80,7 @@ export default function ComplaintsPage() {
   };
 
   if (!allowed) {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">
-        Loading…
-      </div>
-    );
+    return <PageLoader />;
   }
 
   return (

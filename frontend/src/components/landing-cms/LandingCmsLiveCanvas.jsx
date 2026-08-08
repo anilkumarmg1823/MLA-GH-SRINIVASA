@@ -26,7 +26,6 @@ export default function LandingCmsLiveCanvas({
   const stats = content.stats || {};
   const about = content.about || {};
   const media = content.media || {};
-  const leaders = content.leaders?.items || [];
   const gallery = content.gallery?.items || [];
   const grievance = content.grievance || {};
   const contact = content.contact || {};
@@ -60,6 +59,17 @@ export default function LandingCmsLiveCanvas({
     sections.forEach((sec) => observer.observe(sec));
     return () => observer.disconnect();
   }, [onScrollSectionChange]);
+
+  // Auto-scroll active section into view smoothly when activeSection tab changes
+  useEffect(() => {
+    if (!activeSection || !containerRef.current) return;
+    const target = containerRef.current.querySelector(
+      `[data-section-id="${activeSection}"]`
+    );
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+  }, [activeSection]);
 
   const SectionWrapper = ({ id, label, children }) => {
     const isActive = activeSection === id;
@@ -110,15 +120,33 @@ export default function LandingCmsLiveCanvas({
       <SectionWrapper id="header" label="Header">
         <header className="bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-xl px-4 py-3.5">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            {/* Logos & Site Title */}
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 shrink-0">
+            {/* Logos & Site Title — Seal | MLA | Party */}
+            <div className="flex items-center gap-2.5">
+              <div className="relative w-9 h-9 shrink-0 hidden sm:block">
                 <MediaImage
-                  src={site.partyLogo || site.karnatakaLogo}
-                  alt="Logo"
+                  src={site.karnatakaLogo}
+                  alt="Karnataka"
+                  fill
+                  className="object-contain"
+                  sizes="36px"
+                />
+              </div>
+              <div className="relative w-10 h-10 rounded-full overflow-hidden border-2 border-[var(--land-gold)] bg-white shrink-0">
+                <MediaImage
+                  src={site.mlaCircleLogo || "/mla_official_circle_logo.jpg"}
+                  alt="MLA"
                   fill
                   className="object-contain"
                   sizes="40px"
+                />
+              </div>
+              <div className="relative w-9 h-9 shrink-0">
+                <MediaImage
+                  src={site.partyLogo}
+                  alt="Party"
+                  fill
+                  className="object-contain"
+                  sizes="36px"
                 />
               </div>
               <div className="flex flex-col">
@@ -126,7 +154,9 @@ export default function LandingCmsLiveCanvas({
                   {copy.navbarTitle || site.nameEn}
                 </span>
                 <span className="text-[var(--land-gold)] text-[9px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
-                  {site.taglineEn} | {site.taglineKn}
+                  {site.taglineEn === site.taglineKn || !site.taglineKn
+                    ? site.taglineEn
+                    : `${site.taglineEn} | ${site.taglineKn}`}
                 </span>
               </div>
             </div>
@@ -136,11 +166,10 @@ export default function LandingCmsLiveCanvas({
               <span className="text-[var(--land-gold)]">{copy.navHome}</span>
               <span className="text-white/90">{copy.navAbout}</span>
               <span className="text-white/90">{copy.navDevelopments}</span>
-              <span className="text-white/90">{copy.navLeaders}</span>
             </div>
 
-            {/* CM Badge & Login */}
-            <div className="flex items-center gap-3">
+            {/* CM + DCM Badge & Login */}
+            <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-2 bg-[var(--land-blue-deep)]/80 px-2.5 py-1 rounded-full border border-[var(--land-gold)]/40">
                 <div className="relative w-7 h-7 rounded-full overflow-hidden border border-[var(--land-gold)] bg-white shrink-0">
                   <MediaImage
@@ -157,6 +186,25 @@ export default function LandingCmsLiveCanvas({
                   </span>
                   <span className="text-[var(--land-gold)] font-black text-[7px]">
                     {lang === "kn" ? site.cmTitleKn : site.cmTitleEn}
+                  </span>
+                </div>
+              </div>
+              <div className="hidden md:flex items-center gap-2 bg-[var(--land-blue-deep)]/80 px-2.5 py-1 rounded-full border border-[var(--land-gold)]/40">
+                <div className="relative w-7 h-7 rounded-full overflow-hidden border border-[var(--land-gold)] bg-white shrink-0">
+                  <MediaImage
+                    src={site.dcmPhoto}
+                    alt="DCM"
+                    fill
+                    sizes="28px"
+                    className="object-cover object-top"
+                  />
+                </div>
+                <div className="flex flex-col text-left">
+                  <span className="text-white font-extrabold text-[9px] leading-tight">
+                    {lang === "kn" ? site.dcmNameKn : site.dcmNameEn}
+                  </span>
+                  <span className="text-[var(--land-gold)] font-black text-[7px]">
+                    {lang === "kn" ? site.dcmTitleKn : site.dcmTitleEn}
                   </span>
                 </div>
               </div>
@@ -335,36 +383,6 @@ export default function LandingCmsLiveCanvas({
                 <MediaImage src={media.tourScheduleImage} alt="Tour Schedule" fill className="object-cover" sizes="512px" />
               </div>
             ) : null}
-          </div>
-        </section>
-      </SectionWrapper>
-
-      {/* 7. LEADERS SECTION */}
-      <SectionWrapper id="leaders" label="Leaders">
-        <section className="bg-gradient-to-r from-[var(--land-blue-deep)] to-[var(--land-blue-bright)] py-10 px-6 sm:px-10 border-b-4 border-[var(--land-gold)]">
-          <div className="max-w-5xl mx-auto space-y-6">
-            <div className="text-center space-y-2">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 bg-[var(--land-gold)] px-3 py-1 rounded-full">
-                ✦ {copy.leadersBadge}
-              </span>
-              <h2 className="text-2xl font-black text-white">
-                {copy.leadersHeading}
-              </h2>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-              {leaders.slice(0, 6).map((item, index) => (
-                <div
-                  key={item.id || index}
-                  className="bg-white/10 backdrop-blur-md p-4 rounded-2xl border border-[var(--land-gold)]/40 text-center space-y-2"
-                >
-                  <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[var(--land-gold)] mx-auto bg-white/20">
-                    <MediaImage src={item.photo} alt="" fill className="object-cover object-top" sizes="64px" />
-                  </div>
-                  <p className="text-xs font-black text-white">{lang === "kn" ? item.nameKn : item.nameEn}</p>
-                  <p className="text-[9px] font-bold text-slate-300">{lang === "kn" ? item.roleKn : item.roleEn}</p>
-                </div>
-              ))}
-            </div>
           </div>
         </section>
       </SectionWrapper>

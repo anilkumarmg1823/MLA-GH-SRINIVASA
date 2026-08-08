@@ -4,12 +4,26 @@ import {
   buildBedkeUpdatePayload,
 } from "@/lib/bedkePayload";
 
-const LIST_LIMIT = 100;
+const LIST_LIMIT = 200;
+const MAX_PAGES = 20;
 
 export async function loadBedke(params = {}) {
-  const qs = new URLSearchParams({ limit: String(LIST_LIMIT), ...params });
-  const { data } = await api(`/demands?${qs}`);
-  return Array.isArray(data) ? data : [];
+  const all = [];
+  let page = 1;
+  while (page <= MAX_PAGES) {
+    const qs = new URLSearchParams({
+      limit: String(LIST_LIMIT),
+      page: String(page),
+      ...params,
+    });
+    const { data, meta } = await api(`/demands?${qs}`);
+    const rows = Array.isArray(data) ? data : [];
+    all.push(...rows);
+    const total = Number(meta?.total) || all.length;
+    if (all.length >= total || rows.length < LIST_LIMIT) break;
+    page += 1;
+  }
+  return all;
 }
 
 export async function getAllBedke() {

@@ -5,3 +5,10 @@ dist/
 uploads/
 *.log
 .DS_Store
+
+# Local Excel sources — seed/import uses backend/data/*.json instead
+*.xlsx
+~$*
+
+# Assembly PDF dump folder (content already uploaded to S3)
+16*/

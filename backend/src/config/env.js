@@ -12,7 +12,8 @@ export const env = {
   corsOrigin: process.env.CORS_ORIGIN || "http://localhost:3000",
   jwtSecret: required("JWT_SECRET"),
   jwtExpiresIn: process.env.JWT_EXPIRES_IN || "7d",
-  demoOtp: process.env.DEMO_OTP || "123456",
+  demoTotpSecret:
+    process.env.DEMO_TOTP_SECRET || "BTRSABHTAOR7A2U4DZLNIQI6H5OZSNDT",
   databaseUrl: required("DATABASE_URL"),
   aws: {
     accessKeyId: required("AWS_ACCESS_KEY_ID"),

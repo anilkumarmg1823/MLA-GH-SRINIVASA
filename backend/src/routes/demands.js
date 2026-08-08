@@ -21,7 +21,7 @@ router.get(
     if (req.query.status) where.status = String(req.query.status);
     if (req.query.approach) where.approach = String(req.query.approach);
     const page = Math.max(1, Number(req.query.page) || 1);
-    const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+    const limit = Math.min(500, Math.max(1, Number(req.query.limit) || 50));
     const [total, rows] = await Promise.all([
       prisma.demand.count({ where }),
       prisma.demand.findMany({

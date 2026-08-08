@@ -2,7 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { FaPlus, FaTrashAlt, FaTimes, FaUserPlus, FaEdit } from "react-icons/fa";
+import {
+  FaPlus,
+  FaTrashAlt,
+  FaTimes,
+  FaUserPlus,
+  FaEdit,
+  FaQrcode,
+  FaKey,
+} from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
 import { getSession } from "@/lib/auth";
 import { toKannadaName } from "@/lib/transliterateName";
@@ -12,7 +20,10 @@ import {
   getAllStaffAccess,
   upsertStaffAccess,
   deleteStaffAccess,
+  enrollStaffTotp,
+  resetStaffTotp,
 } from "@/lib/permissionsStore";
+import PageLoader from "@/components/ui/PageLoader";
 
 function emptyPerms() {
   return {
@@ -103,6 +114,8 @@ export default function AccessManagementPage() {
   });
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
+  const [totpModal, setTotpModal] = useState(null); // { phone, name, secret, qrDataUrl }
+  const [totpBusyId, setTotpBusyId] = useState(null);
 
   const refresh = useCallback(async () => {
     const list = await getAllStaffAccess();
@@ -273,10 +286,40 @@ export default function AccessManagementPage() {
     return () => clearTimeout(id);
   }, [toast]);
 
+  const openTotpEnroll = async (user, { reset = false } = {}) => {
+    setError("");
+    setTotpBusyId(user.id);
+    try {
+      const data = reset
+        ? await resetStaffTotp(user.id)
+        : await enrollStaffTotp(user.id);
+      setTotpModal({
+        phone: data.phone || user.phone,
+        name: data.name || user.name,
+        secret: data.secret,
+        qrDataUrl: data.qrDataUrl,
+        reset,
+      });
+      await refresh();
+      setToast(
+        reset
+          ? lang === "kn"
+            ? "Authenticator ಮರುಹೊಂದಿಸಲಾಗಿದೆ"
+            : "Authenticator reset — scan new QR"
+          : lang === "kn"
+            ? "Authenticator QR ತಯಾರಾಗಿದೆ"
+            : "Authenticator QR ready — scan once"
+      );
+    } catch (err) {
+      setError(err?.message || "Could not enroll Authenticator");
+    } finally {
+      setTotpBusyId(null);
+    }
+  };
+
+
   if (!allowed) {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">Loading…</div>
-    );
+    return <PageLoader />;
   }
 
   return (
@@ -533,6 +576,21 @@ export default function AccessManagementPage() {
                             <p className="text-[11px] text-[var(--dash-text-45)] mt-0.5">
                               {user.phone}
                             </p>
+                            <p
+                              className={`text-[10px] font-black mt-1 ${
+                                user.totpEnabled
+                                  ? "text-emerald-600"
+                                  : "text-amber-600"
+                              }`}
+                            >
+                              {user.totpEnabled
+                                ? lang === "kn"
+                                  ? "Authenticator ON"
+                                  : "Authenticator ON"
+                                : lang === "kn"
+                                  ? "Authenticator needed"
+                                  : "Authenticator needed"}
+                            </p>
                           </>
                         )}
                       </td>
@@ -567,24 +625,52 @@ export default function AccessManagementPage() {
                             </button>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-center gap-1">
+                          <div className="flex flex-col items-stretch gap-1.5 min-w-[130px]">
                             <button
                               type="button"
-                              onClick={() => startEdit(user)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/40 text-[#CCBCA5] text-xs font-black hover:bg-[#CCBCA5]/10"
+                              onClick={() =>
+                                openTotpEnroll(user, {
+                                  reset: Boolean(user.totpEnabled),
+                                })
+                              }
+                              disabled={totpBusyId === user.id}
+                              className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full border border-emerald-500/40 text-emerald-700 dark:text-emerald-400 text-xs font-black hover:bg-emerald-500/10 disabled:opacity-50"
+                              title={
+                                user.totpEnabled
+                                  ? "Reset Authenticator QR"
+                                  : "Show Authenticator QR"
+                              }
                             >
-                              <FaEdit className="text-[10px]" />
-                              {t.edit}
+                              {user.totpEnabled ? (
+                                <FaKey className="text-[10px]" />
+                              ) : (
+                                <FaQrcode className="text-[10px]" />
+                              )}
+                              {totpBusyId === user.id
+                                ? "…"
+                                : user.totpEnabled
+                                  ? "Reset TOTP"
+                                  : "Enroll TOTP"}
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => removeFromPortal(user)}
-                              className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-300/70 hover:text-red-300 hover:bg-red-400/10"
-                              title={t.accessRemoveFromPortal}
-                              aria-label={t.accessRemoveFromPortal}
-                            >
-                              <FaTrashAlt className="text-xs" />
-                            </button>
+                            <div className="flex items-center justify-center gap-1">
+                              <button
+                                type="button"
+                                onClick={() => startEdit(user)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/40 text-[#CCBCA5] text-xs font-black hover:bg-[#CCBCA5]/10"
+                              >
+                                <FaEdit className="text-[10px]" />
+                                {t.edit}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => removeFromPortal(user)}
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-lg text-red-300/70 hover:text-red-300 hover:bg-red-400/10"
+                                title={t.accessRemoveFromPortal}
+                                aria-label={t.accessRemoveFromPortal}
+                              >
+                                <FaTrashAlt className="text-xs" />
+                              </button>
+                            </div>
                           </div>
                         )}
                       </td>
@@ -596,6 +682,60 @@ export default function AccessManagementPage() {
           </div>
         )}
       </div>
+
+      {totpModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-panel)] p-5 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-black text-[var(--dash-heading)]">
+                  Authenticator QR
+                </h2>
+                <p className="text-xs text-[var(--dash-text-60)] mt-1">
+                  {totpModal.name} · {totpModal.phone}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setTotpModal(null)}
+                className="p-2 rounded-full hover:bg-[var(--dash-hover)] text-[var(--dash-text-60)]"
+                aria-label="Close"
+              >
+                <FaTimes />
+              </button>
+            </div>
+            <p className="text-sm text-[var(--dash-text-70)]">
+              Staff scans this once in Google or Microsoft Authenticator. Show
+              this screen only once — then close it.
+            </p>
+            {totpModal.qrDataUrl ? (
+              <div className="flex justify-center bg-white rounded-xl p-4">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={totpModal.qrDataUrl}
+                  alt="Authenticator QR code"
+                  className="w-56 h-56"
+                />
+              </div>
+            ) : null}
+            <div className="rounded-xl border border-[var(--dash-border-soft)] bg-[var(--dash-bg)] px-3 py-2">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dash-text-50)]">
+                Manual secret
+              </p>
+              <p className="font-mono text-xs text-[var(--dash-text)] break-all mt-1">
+                {totpModal.secret}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTotpModal(null)}
+              className="w-full py-2.5 rounded-full bg-[var(--dash-accent)] text-white text-sm font-black"
+            >
+              Done — staff has scanned
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -1,12 +1,5 @@
-// Official Kudligi Taluk Gram Panchayats & DRRP Projects Dataset (drrp.pdf)
-export const GRAM_PANCHAYATS = [
-  "Ambaliganur", "Banavikallu", "Belagatta", "Channapura", "Chilakanahatti", "Choranur", 
-  "G.Basapur", "Gowripura", "Gudekote", "Gunthagola", "Halasagara", "Hirekumbalgunte", 
-  "Hosahalli", "Huchangidurga", "Hulikunte", "Huralihalli", "Jarimale", "Kadekolla", 
-  "Kalyanapura", "Kanamadugu", "Kottur", "Kudligi Town", "Kyasapur", "Moraba", 
-  "N.D.Halli", "Nimidagalla", "Rampura", "Salhunse", "Shivapura", "Sooladahalli", 
-  "T.Rampura", "Ujjini", "Valase", "Virupapur"
-];
+// Kept for legacy DRRP sample roads only. Live map GPs come from mapGramPanchayats.js
+export { MAP_GRAM_PANCHAYATS as GRAM_PANCHAYATS } from "./mapGramPanchayats";
 
 export const DRRP_PROJECTS = [
   { id: 1, code: "VR18", name: "ಟಿ.ರಾಮಪುರ ರಿಂದ ಎನ್.ಡಿ.ಹಳ್ಳಿ ರಸ್ತೆ ನಿರ್ಮಾಣ ಕಾಮಗಾರಿ", gp: "T.Rampura", destGp: "N.D.Halli", type: "VR Road", lengthKm: 3.75, budget: "₹168.75 ಲಕ್ಷ", status: "ಕಾಮಗಾರಿ ಪ್ರಗತಿಯಲ್ಲಿದೆ (In Progress)" },

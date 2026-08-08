@@ -6,8 +6,10 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import VillageDevelopmentMap from "./components/VillageDevelopmentMap";
 import MlaTourCalendar from "./components/MlaTourCalendar";
+import MediaReportsSection from "./components/MediaReportsSection";
+import MedicalReferralGlimpseSection from "./components/MedicalReferralGlimpseSection";
 import MediaImage from "@/components/landing-cms/MediaImage";
-import { landingContentSeed, LEADER_BADGE_TONES } from "@/data/landingContentSeed";
+import { landingContentSeed } from "@/data/landingContentSeed";
 import {
   loadLandingContent,
   brandStyleVars,
@@ -16,9 +18,11 @@ import {
 } from "@/lib/landingContentStore";
 import { loadPublicDevelopments } from "@/lib/publicDevelopments";
 import { submitComplaint } from "@/lib/complaintsStore";
-import { 
-  FaUsers, FaHandshake, FaChartLine, FaShieldAlt, FaLaptop, 
-  FaFacebookF, FaTwitter, FaYoutube, FaInstagram, FaPhoneAlt, FaEnvelope 
+import {
+  FaUsers, FaHandshake, FaChartLine, FaShieldAlt, FaLaptop,
+  FaFacebookF, FaTwitter, FaYoutube, FaInstagram, FaPhoneAlt, FaEnvelope,
+  FaHospitalUser, FaImages, FaClipboardList, FaLandmark, FaGlobe,
+  FaBuilding, FaHome, FaMapMarkerAlt
 } from "react-icons/fa";
 
 // Animated Counter Component for Constituency Stats
@@ -55,6 +59,7 @@ export default function Home() {
   });
   const [currentSlide, setCurrentSlide] = useState(0);
   const [quickLinksOpen, setQuickLinksOpen] = useState(false);
+  const [socialSidebarCollapsed, setSocialSidebarCollapsed] = useState(false);
   const [content, setContent] = useState(landingContentSeed);
   const [publicDevelopments, setPublicDevelopments] = useState([]);
 
@@ -88,8 +93,6 @@ export default function Home() {
   const site = content.site || {};
   const heroSlides = content.hero?.slides || [];
   const galleryItems = content.gallery?.items || [];
-  const leaderItems = content.leaders?.items || [];
-  const leadersLoop = [...leaderItems, ...leaderItems];
   const brandVars = brandStyleVars(content.brand);
 
   useEffect(() => {
@@ -125,9 +128,9 @@ export default function Home() {
     } catch (err) {
       setFormError(
         err?.message ||
-          (lang === "kn"
-            ? "Could not submit. Please try again."
-            : "Could not submit. Please try again.")
+        (lang === "kn"
+          ? "Could not submit. Please try again."
+          : "Could not submit. Please try again.")
       );
     } finally {
       setFormSending(false);
@@ -142,13 +145,21 @@ export default function Home() {
         fontFamily: "var(--land-font-body)",
       }}
     >
-      
-      {/* 1. FLOATING SOCIAL SIDEBAR (Matching reference image: Black arrow header + stacked solid brand blocks) */}
-      <div className="fixed left-0 top-[35%] z-40 hidden xl:flex flex-col shadow-2xl overflow-hidden rounded-r-lg border-y border-r border-black/20">
+
+      {/* 1. FLOATING SOCIAL SIDEBAR (Collapsible on black header click) */}
+      <div
+        className={`fixed left-0 top-[35%] z-40 hidden xl:flex flex-col shadow-2xl overflow-hidden rounded-r-lg border-y border-r border-black/20 transition-transform duration-300 ${socialSidebarCollapsed ? "-translate-x-full" : "translate-x-0"
+          }`}
+      >
         {/* Top collapse / left arrow header */}
-        <div className="bg-black p-3.5 text-white flex items-center justify-center cursor-pointer hover:bg-black/90 transition-colors">
+        <button
+          type="button"
+          onClick={() => setSocialSidebarCollapsed(true)}
+          className="bg-black p-3.5 text-white flex items-center justify-center cursor-pointer hover:bg-black/90 transition-colors"
+          title="Collapse Sidebar"
+        >
           <span className="text-sm font-bold">←</span>
-        </div>
+        </button>
         {/* Facebook Block */}
         <a href={content.contact?.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="bg-[#3b5998] p-3.5 text-white flex items-center justify-center hover:brightness-110 transition-all">
           <FaFacebookF className="w-5 h-5 text-white" />
@@ -167,17 +178,35 @@ export default function Home() {
         </a>
       </div>
 
-      {/* 2. FLOATING GRIEVANCES VERTICAL TAB (Right Edge - Royal Gold Theme) */}
-      <button 
+      {/* Expand Button when Collapsed */}
+      {socialSidebarCollapsed && (
+        <button
+          type="button"
+          onClick={() => setSocialSidebarCollapsed(false)}
+          className="fixed left-0 top-[35%] z-40 hidden xl:flex bg-black p-3.5 text-white rounded-r-lg shadow-2xl border-y border-r border-black/20 hover:bg-black/80 transition-all cursor-pointer"
+          title="Expand Social Sidebar"
+        >
+          <span className="text-sm font-bold">→</span>
+        </button>
+      )}
+
+      {/* 2. FLOATING GRIEVANCES VERTICAL TAB (Right Edge - Dynamic Kannada / English) */}
+      <button
+        type="button"
         onClick={() => handleScroll("grievance-form")}
-        className="fixed right-0 top-[90%] -translate-y-1/2 z-50 bg-[var(--land-gold)] hover:bg-white text-slate-950 font-black px-2.5 py-4 text-xs sm:text-sm rounded-l-xl shadow-2xl border-2 border-r-0 border-white transition-all duration-300 cursor-pointer flex items-center justify-center tracking-widest text-slate-900 hover:px-3.5"
+        className="fixed right-0 top-[90%] -translate-y-1/2 z-50 bg-[var(--land-gold)] hover:bg-white text-slate-950 font-black px-3 py-5 text-xs sm:text-sm rounded-l-2xl shadow-2xl border-2 border-r-0 border-white transition-all duration-300 cursor-pointer flex items-center justify-center tracking-wider text-slate-900 hover:px-4 whitespace-nowrap overflow-visible select-none"
         style={{ writingMode: "vertical-rl" }}
       >
-        <span>{currentText.grievancesTab}</span>
+        <span className="whitespace-nowrap inline-block leading-none">
+          {lang === "kn"
+            ? (content.copy?.kn?.grievancesTab || currentText.grievancesTab || "ದೂರು / ಸಲಹೆಗಳು")
+            : (content.copy?.en?.grievancesTab || currentText.grievancesTab || "Complaint / Suggestion")}
+        </span>
       </button>
 
-      {/* Raw CSS Injection for Background Float Animations */}
-      <style dangerouslySetInnerHTML={{ __html: `
+      {/* Raw CSS Injection for Background Float Animations & Hiding Video Controls */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @keyframes floatSlow {
           0%, 100% { transform: translate(0, 0) scale(1); }
           50% { transform: translate(60px, -45px) scale(1.18); }
@@ -185,15 +214,26 @@ export default function Home() {
         .rotate-270 {
           transform: rotate(-90deg);
         }
+        video::-webkit-media-controls,
+        video::-webkit-media-controls-enclosure,
+        video::-webkit-media-controls-panel,
+        video::-webkit-media-controls-play-button,
+        video::-webkit-media-controls-start-playback-button,
+        video::-webkit-media-controls-overlay-play-button {
+          display: none !important;
+          -webkit-appearance: none !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
+        }
       `}} />
 
       {/* Sticky Top Header */}
       <header className="sticky top-0 z-50 bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-xl backdrop-blur-md">
         <div className="w-full px-4 sm:px-8 lg:px-12 h-20 flex items-center justify-between">
-          
-          {/* Logo Brand Header - Side-by-Side State Seal and Party Logo */}
+
+          {/* Logo Brand Header — Seal | MLA (center) | Party  (same as dashboard navbar) */}
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            {/* Government State Seal (Hidden on mobile for responsiveness) */}
+            {/* Government State Seal */}
             <div className="relative w-9 h-9 sm:w-11 sm:h-11 hidden md:block filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
               <MediaImage
                 src={site.karnatakaLogo}
@@ -204,7 +244,19 @@ export default function Home() {
                 priority
               />
             </div>
-            
+
+            {/* Official Circular MLA Logo (centre) */}
+            <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden border-2 border-[var(--land-gold)] shadow-md shrink-0 bg-white">
+              <MediaImage
+                src={site.mlaCircleLogo || "/mla_official_circle_logo.jpg"}
+                alt="Dr. Srinivas N. T. MLA"
+                fill
+                sizes="(max-width: 640px) 40px, 48px"
+                className="object-contain"
+                priority
+              />
+            </div>
+
             {/* Congress Party Logo */}
             <div className="relative w-9 h-9 sm:w-11 sm:h-11 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)]">
               <MediaImage
@@ -222,7 +274,9 @@ export default function Home() {
                 {currentText.navbarTitle}
               </span>
               <span className="text-[var(--land-gold)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
-                {site.taglineEn} | {site.taglineKn}
+                {site.taglineEn === site.taglineKn || !site.taglineKn
+                  ? site.taglineEn
+                  : `${site.taglineEn} | ${site.taglineKn}`}
               </span>
             </div>
           </div>
@@ -232,65 +286,64 @@ export default function Home() {
             <button onClick={() => handleScroll("home")} className="text-[var(--land-gold)] hover:text-white transition-colors">{currentText.navHome}</button>
             <button onClick={() => handleScroll("about")} className="text-white/90 hover:text-[var(--land-gold)] transition-colors">{currentText.navAbout}</button>
             <button onClick={() => handleScroll("developments")} className="text-white/90 hover:text-[var(--land-gold)] transition-colors">{currentText.navDevelopments}</button>
-            <Link
-              href="/leaders"
-              className="text-white/90 hover:text-[var(--land-gold)] transition-colors font-black"
-            >
-              {currentText.navLeaders}
-            </Link>
 
-            {/* Quick Links Dropdown Menu (Contains Medical Referral, Gallery, Grievance & Govt Links - Clean Text Only) */}
+            {/* Quick Links Dropdown Menu */}
             <div className="relative">
               <button
                 onClick={() => setQuickLinksOpen(!quickLinksOpen)}
-                className="inline-flex items-center gap-1.5 text-white/90 hover:text-[var(--land-gold)] transition-colors font-black bg-[var(--land-blue-deep)]/80 px-4 py-1.5 rounded-full border border-[var(--land-gold)]/40 shadow-sm text-xs cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-white/90 hover:text-[var(--land-gold)] transition-colors text-sm font-black tracking-wide cursor-pointer py-1"
               >
                 <span>{currentText.quickLinks}</span>
-                <span className="text-[10px] text-[var(--land-gold)]">{quickLinksOpen ? "▲" : "▼"}</span>
+                <span className="text-[10px] text-[var(--land-gold)] transition-transform duration-200">{quickLinksOpen ? "▲" : "▼"}</span>
               </button>
 
               {quickLinksOpen && (
-                <div className="absolute right-0 mt-2 w-56 bg-[var(--land-blue-deep)] backdrop-blur-2xl rounded-2xl p-2 shadow-2xl border-2 border-[var(--land-gold)]/50 flex flex-col gap-1 z-50">
+                <div className="absolute right-0 mt-3 w-64 bg-[#001742]/95 backdrop-blur-2xl rounded-2xl p-2.5 shadow-2xl border-2 border-[var(--land-gold)]/60 flex flex-col gap-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Link
                     href="/medical-referral"
                     onClick={() => setQuickLinksOpen(false)}
-                    className="px-3.5 py-2 text-xs font-black text-slate-200 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left"
+                    className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-extrabold text-slate-100 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left group"
                   >
-                    {currentText.medicalReferral}
+                    <FaHospitalUser className="w-4 h-4 text-[var(--land-gold)] shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{currentText.medicalReferral}</span>
                   </Link>
 
                   <button
                     onClick={() => { handleScroll("gallery"); setQuickLinksOpen(false); }}
-                    className="px-3.5 py-2 text-xs font-black text-slate-200 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left"
+                    className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-extrabold text-slate-100 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left cursor-pointer group"
                   >
-                    {currentText.photoGallery}
+                    <FaImages className="w-4 h-4 text-emerald-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{currentText.photoGallery}</span>
                   </button>
 
                   <button
                     onClick={() => { handleScroll("grievance-form"); setQuickLinksOpen(false); }}
-                    className="px-3.5 py-2 text-xs font-black text-slate-200 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left"
+                    className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-extrabold text-slate-100 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left cursor-pointer group"
                   >
-                    {currentText.grievancesSuggestions}
+                    <FaClipboardList className="w-4 h-4 text-amber-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{currentText.grievancesSuggestions}</span>
                   </button>
 
                   <a
-                    href={content.quickLinks?.sevaSindhuUrl}
+                    href={content.quickLinks?.sevaSindhuUrl || "https://sevasindhu.karnataka.gov.in"}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setQuickLinksOpen(false)}
-                    className="px-3.5 py-2 text-xs font-black text-slate-200 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left"
+                    className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-extrabold text-slate-100 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left group"
                   >
-                    {currentText.sevaSindhu}
+                    <FaLandmark className="w-4 h-4 text-blue-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{currentText.sevaSindhu}</span>
                   </a>
 
                   <a
-                    href={content.quickLinks?.districtPortalUrl}
+                    href={content.quickLinks?.districtPortalUrl || "https://vijayanagara.nic.in"}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setQuickLinksOpen(false)}
-                    className="px-3.5 py-2 text-xs font-black text-slate-200 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left"
+                    className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-extrabold text-slate-100 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left group"
                   >
-                    {currentText.districtPortal}
+                    <FaGlobe className="w-4 h-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{currentText.districtPortal}</span>
                   </a>
                 </div>
               )}
@@ -300,49 +353,73 @@ export default function Home() {
 
           {/* Header Action Badges, Language Selector & Login Button */}
           <div className="flex items-center gap-2 sm:gap-3.5 shrink-0">
-            
+
             {/* Language Switcher */}
             <div className="flex items-center gap-1 bg-[var(--land-blue-deep)]/80 p-1 rounded-full border border-[var(--land-gold)]/40 h-fit">
               <button
                 onClick={() => setLang("en")}
-                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
-                  lang === "en" 
-                    ? "bg-[var(--land-gold)] text-slate-900 shadow-md" 
+                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${lang === "en"
+                    ? "bg-[var(--land-gold)] text-slate-900 shadow-md"
                     : "text-white/70 hover:text-white"
-                }`}
+                  }`}
               >
                 EN
               </button>
               <button
                 onClick={() => setLang("kn")}
-                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
-                  lang === "kn" 
-                    ? "bg-[var(--land-gold)] text-slate-900 shadow-md" 
+                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${lang === "kn"
+                    ? "bg-[var(--land-gold)] text-slate-900 shadow-md"
                     : "text-white/70 hover:text-white"
-                }`}
+                  }`}
               >
                 ಕನ್ನಡ
               </button>
             </div>
 
-            {/* D.K. Shivakumar Chief Minister Badge (Hidden on mobile to save space) */}
-            <div className="hidden md:flex items-center gap-2 bg-[var(--land-blue-deep)]/80 px-3 py-1 rounded-full border border-[var(--land-gold)]/40 shadow-sm h-fit">
-              <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[var(--land-gold)] bg-white shrink-0">
-                <MediaImage
-                  src={site.cmPhoto}
-                  alt="D.K. Shivakumar"
-                  fill
-                  sizes="32px"
-                  className="object-cover object-top"
-                />
+            {/* CM + DCM badges (Hidden on mobile to save space) */}
+            <div className="hidden lg:flex items-center gap-2">
+              <div className="flex items-center gap-2 bg-[var(--land-blue-deep)]/80 px-3 py-1 rounded-full border border-[var(--land-gold)]/40 shadow-sm h-fit">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[var(--land-gold)] bg-white shrink-0">
+                  <MediaImage
+                    src={site.cmPhoto}
+                    alt={site.cmNameEn || "Chief Minister"}
+                    fill
+                    sizes="32px"
+                    className="object-cover object-top"
+                  />
+                </div>
+                <div className="flex flex-col text-left justify-center">
+                  <span className="text-white font-extrabold text-[10px] leading-tight tracking-wide">
+                    {lang === "kn" ? site.cmNameKn : site.cmNameEn}
+                  </span>
+                  <span className="text-[var(--land-gold)] font-extrabold text-[8px] tracking-wide leading-normal">
+                    {lang === "kn" ? site.cmTitleKn : site.cmTitleEn}
+                  </span>
+                </div>
               </div>
-              <div className="flex flex-col text-left justify-center">
-                <span className="text-white font-extrabold text-[10px] leading-tight tracking-wide">
-                  {lang === 'kn' ? site.cmNameKn : site.cmNameEn}
-                </span>
-                <span className="text-[var(--land-gold)] font-extrabold text-[8px] tracking-wide leading-normal">
-                  {lang === 'kn' ? site.cmTitleKn : site.cmTitleEn}
-                </span>
+
+              <div className="flex items-center gap-2 bg-[var(--land-blue-deep)]/80 px-3 py-1 rounded-full border border-[var(--land-gold)]/40 shadow-sm h-fit">
+                <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[var(--land-gold)] bg-white shrink-0">
+                  <MediaImage
+                    src={site.dcmPhoto || "/dcm_g_parameshwar.png"}
+                    alt={site.dcmNameEn || "Deputy Chief Minister"}
+                    fill
+                    sizes="32px"
+                    className="object-cover object-top"
+                  />
+                </div>
+                <div className="flex flex-col text-left justify-center">
+                  <span className="text-white font-extrabold text-[10px] leading-tight tracking-wide">
+                    {lang === "kn"
+                      ? site.dcmNameKn || "ಜಿ. ಪರಮೇಶ್ವರ್"
+                      : site.dcmNameEn || "G. Parameshwar"}
+                  </span>
+                  <span className="text-[var(--land-gold)] font-extrabold text-[8px] tracking-wide leading-normal">
+                    {lang === "kn"
+                      ? site.dcmTitleKn || "ಉಪಮುಖ್ಯಮಂತ್ರಿ"
+                      : site.dcmTitleEn || "Deputy Chief Minister"}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -361,7 +438,7 @@ export default function Home() {
       {/* 3. HERO BANNER AREA (Rich Royal Blue Theme with Animated Slogan & Photo Carousel) */}
       <section
         id="home"
-        className="relative w-full overflow-hidden bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-t-4 border-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl min-h-[400px] sm:min-h-[460px] lg:h-[510px]"
+        className="relative w-full overflow-hidden bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl min-h-[400px] sm:min-h-[460px] lg:h-[510px]"
         style={{ fontFamily: "var(--land-font-display)" }}
       >
         {(() => {
@@ -372,47 +449,52 @@ export default function Home() {
               ? content.hero.overlayOpacity
               : 0.65;
           return (
-        <div className="absolute inset-0 z-0 overflow-hidden bg-[var(--land-blue-deep)] select-none pointer-events-none">
-          {content.hero?.video ? (
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              disablePictureInPicture
-              controlsList="nodownload nofullscreen noremoteplayback"
-              className="object-cover object-center w-full h-full opacity-40 filter brightness-110 contrast-110 saturate-110 pointer-events-none select-none"
-              style={{ pointerEvents: "none" }}
-            >
-              <source src={content.hero.video} type="video/mp4" />
-            </video>
-          ) : null}
-          {slideBg ? (
-            <MediaImage
-              src={slideBg}
-              alt=""
-              fill
-              sizes="100vw"
-              className="object-cover object-center opacity-50"
-            />
-          ) : null}
-          <div
-            className="absolute inset-0 z-10 pointer-events-none select-none"
-            style={{
-              background: `linear-gradient(to right, color-mix(in srgb, var(--land-blue-deep) ${Math.round(overlay * 100)}%, transparent), color-mix(in srgb, var(--land-blue-mid) ${Math.round(overlay * 70)}%, transparent), transparent)`,
-            }}
-          />
-        </div>
+            <div className="absolute inset-0 z-0 overflow-hidden bg-[var(--land-blue-deep)] select-none pointer-events-none">
+              {content.hero?.video ? (
+                <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
+                  <video
+                    key={content.hero.video}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    disablePictureInPicture
+                    controls={false}
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    controlsList="nodownload nofullscreen noremoteplayback"
+                    className="object-cover object-center w-full h-full opacity-40 filter brightness-110 contrast-110 saturate-110 pointer-events-none select-none"
+                    style={{ pointerEvents: "none" }}
+                    src={content.hero.video}
+                  />
+                </div>
+              ) : null}
+              {slideBg ? (
+                <MediaImage
+                  src={slideBg}
+                  alt=""
+                  fill
+                  sizes="100vw"
+                  className="object-cover object-center opacity-50"
+                />
+              ) : null}
+              <div
+                className="absolute inset-0 z-10 pointer-events-none select-none"
+                style={{
+                  background: `linear-gradient(to right, color-mix(in srgb, var(--land-blue-deep) ${Math.round(overlay * 100)}%, transparent), color-mix(in srgb, var(--land-blue-mid) ${Math.round(overlay * 70)}%, transparent), transparent)`,
+                }}
+              />
+            </div>
           );
         })()}
 
         {/* Banner Main Content with Animated Slogan & Photo Carousel */}
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full h-full flex flex-col justify-center py-6 lg:py-0">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto">
-            
+
             {/* LEFT COLUMN: Animated Development Work Slogans (Expanded Width 8 Cols) */}
             <div className="lg:col-span-8 flex flex-col gap-3.5 text-left items-start z-30 max-w-3xl">
-              
+
               <motion.div
                 key={`badge-${currentSlide}`}
                 initial={{ opacity: 0, y: -10 }}
@@ -457,21 +539,21 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Right End Flushed Dynamic MLA Portrait Image (Changes per Slide) */}
-        <div className="absolute right-0 lg:right-6 bottom-0 z-30 w-[300px] sm:w-[420px] lg:w-[540px] h-[350px] sm:h-[430px] lg:h-[485px] pointer-events-none">
+        {/* Right End Flushed Dynamic MLA Portrait Image (Proportional height & rightmost edge alignment) */}
+        <div className="absolute right-0 bottom-0 z-30 w-[240px] sm:w-[330px] lg:w-[420px] xl:w-[450px] h-[280px] sm:h-[360px] lg:h-[400px] xl:h-[425px] pointer-events-none">
           <motion.div
             key={`mla-portrait-${currentSlide}`}
-            initial={{ opacity: 0, scale: 0.94, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.94, y: 15 }}
-            transition={{ duration: 0.5 }}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.96 }}
+            transition={{ duration: 0.4 }}
             className="relative w-full h-full flex items-end justify-end"
           >
             <MediaImage
               src={(heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage}
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
-              sizes="(max-width: 640px) 300px, (max-width: 1024px) 420px, 540px"
+              sizes="(max-width: 640px) 240px, (max-width: 1024px) 330px, 450px"
               className="object-contain object-bottom object-right drop-shadow-2xl"
               priority
             />
@@ -482,7 +564,7 @@ export default function Home() {
 
       {/* 3.5 CONSTITUENCY STATS BAR (Unique Royal Blue Political Banner with Gold Accent & Kudligi People Background) */}
       <div className="relative w-full text-white py-7 shadow-2xl overflow-hidden z-20 bg-gradient-to-r from-[var(--land-blue-mid)] via-[var(--land-blue-bright)] to-[var(--land-blue-light)]">
-        
+
         {/* Low Opacity Full-Width Kudligi People & Community Background Image */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none select-none">
           <MediaImage
@@ -497,21 +579,15 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--land-blue-mid)]/80 via-[var(--land-blue-bright)]/60 to-[var(--land-blue-mid)]/80 z-[1]" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col lg:flex-row items-center justify-between gap-5">
-          
-          {/* Grid of Metric Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-5 w-full lg:w-auto flex-1">
-            
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+
+          {/* Constituency Math Equation Layout (33 G.P. + 160+ Villages + 4 Hoblis = 1 MLA) */}
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-3.5 w-full">
+
             {/* 1. Gram Panchayats */}
-            <div className="flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-5 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
-              <div className="relative w-12 h-12 rounded-xl bg-white p-1 overflow-hidden shrink-0 shadow-md flex items-center justify-center border border-white/80">
-                <MediaImage
-                  src={content.stats?.gpIcon}
-                  alt="3D Gram Panchayat Building Icon"
-                  fill
-                  sizes="48px"
-                  className="object-contain p-0.5"
-                />
+            <div className="flex-1 w-full flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-4 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFD700] to-[#FFA500] text-slate-950 shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaBuilding className="w-6 h-6 text-slate-950" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1.5">
@@ -526,16 +602,17 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Plus Operator 1 */}
+            <div className="flex items-center justify-center shrink-0 py-1 lg:py-0">
+              <div className="w-8 h-8 rounded-full bg-[var(--land-gold)] text-slate-950 font-black text-xl flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
+                +
+              </div>
+            </div>
+
             {/* 2. Revenue Villages */}
-            <div className="flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-5 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
-              <div className="relative w-12 h-12 rounded-xl bg-white p-1 overflow-hidden shrink-0 shadow-md flex items-center justify-center border border-white/80">
-                <MediaImage
-                  src={content.stats?.villagesIcon}
-                  alt="3D Village Houses Icon"
-                  fill
-                  sizes="48px"
-                  className="object-contain p-0.5"
-                />
+            <div className="flex-1 w-full flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-4 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 text-white shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaHome className="w-6 h-6 text-white" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1.5">
@@ -550,16 +627,17 @@ export default function Home() {
               </div>
             </div>
 
+            {/* Plus Operator 2 */}
+            <div className="flex items-center justify-center shrink-0 py-1 lg:py-0">
+              <div className="w-8 h-8 rounded-full bg-[var(--land-gold)] text-slate-950 font-black text-xl flex items-center justify-center shadow-lg border-2 border-white animate-pulse">
+                +
+              </div>
+            </div>
+
             {/* 3. Hoblis */}
-            <div className="flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-5 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all col-span-2 md:col-span-1">
-              <div className="relative w-12 h-12 rounded-xl bg-white p-1 overflow-hidden shrink-0 shadow-md flex items-center justify-center border border-white/80">
-                <MediaImage
-                  src={content.stats?.hoblisIcon}
-                  alt="3D Hoblis Location Pin Icon"
-                  fill
-                  sizes="48px"
-                  className="object-contain p-0.5"
-                />
+            <div className="flex-1 w-full flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-4 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaMapMarkerAlt className="w-6 h-6 text-white" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-baseline gap-1.5">
@@ -574,36 +652,47 @@ export default function Home() {
               </div>
             </div>
 
-          </div>
-
-          {/* MLA Round Photo Badge Box */}
-          <div className="flex items-center gap-4 bg-white/25 backdrop-blur-md border-2 border-white px-6 py-3.5 rounded-2xl shadow-2xl shrink-0 w-full sm:w-auto justify-center sm:justify-start">
-            <div className="relative w-14 h-14 rounded-full overflow-hidden border-2 border-white bg-white shadow-xl shrink-0">
-              <MediaImage
-                src={site.mlaPortrait}
-                alt="Dr. Srinivas N. T. MLA"
-                fill
-                sizes="56px"
-                className="object-cover object-top scale-110"
-              />
+            {/* Equals Operator */}
+            <div className="flex items-center justify-center shrink-0 py-1 lg:py-0">
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-amber-400 to-[#FFD700] text-slate-950 font-black text-2xl flex items-center justify-center shadow-2xl border-2 border-white ring-4 ring-amber-300/40">
+                =
+              </div>
             </div>
-            <div className="flex flex-col text-left">
-              <span className="text-white font-black text-base sm:text-lg tracking-wide drop-shadow-md">
-                <AnimatedCounter end={1} duration={1} /> {currentText.constituencyMla}
-              </span>
-              <span className="text-[var(--land-gold)] text-xs font-black uppercase tracking-wider mt-0.5">
-                {lang === 'kn' ? site.nameShortKn : site.nameShortEn}
-              </span>
-            </div>
-          </div>
 
+            {/* 4. Constituency MLA (Equation Result Card) */}
+            <div className="flex-1 w-full flex items-center gap-3.5 bg-gradient-to-r from-[var(--land-gold)]/30 to-amber-500/20 backdrop-blur-md border-2 border-[var(--land-gold)] px-4 py-3.5 rounded-2xl shadow-2xl hover:bg-white/30 transition-all ring-2 ring-[var(--land-gold)]/40">
+              <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white bg-white shadow-lg shrink-0">
+                <MediaImage
+                  src={site.mlaPortrait}
+                  alt="Dr. Srinivas N. T. MLA"
+                  fill
+                  sizes="48px"
+                  className="object-cover object-top scale-110"
+                />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-2xl sm:text-3xl font-black text-[var(--land-gold)] drop-shadow-md">
+                    <AnimatedCounter end={1} duration={1} />
+                  </span>
+                  <span className="text-xs font-black text-white uppercase tracking-wider">
+                    {lang === 'kn' ? 'ಕ್ಷೇತ್ರ / ಶಾಸಕರು' : 'Constituency MLA'}
+                  </span>
+                </div>
+                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide">
+                  {lang === 'kn' ? site.nameShortKn : site.nameShortEn}
+                </span>
+              </div>
+            </div>
+
+          </div>
         </div>
       </div>
 
-      {/* 4. ABOUT SECTION — Clean White Theme with Low Opacity Watermark Background */}
-      <section id="about" className="relative bg-[var(--land-surface)] py-10 sm:py-12 border-b-2 border-slate-200 overflow-hidden text-slate-900">
+      {/* 4. ABOUT SECTION — Clean Light Theme with Seamless MLA Photo Background & Vidhana Soudha Watermark */}
+      <section id="about" className="relative bg-[var(--land-surface)] py-14 sm:py-16 overflow-hidden text-slate-900">
 
-        {/* Vidhana Soudha / Kudligi Map low-opacity background image watermark */}
+        {/* Vidhana Soudha low-opacity background image watermark */}
         <div className="absolute inset-0 z-0 pointer-events-none select-none opacity-10">
           <MediaImage
             src={content.about?.watermark || content.media?.watermark}
@@ -615,109 +704,125 @@ export default function Home() {
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center py-4">
-          
-          {/* Photo on Left */}
-          <div className="lg:col-span-5 flex justify-center items-center">
-            <div className="p-3 rounded-[32px] bg-white shadow-2xl border-4 border-[var(--land-blue-bright)] shadow-blue-500/20 w-full max-w-[360px] sm:max-w-[420px] lg:max-w-[480px] overflow-hidden">
-              <div className="relative w-full rounded-[24px] overflow-hidden bg-white aspect-square flex items-center justify-center">
-                <MediaImage
-                  src={content.about?.portrait}
-                  alt="Dr. Srinivas N. T. MLA Kudligi"
-                  fill
-                  sizes="(max-width: 1024px) 420px, 480px"
-                  className="object-contain object-center scale-105"
-                  priority
-                />
-              </div>
-            </div>
-          </div>
+        {/* Seamless Full-Opacity MLA Photo (/mla_about_photo.png) Positioned on Left */}
+        <div className="absolute left-0 bottom-0 top-0 w-full sm:w-5/12 lg:w-[38%] z-0 pointer-events-none select-none">
+          <MediaImage
+            src="/mla_about_hd_cutout.png"
+            alt="Dr. Srinivas N. T. MLA"
+            fill
+            sizes="(max-width: 1024px) 100vw, 40vw"
+            className="object-contain object-bottom filter drop-shadow-lg"
+            priority
+          />
+        </div>
 
-          {/* Right: Heading + stats + description */}
-          <div className="lg:col-span-7 flex flex-col gap-4 text-center lg:text-left items-center lg:items-start">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             
-            {/* Constituency badge */}
-            <span className="inline-flex items-center gap-2 bg-[var(--land-blue-bright)]/10 border border-[var(--land-blue-bright)]/30 text-[var(--land-blue-alt)] text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm">
-              ✦ {currentText.aboutBadge}
-            </span>
+            {/* Right-Shifted Content: Shifted to lg:col-start-6 for perfect spacing */}
+            <div className="lg:col-span-7 lg:col-start-6 flex flex-col gap-5 text-left pl-0 lg:pl-4">
 
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-[var(--land-blue-mid)]">
-              {currentText.aboutHeading}
-            </h2>
-            <div className="w-16 h-1.5 bg-[var(--land-blue-bright)] rounded-full" />
+              {/* Heading */}
+              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-[#001D56]">
+                {currentText.aboutHeading}
+              </h2>
+              <div className="w-20 h-1.5 bg-[#FFD700] rounded-full shadow-sm" />
 
-            <p className="text-slate-700 text-sm sm:text-base leading-relaxed text-justify font-sans font-medium max-w-2xl">
-              {currentText.aboutDesc}
-            </p>
+              {/* Bio Paragraph */}
+              <p className="text-slate-700 text-sm sm:text-base leading-relaxed text-justify font-bold bg-white/90 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-md">
+                {currentText.aboutDesc}
+              </p>
 
-            {/* Stats row — animated on scroll */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full mt-2">
-              {[
-                { num: currentText.aboutStatYear, label: currentText.aboutStatYearLabel },
-                { num: currentText.aboutStatVillages, label: currentText.aboutStatVillagesLabel },
-                { num: currentText.aboutStatInitiatives, label: currentText.aboutStatInitiativesLabel },
-                { num: currentText.aboutStatBeneficiaries, label: currentText.aboutStatBeneficiariesLabel },
-              ].map((s, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: false, amount: 0.3 }}
-                  transition={{ duration: 0.4, delay: i * 0.1 }}
-                  className="flex flex-col items-center lg:items-start bg-white border-2 border-slate-200/80 rounded-2xl px-4 py-3 gap-0.5 shadow-md hover:border-[var(--land-blue-bright)] transition-all"
-                >
-                  <span className="text-2xl sm:text-3xl font-black text-[var(--land-blue-bright)]">{s.num}</span>
-                  <span className="text-slate-600 text-[11px] font-extrabold uppercase tracking-wide leading-tight">{s.label}</span>
-                </motion.div>
-              ))}
+              {/* Stats row — animated on scroll */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 w-full mt-1">
+                {[
+                  { num: currentText.aboutStatYear, label: currentText.aboutStatYearLabel },
+                  { num: currentText.aboutStatVillages, label: currentText.aboutStatVillagesLabel },
+                  { num: currentText.aboutStatInitiatives, label: currentText.aboutStatInitiativesLabel },
+                  { num: currentText.aboutStatBeneficiaries, label: currentText.aboutStatBeneficiariesLabel },
+                ].map((s, i) => (
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: false, amount: 0.3 }}
+                    transition={{ duration: 0.4, delay: i * 0.1 }}
+                    className="flex flex-col items-start bg-white border-2 border-slate-200/90 rounded-2xl px-4 py-3 gap-0.5 shadow-md hover:border-[#002B7F] transition-all"
+                  >
+                    <span className="text-2xl sm:text-3xl font-black text-[#002B7F]">{s.num}</span>
+                    <span className="text-slate-600 text-[11px] font-extrabold uppercase tracking-wide leading-tight">{s.label}</span>
+                  </motion.div>
+                ))}
+              </div>
+
             </div>
 
           </div>
-
         </div>
       </section>
 
       {/* 5. DEVELOPMENTS FOCUS SECTOR CARDS & INTERACTIVE VILLAGE MAP (ಅಭಿವೃದ್ಧಿಗಳು - Full Width Royal Blue Banner) */}
-      <section id="developments" className="relative bg-gradient-to-br from-[var(--land-blue)] via-[var(--land-blue-alt)] to-[var(--land-blue-bright)] pt-6 sm:pt-8 pb-12 border-y-4 border-white text-white shadow-2xl overflow-hidden">
-        
-        {/* Vidhana Soudha & Development Infrastructure Watermark Overlay */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-10 select-none">
-          <MediaImage
-            src={content.about?.watermark || content.media?.watermark}
-            alt="Infrastructure Development Watermark"
-            fill
-            sizes="100vw"
-            className="object-cover object-center filter brightness-125"
+      <section id="developments" className="relative bg-gradient-to-br from-[var(--land-blue)] via-[var(--land-blue-alt)] to-[var(--land-blue-bright)] pt-10 sm:pt-12 pb-14 sm:pb-16 border-y-4 border-white text-white shadow-2xl overflow-hidden">
+
+        {/* Background Video Player for Development Projects Section */}
+        <div className="absolute inset-0 z-0 overflow-hidden select-none pointer-events-none">
+          <video
+            key={content.media?.developmentsVideo || "dev-bg"}
+            autoPlay
+            loop
+            muted
+            playsInline
+            disablePictureInPicture
+            controls={false}
+            tabIndex={-1}
+            aria-hidden="true"
+            controlsList="nodownload nofullscreen noremoteplayback"
+            onLoadedMetadata={(e) => {
+              if (e.target.currentTime < 5.5) {
+                e.target.currentTime = 5.5;
+              }
+            }}
+            onTimeUpdate={(e) => {
+              if (e.target.currentTime < 5.5) {
+                e.target.currentTime = 5.5;
+              }
+            }}
+            className="object-cover object-center w-full h-full opacity-65 filter brightness-110 contrast-110 pointer-events-none select-none"
+            style={{ pointerEvents: "none" }}
+            src={
+              content.media?.developmentsVideo ||
+              "/lv_0_20251107090516.mp4#t=5.5"
+            }
           />
+          {/* Soft Translucent Overlay for High Video Visibility & Text Contrast */}
+          <div className="absolute inset-0 bg-gradient-to-br from-[#001438]/50 via-[#002B7F]/40 to-[#001D56]/50 z-[1]" />
         </div>
 
-        <div className="relative z-10 max-w-[1440px] w-full mx-auto px-4 sm:px-8 lg:px-12 flex flex-col gap-8">
-          
-          <div className="text-center">
-            <span className="inline-flex items-center gap-2 bg-white/20 border border-white/40 text-[var(--land-gold)] text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md mb-1.5">
-              ✦ {currentText.devBadge}
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-white drop-shadow-lg">
+        <div className="relative z-10 max-w-[1440px] w-full mx-auto px-4 sm:px-8 lg:px-12 flex flex-col gap-7 sm:gap-9">
+
+          <header className="text-center max-w-3xl mx-auto">
+            <h2
+              className="text-2xl sm:text-3xl lg:text-[2.65rem] font-black tracking-tight text-white leading-tight"
+              style={{ fontFamily: "var(--land-font-display)" }}
+            >
               {currentText.devHeading}
             </h2>
-            <p className="text-white/80 text-xs sm:text-sm mt-1.5 max-w-2xl mx-auto font-medium">{currentText.devDesc}</p>
-            <div className="w-20 h-1.5 bg-[var(--land-gold)] mx-auto mt-2 rounded-full shadow-md" />
-          </div>
+            <p className="text-white/75 text-sm sm:text-[15px] mt-3 max-w-xl mx-auto font-medium leading-relaxed">
+              {currentText.devDesc}
+            </p>
+            <div className="w-16 h-1 bg-[var(--land-gold)] mx-auto mt-4 rounded-full" />
+          </header>
 
-          {/* Interactive Village-wise Development Map & DRRP Projects Explorer */}
           <VillageDevelopmentMap
             lang={lang}
             developments={publicDevelopments}
           />
-
-
-
         </div>
       </section>
 
       {/* 6. MLA TOUR PROGRAM CALENDAR & OFFICIAL SCHEDULE DOCUMENT (ಶಾಸಕರ ಪ್ರವಾಸ ಕಾರ್ಯಕ್ರಮ - Clean White Theme) */}
-      <section id="media" className="relative bg-[var(--land-surface)] pt-4 sm:pt-6 pb-12 border-b-4 border-[var(--land-blue-bright)] text-slate-900 shadow-xl overflow-hidden">
-        
+      <section id="media" className="relative bg-[var(--land-surface)] pt-4 sm:pt-6 pb-12 text-slate-900 shadow-xl overflow-hidden">
+
         {/* Vidhana Soudha & Kudligi Watermark Overlay */}
         <div className="absolute inset-0 z-0 pointer-events-none opacity-10 select-none">
           <MediaImage
@@ -730,15 +835,12 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-[1440px] w-full mx-auto px-4 sm:px-8 lg:px-12 flex flex-col gap-8">
-          
+
           <div className="text-center">
-            <span className="inline-flex items-center gap-2 bg-[var(--land-blue-bright)]/10 border border-[var(--land-blue-bright)]/30 text-[var(--land-blue-bright)] text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm mb-1.5">
-              ✦ {currentText.tourBadge}
-            </span>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-[var(--land-blue)] drop-shadow-sm">
               {currentText.tourHeading}
             </h2>
-            <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-2xl mx-auto font-semibold">
+            <p className="text-slate-600 text-xs sm:text-sm md:text-base mt-1.5 font-bold whitespace-nowrap overflow-hidden text-ellipsis max-w-none text-center px-2">
               {currentText.tourDesc}
             </p>
             <div className="w-20 h-1.5 bg-[var(--land-blue-bright)] mx-auto mt-2 rounded-full shadow-md" />
@@ -754,258 +856,156 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 6.5 MUKANDARU / LEADERS MOVING CAROUSEL SECTION */}
-      <section id="leaders" className="relative py-14 bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-t-4 border-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl overflow-hidden">
-        
-        {/* Low Opacity Background Watermark */}
-        <div className="absolute inset-0 z-0 opacity-15 pointer-events-none select-none">
-          <MediaImage
-            src={content.stats?.peopleBanner || content.leaders?.watermark}
-            alt="Kudligi Background"
-            fill
-            sizes="100vw"
-            className="object-cover filter brightness-125 contrast-110 mix-blend-overlay"
-          />
-        </div>
+      {/* 6.5 MEDIA REPORTS & PRESS CLIPPINGS SECTION (ಮಾಧ್ಯಮ ವರದಿಗಳು) */}
+      <MediaReportsSection
+        lang={lang}
+        reports={content.media?.reports || []}
+      />
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col gap-8">
-          
-          {/* Header Title Bar */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b border-[var(--land-gold)]/30 pb-5">
-            <div className="flex flex-col text-center sm:text-left">
-              <span className="inline-flex items-center gap-2 bg-[var(--land-gold)] text-slate-950 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full w-fit mx-auto sm:mx-0 shadow-md mb-1 border border-white">
-                ✦ {currentText.leadersBadge}
-              </span>
-              <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-white drop-shadow-md">
-                {currentText.leadersHeading}
-              </h2>
-              <p className="text-slate-200 text-xs sm:text-sm mt-1 font-semibold">
-                {currentText.leadersDesc}
-              </p>
-            </div>
+      {/* 6.8 MEDICAL REFERRAL GLIMPSE SECTION (ವೈದ್ಯಕೀಯ ಶಿಫಾರಸು ಕೋಶ) */}
+      <MedicalReferralGlimpseSection lang={lang} />
 
-            {/* View All Button linking to /leaders */}
-            <Link
-              href="/leaders"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[var(--land-gold)] hover:bg-white text-slate-950 font-black text-xs sm:text-sm rounded-full shadow-xl border-2 border-white hover:scale-105 transition-all whitespace-nowrap shrink-0"
-            >
-              <span>{currentText.leadersViewAll}</span>
-            </Link>
-          </div>
+      {/* 7. TOURIST PLACES & CULTURAL HERITAGE SECTION (ಪ್ರವಾಸಿ ತಾಣಗಳು - Royal Blue Theme) */}
+      <section id="gallery" className="relative py-16 bg-gradient-to-br from-[#001438] via-[#002B7F] to-[#003B95] shadow-2xl overflow-hidden text-white">
 
-          {/* Leaders Auto-Scrolling Moving Marquee Track */}
-          <div className="w-full overflow-hidden relative group py-2">
-            
-            {/* Left & Right Fade Shadows */}
-            <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[var(--land-blue-deep)] to-transparent z-20 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[var(--land-blue-bright)] to-transparent z-20 pointer-events-none" />
-
-            <div className="animate-marquee-scroll flex gap-6 items-center">
-              {leadersLoop.map((leader, idx) => (
-                <Link
-                  key={`${leader.id}-${idx}`}
-                  href={`/leaders?id=${leader.id}`}
-                  className="w-[260px] sm:w-[290px] shrink-0 group relative bg-[var(--land-blue-deep)]/85 backdrop-blur-xl rounded-3xl p-5 border-2 border-[var(--land-gold)]/40 hover:border-[var(--land-gold)] shadow-xl hover:shadow-2xl transition-all duration-300 flex flex-col items-center text-center overflow-hidden"
-                >
-                  <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-bright)] to-[var(--land-gold)]" />
-                  <span
-                    className={`text-[10px] px-3 py-1 rounded-full shadow-md mb-3 ${
-                      LEADER_BADGE_TONES[leader.badgeTone] || LEADER_BADGE_TONES.gold
-                    }`}
-                  >
-                    {lang === "kn"
-                      ? leader.categoryKn
-                      : leader.categoryEn || leader.categoryKn}
-                  </span>
-                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full overflow-hidden border-4 border-[var(--land-gold)] shadow-xl mb-3 group-hover:scale-105 transition-transform duration-300 bg-white/10">
-                    <MediaImage
-                      src={leader.photo}
-                      alt={leader.nameEn}
-                      fill
-                      sizes="112px"
-                      className="object-cover object-top"
-                    />
-                  </div>
-                  <h3 className="font-black text-base sm:text-lg text-white group-hover:text-[var(--land-gold)] transition-colors leading-snug">
-                    {lang === "kn" ? leader.nameKn : leader.nameEn}
-                  </h3>
-                  <p className="text-xs font-bold text-slate-300 mt-1 leading-relaxed">
-                    {lang === "kn" ? leader.roleKn : leader.roleEn}
-                  </p>
-                  <div className="mt-4 w-full pt-3 border-t border-white/10 flex items-center justify-center gap-2 text-xs font-black text-[var(--land-gold)] group-hover:text-slate-950 bg-[var(--land-blue)] group-hover:bg-[var(--land-gold)] py-2 rounded-xl transition-all shadow-md">
-                    <FaPhoneAlt className="w-3.5 h-3.5" />
-                    <span>{currentText.leadersDetails}</span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-          </div>
-
-        </div>
-      </section>
-
-      {/* 7. TOURIST PLACES & CULTURAL HERITAGE SECTION (ಪ್ರವಾಸಿ ತಾಣಗಳು - Clean Light Theme with Tourism Background) */}
-      <section id="gallery" className="relative py-16 bg-[var(--land-surface)] border-t-4 border-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-inner overflow-hidden">
-        
         {/* Tourism Map & Heritage Background Pattern */}
-        <div className="absolute inset-0 z-0 opacity-10 pointer-events-none select-none">
+        <div className="absolute inset-0 z-0 opacity-15 pointer-events-none select-none">
           <MediaImage
             src={content.gallery?.watermark}
             alt="Kudligi Tourism Map Background"
             fill
             sizes="100vw"
-            className="object-cover filter contrast-125"
+            className="object-cover filter contrast-125 mix-blend-overlay"
           />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col gap-10">
 
-          <div className="text-center">
-            <span className="inline-flex items-center gap-2 bg-[var(--land-blue-bright)]/10 border border-[var(--land-blue-bright)]/30 text-[var(--land-blue-bright)] text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-sm mb-1.5">
-              ✦ {currentText.galleryBadge}
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-[var(--land-blue)] drop-shadow-sm">
+          <div className="text-center flex flex-col items-center gap-2">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-white drop-shadow-md">
               {currentText.galleryHeading}
             </h2>
-            <p className="text-slate-600 text-xs sm:text-sm mt-1.5 max-w-2xl mx-auto font-semibold">
+            <p className="text-slate-200 text-xs sm:text-sm mt-1.5 max-w-2xl mx-auto font-semibold leading-relaxed">
               {currentText.galleryDesc}
             </p>
-            <div className="w-20 h-1.5 bg-[var(--land-blue-bright)] mx-auto mt-2 rounded-full shadow-md" />
+            <div className="w-24 h-1.5 bg-[#FFD700] mx-auto mt-2 rounded-full shadow-md" />
           </div>
 
-          {/* Alternating rows */}
-          <div className="flex flex-col gap-8">
-            {galleryItems.map((item, index) => {
-              const isEven = index % 2 === 0;
-              return (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className={`flex flex-col lg:flex-row ${
-                    isEven ? "lg:flex-row" : "lg:flex-row-reverse"
-                  } gap-0 rounded-3xl overflow-hidden border-2 border-slate-200 bg-white shadow-xl group hover:border-[var(--land-blue-bright)] transition-all`}
-                >
-                  {/* Image side */}
-                  <div className="relative w-full lg:w-1/2 h-[280px] lg:h-[340px] overflow-hidden shrink-0">
-                    <MediaImage
-                      src={item.image}
-                      alt={item.titleEn}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 50vw"
-                      className="object-cover group-hover:scale-105 transition-transform duration-700"
-                    />
-                    {/* Index badge */}
-                    <span className="absolute top-3 left-3 bg-[var(--land-blue)] text-[var(--land-gold)] text-[10px] font-black px-3 py-1 rounded-full shadow-lg border border-[var(--land-gold)]/50">
-                      0{index + 1}
-                    </span>
-                  </div>
+          {/* Unified 4-Card Grid Layout (Tourist Places + Farmers) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              ...galleryItems.map((item, index) => ({
+                id: item.id || `g-${index}`,
+                title: lang === "kn" ? item.titleKn : item.titleEn,
+                desc: lang === "kn" ? item.descKn : item.descEn,
+                image: item.image,
+                badge: lang === "kn" ? "ಪ್ರವಾಸಿ ತಾಣ" : "Heritage Spot",
+                index: index + 1,
+              })),
+              {
+                id: "farmers",
+                title: currentText.farmersHeading || (lang === "kn" ? "ಕೂಡ್ಲಿಗಿ ರೈತರ ಪ್ರಮುಖ ಬೆಳೆಗಳು" : "Kudligi Agricultural Crops"),
+                desc: currentText.farmersDesc || (lang === "kn" ? "ಸ್ಥಳೀಯ ಕೂಡ್ಲಿಗಿ ಭಾಗದ ರೈತರ ಪ್ರಮುಖ ಕೃಷಿ ವಾಣಿಜ್ಯ ಬೆಳೆಗಳು." : "Commercial crops and agriculture in Kudligi."),
+                image: content.gallery?.farmersImage || "/gallery_farmers.png",
+                badge: currentText.farmersBadge || (lang === "kn" ? "ಕೃಷಿ & ರೈತ" : "Agriculture & Farmers"),
+                index: galleryItems.length + 1,
+              },
+            ].map((card, index) => (
+              <motion.div
+                key={card.id || index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: index * 0.1 }}
+                className="bg-gradient-to-b from-[#001D56]/90 via-[#002B7F]/80 to-[#001438]/95 border-2 border-white/20 hover:border-[#FFD700] rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-300 flex flex-col group"
+              >
+                {/* Top Image Container */}
+                <div className="relative w-full h-[210px] overflow-hidden shrink-0">
+                  <MediaImage
+                    src={card.image}
+                    alt={card.title}
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover group-hover:scale-110 transition-transform duration-500"
+                  />
+                  {/* Top-Left Index Badge */}
+                  <span className="absolute top-3 left-3 bg-[#FFD700] text-slate-950 text-xs font-black px-3 py-0.5 rounded-full shadow-lg border border-white">
+                    0{card.index}
+                  </span>
+                  {/* Top-Right Category Pill */}
+                  <span className="absolute top-3 right-3 bg-[#001438]/90 text-[#FFD700] text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border border-[#FFD700]/50 backdrop-blur-md shadow-md">
+                    ✦ {card.badge}
+                  </span>
+                </div>
 
-                  {/* Content side */}
-                  <div className="w-full lg:w-1/2 flex flex-col justify-center gap-4 px-6 py-8 lg:px-10">
-                    <span className="bg-[var(--land-blue-bright)] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit shadow-sm border border-blue-300">
-                      ✦ {lang === "kn" ? "ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರ" : "Kudligi Constituency"}
-                    </span>
-                    <h3 className="text-xl sm:text-2xl font-black text-[var(--land-blue)] leading-tight">
-                      {lang === 'kn' ? item.titleKn : item.titleEn}
+                {/* Card Content Body */}
+                <div className="p-4 sm:p-5 flex flex-col justify-between flex-1 gap-3">
+                  <div className="flex flex-col gap-2">
+                    <h3 className="text-base sm:text-lg font-black text-white leading-snug group-hover:text-[#FFD700] transition-colors">
+                      {card.title}
                     </h3>
-                    <div className="w-14 h-1.5 bg-[var(--land-gold)] rounded-full shadow-sm" />
-                    <p className="text-slate-800 text-xs sm:text-sm leading-relaxed font-bold bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
-                      {lang === 'kn' ? item.descKn : item.descEn}
+                    <div className="w-10 h-1 bg-[#FFD700] rounded-full shadow-sm" />
+                    <p className="text-slate-200 text-xs leading-relaxed font-semibold bg-white/5 p-3 rounded-2xl border border-white/10 mt-0.5">
+                      {card.desc}
                     </p>
                   </div>
-                </motion.div>
-              );
-            })}
+                </div>
+              </motion.div>
+            ))}
           </div>
-
-          {/* Kudligi Farmers Feature Row */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="flex flex-col lg:flex-row-reverse gap-0 rounded-3xl overflow-hidden border-2 border-slate-200 bg-white shadow-xl group hover:border-[var(--land-blue-bright)] transition-all"
-          >
-            {/* Farmers image */}
-            <div className="relative w-full lg:w-1/2 h-[280px] lg:h-[340px] overflow-hidden shrink-0">
-              <MediaImage
-                src={content.gallery?.farmersImage}
-                alt="Kudligi Farmers"
-                fill
-                sizes="(max-width: 1024px) 100vw, 50vw"
-                className="object-cover group-hover:scale-105 transition-transform duration-700"
-              />
-            </div>
-            {/* Content */}
-            <div className="w-full lg:w-1/2 flex flex-col justify-center gap-4 px-6 py-8 lg:px-10">
-              <span className="bg-[var(--land-blue-bright)] text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full w-fit shadow-sm border border-blue-300">
-                ✦ {currentText.farmersBadge}
-              </span>
-              <h3 className="text-xl sm:text-2xl font-black text-[var(--land-blue)] leading-tight">
-                {currentText.farmersHeading}
-              </h3>
-              <div className="w-14 h-1.5 bg-[var(--land-gold)] rounded-full shadow-sm" />
-              <p className="text-slate-800 text-xs sm:text-sm leading-relaxed font-bold bg-slate-50 p-4 rounded-2xl border border-slate-200 shadow-sm">
-                {currentText.farmersDesc}
-              </p>
-            </div>
-          </motion.div>
 
         </div>
       </section>
 
-      {/* 8. COMPLAINTS & SUGGESTIONS INPUT FORM (ದೂರುಗಳು - Royal Blue Theme) */}
-      <section id="grievance-form" className="relative py-16 bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-t-4 border-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl overflow-hidden text-white">
-        
-        {/* Background People Watermark */}
-        <div className="absolute inset-0 z-0 opacity-15 pointer-events-none select-none">
+      {/* 8. COMPLAINTS & SUGGESTIONS INPUT FORM (ದೂರುಗಳು - Clean White Theme) */}
+      <section id="grievance-form" className="relative py-16 bg-white border-t-4 border-[#FFD700] shadow-xl overflow-hidden text-slate-900">
+
+        {/* Background Watermark */}
+        <div className="absolute inset-0 z-0 opacity-5 pointer-events-none select-none">
           <MediaImage
             src={content.stats?.peopleBanner || content.leaders?.watermark}
             alt="Kudligi Background"
             fill
             sizes="100vw"
-            className="object-cover filter brightness-125 contrast-110 mix-blend-overlay"
+            className="object-cover filter grayscale contrast-125"
           />
         </div>
 
         <div className="relative z-10 max-w-3xl mx-auto px-4 sm:px-6 flex flex-col gap-8">
-          
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.5 }}
-            className="text-center"
+            className="text-center flex flex-col items-center gap-2"
           >
-            <span className="inline-flex items-center gap-2 bg-[var(--land-gold)] text-slate-950 text-[10px] font-black uppercase tracking-widest px-3.5 py-1 rounded-full shadow-md mb-2 border border-white">
-              ✦ {currentText.formBadge}
-            </span>
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-white drop-shadow-md">
-              {currentText.formHeading}
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-wide text-[#001D56]">
+              {lang === "kn" ? "ದೂರುಗಳು ಮತ್ತು ಸಲಹೆಗಳ ಪೋರ್ಟಲ್" : "COMPLAINTS & SUGGESTIONS PORTAL"}
             </h2>
-            <p className="text-slate-200 text-xs sm:text-sm mt-1.5 font-semibold">{currentText.formSub}</p>
-            <div className="w-20 h-1.5 bg-[var(--land-gold)] mx-auto mt-2.5 rounded-full shadow-md" />
+            <p className="text-slate-600 text-xs sm:text-sm mt-1 font-bold">
+              {lang === "kn"
+                ? "ನಿಮ್ಮ ಶಾಸಕರೊಂದಿಗೆ ಸಂಪರ್ಕ ಸಾಧಿಸಿ. ನಿಮ್ಮ ಅಹವಾಲುಗಳನ್ನು ನೇರವಾಗಿ ದಾಖಲಿಸಿ."
+                : "Connect with your MLA. Log your suggestions or grievances directly."}
+            </p>
+            <div className="w-20 h-1.5 bg-[#FFD700] mx-auto mt-2 rounded-full shadow-md" />
           </motion.div>
 
           {/* Form Card Grid */}
-          <div className="bg-[var(--land-blue-deep)]/90 backdrop-blur-xl rounded-3xl border-2 border-[var(--land-gold)]/50 p-6 sm:p-10 shadow-2xl">
+          <div className="bg-slate-50 rounded-3xl border-2 border-[#002B7F]/30 p-6 sm:p-10 shadow-2xl">
             {formSubmitted ? (
               <div className="text-center py-10 flex flex-col items-center gap-3">
-                <div className="w-16 h-16 rounded-full bg-[var(--land-gold)] text-slate-950 flex items-center justify-center text-3xl font-black shadow-xl">
+                <div className="w-16 h-16 rounded-full bg-[#001D56] text-[#FFD700] flex items-center justify-center text-3xl font-black shadow-xl">
                   ✓
                 </div>
-                <span className="text-white font-black text-lg sm:text-xl mt-2 drop-shadow-sm">
+                <span className="text-slate-900 font-black text-lg sm:text-xl mt-2">
                   {currentText.formSuccess}
                 </span>
               </div>
             ) : (
               <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
                 {formError ? (
-                  <p className="text-rose-200 text-xs font-bold bg-rose-900/40 border border-rose-300/40 rounded-xl px-3 py-2">
+                  <p className="text-rose-700 text-xs font-bold bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
                     {formError}
                   </p>
                 ) : null}
@@ -1013,7 +1013,7 @@ export default function Home() {
                 {/* Row 1: Name & Phone */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="flex flex-col gap-2">
-                    <label className="text-[var(--land-gold)] text-xs font-black uppercase tracking-wider">
+                    <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
                       {currentText.formName} *
                     </label>
                     <input
@@ -1023,11 +1023,11 @@ export default function Home() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, name: e.target.value }))
                       }
-                      className="bg-[var(--land-blue)]/90 border-2 border-[var(--land-gold)]/30 rounded-xl p-3.5 text-white text-xs sm:text-sm font-bold focus:border-[var(--land-gold)] focus:outline-none transition-colors shadow-inner"
+                      className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors shadow-sm"
                     />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <label className="text-[var(--land-gold)] text-xs font-black uppercase tracking-wider">
+                    <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
                       {currentText.formPhone} *
                     </label>
                     <input
@@ -1037,14 +1037,14 @@ export default function Home() {
                       onChange={(e) =>
                         setForm((f) => ({ ...f, phone: e.target.value }))
                       }
-                      className="bg-[var(--land-blue)]/90 border-2 border-[var(--land-gold)]/30 rounded-xl p-3.5 text-white text-xs sm:text-sm font-bold focus:border-[var(--land-gold)] focus:outline-none transition-colors shadow-inner"
+                      className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors shadow-sm"
                     />
                   </div>
                 </div>
 
                 {/* Row 2: Dropdown selector */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-[var(--land-gold)] text-xs font-black uppercase tracking-wider">
+                  <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
                     {currentText.formVillage} *
                   </label>
                   <select
@@ -1053,16 +1053,16 @@ export default function Home() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, village: e.target.value }))
                     }
-                    className="bg-[var(--land-blue)]/90 border-2 border-[var(--land-gold)]/30 rounded-xl p-3.5 text-white text-xs sm:text-sm font-bold focus:border-[var(--land-gold)] focus:outline-none transition-colors cursor-pointer shadow-inner"
+                    className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors cursor-pointer shadow-sm"
                   >
-                    <option value="" className="bg-[var(--land-blue)] text-white">
+                    <option value="" className="bg-white text-slate-900">
                       {currentText.formVillagePlaceholder}
                     </option>
                     {(content.grievance?.villages || []).map((v) => (
                       <option
                         key={v.value}
                         value={v.value}
-                        className="bg-[var(--land-blue)] text-white"
+                        className="bg-white text-slate-900"
                       >
                         {v.labelEn} / {v.labelKn}
                       </option>
@@ -1072,7 +1072,7 @@ export default function Home() {
 
                 {/* Subject */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-[var(--land-gold)] text-xs font-black uppercase tracking-wider">
+                  <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
                     {currentText.formSubject}
                   </label>
                   <input
@@ -1082,13 +1082,13 @@ export default function Home() {
                       setForm((f) => ({ ...f, subject: e.target.value }))
                     }
                     placeholder="e.g. Drinking water / Road / Electricity"
-                    className="bg-[var(--land-blue)]/90 border-2 border-[var(--land-gold)]/30 rounded-xl p-3.5 text-white text-xs sm:text-sm font-bold focus:border-[var(--land-gold)] focus:outline-none transition-colors shadow-inner"
+                    className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors shadow-sm"
                   />
                 </div>
 
                 {/* Message textarea */}
                 <div className="flex flex-col gap-2">
-                  <label className="text-[var(--land-gold)] text-xs font-black uppercase tracking-wider">
+                  <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
                     {currentText.formMessage} *
                   </label>
                   <textarea
@@ -1098,15 +1098,15 @@ export default function Home() {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, message: e.target.value }))
                     }
-                    className="bg-[var(--land-blue)]/90 border-2 border-[var(--land-gold)]/30 rounded-xl p-3.5 text-white text-xs sm:text-sm font-bold focus:border-[var(--land-gold)] focus:outline-none transition-colors shadow-inner"
+                    className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors shadow-sm"
                   />
                 </div>
 
                 {/* Submit button */}
-                <button 
+                <button
                   type="submit"
                   disabled={formSending}
-                  className="mt-2 bg-[var(--land-gold)] hover:bg-white text-slate-950 font-black text-sm py-4 rounded-2xl shadow-2xl transition-all duration-300 border-2 border-white cursor-pointer hover:scale-[1.02] active:scale-95 tracking-wide disabled:opacity-60"
+                  className="mt-2 bg-[#001D56] hover:bg-[#002B7F] text-[#FFD700] font-black text-sm py-4 rounded-2xl shadow-xl transition-all duration-300 border-2 border-[#FFD700] cursor-pointer hover:scale-[1.02] active:scale-95 tracking-wide disabled:opacity-60"
                 >
                   {formSending
                     ? "..."
@@ -1120,56 +1120,74 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="w-full bg-[var(--land-footer-bg)] border-t-2 border-[var(--land-footer-accent)]/50 relative z-10">
+      {/* FOOTER - Royal Blue & Saffron Gold Theme */}
+      <footer className="w-full bg-gradient-to-b from-[#001030] via-[#001948] to-[#000B22] border-t-4 border-[var(--land-gold)] text-white relative z-10 overflow-hidden shadow-2xl">
 
-        {/* Top footer bar */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12 py-10 grid grid-cols-1 md:grid-cols-3 gap-10 items-start">
+        {/* Dynamic Background Glow Effect */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[300px] bg-blue-600/10 rounded-full filter blur-[120px] pointer-events-none" />
 
-          {/* LEFT: MLA circular badge + tagline */}
-          <div className="flex flex-col items-center md:items-start gap-4">
-            {/* Circular badge — orbit text effect using SVG */}
-            <div className="relative w-[160px] h-[160px] shrink-0">
-              {/* Orbit ring */}
-              <svg viewBox="0 0 160 160" className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: "18s" }}>
-                <defs>
-                  <path id="orbitPath" d="M80,80 m-64,0 a64,64 0 1,1 128,0 a64,64 0 1,1 -128,0" />
-                </defs>
-                <text fill="var(--land-footer-accent)" fontSize="8.5" fontWeight="900" fontFamily="sans-serif" letterSpacing="2.5">
-                  <textPath href="#orbitPath" startOffset="0%">{currentText.footerOrbit}</textPath>
-                </text>
-              </svg>
-              {/* Inner circle photo */}
-              <div className="absolute inset-[16px] rounded-full overflow-hidden border-4 border-[var(--land-footer-accent)] shadow-2xl bg-[#282c2d]">
-                <MediaImage
-                  src={site.mlaPortrait}
-                  alt="Dr. Srinivas N. T."
-                  fill
-                  sizes="128px"
-                  className="object-cover object-top"
-                />
+        {/* Main Footer Container */}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 py-12 lg:py-16 grid grid-cols-1 md:grid-cols-12 gap-10 items-start">
+
+          {/* LEFT COLUMN: MLA Profile & Leadership Branding (4 Cols) */}
+          <div className="md:col-span-5 flex flex-col items-center md:items-start gap-5 text-center md:text-left">
+            <div className="flex flex-col sm:flex-row items-center gap-5 bg-white/5 border border-white/15 p-4 sm:p-5 rounded-3xl backdrop-blur-md shadow-xl w-full">
+              {/* Circular Orbit MLA Photo */}
+              <div className="relative w-[130px] h-[130px] shrink-0">
+                <svg viewBox="0 0 160 160" className="absolute inset-0 w-full h-full animate-spin" style={{ animationDuration: "20s" }}>
+                  <defs>
+                    <path id="orbitPath" d="M80,80 m-64,0 a64,64 0 1,1 128,0 a64,64 0 1,1 -128,0" />
+                  </defs>
+                  <text fill="var(--land-gold)" fontSize="8.5" fontWeight="900" fontFamily="sans-serif" letterSpacing="2.5">
+                    <textPath href="#orbitPath" startOffset="0%">{currentText.footerOrbit}</textPath>
+                  </text>
+                </svg>
+                <div className="absolute inset-[14px] rounded-full overflow-hidden border-3 border-[var(--land-gold)] shadow-2xl bg-[#001742]">
+                  <MediaImage
+                    src={site.mlaPortrait}
+                    alt="Dr. Srinivas N. T."
+                    fill
+                    sizes="128px"
+                    className="object-cover object-top"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center sm:items-start gap-1">
+                <span className="bg-[var(--land-gold)] text-slate-950 font-black text-[10px] uppercase tracking-widest px-2.5 py-0.5 rounded-full shadow-sm">
+                  {lang === 'kn' ? 'ಶಾಸಕರು - ಕೂಡ್ಲಿಗಿ' : 'MLA - KUDLIGI'}
+                </span>
+                <h3 className="text-lg sm:text-xl font-black text-white tracking-wide leading-tight mt-1">
+                  {lang === 'kn' ? site.nameShortKn : site.nameShortEn}
+                </h3>
+                <p className="text-white/70 text-xs font-semibold">
+                  {currentText.footerRole}
+                </p>
               </div>
             </div>
 
-            <div className="text-center md:text-left">
-              <p className="text-[var(--land-footer-accent)] font-black text-sm tracking-widest uppercase">
-                {lang === 'kn' ? site.nameShortKn : site.nameShortEn}
-              </p>
-              <p className="text-white/50 text-[11px] mt-0.5">
-                {currentText.footerRole}
-              </p>
-              <p className="text-white/40 text-[10px] mt-3 leading-relaxed max-w-[200px]">
-                {currentText.footerMotto}
-              </p>
+            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-medium max-w-md">
+              {currentText.footerMotto}
+            </p>
+
+            {/* Values / Principles Badges */}
+            <div className="flex flex-wrap justify-center md:justify-start gap-2 pt-1">
+              {currentText.values.map((v, i) => (
+                <span key={i} className="text-[10px] font-black text-[#FFD700] bg-white/10 border border-[#FFD700]/30 px-3 py-1 rounded-full uppercase tracking-wider backdrop-blur-sm shadow-sm">
+                  ✦ {v}
+                </span>
+              ))}
             </div>
           </div>
 
-          {/* CENTER: Quick links */}
-          <div className="flex flex-col items-center gap-4">
-            <h4 className="text-[var(--land-footer-accent)] font-black text-sm uppercase tracking-widest border-b border-[var(--land-footer-accent)]/30 pb-2 w-full text-center">
-              {currentText.quickLinks}
+          {/* MIDDLE COLUMN: Quick Links Navigation (3 Cols) */}
+          <div className="md:col-span-3 flex flex-col items-center md:items-start gap-4">
+            <h4 className="text-[var(--land-gold)] font-black text-sm uppercase tracking-widest flex items-center gap-2 border-b-2 border-[var(--land-gold)]/40 pb-2 w-full">
+              <span>✦</span>
+              <span>{currentText.quickLinks}</span>
             </h4>
-            <nav className="flex flex-col gap-2 text-center">
+
+            <nav className="flex flex-col gap-2.5 w-full">
               {[
                 { id: "home", label: currentText.navHome },
                 { id: "about", label: currentText.navAbout },
@@ -1181,80 +1199,99 @@ export default function Home() {
                 <button
                   key={link.id}
                   onClick={() => handleScroll(link.id)}
-                  className="text-white/60 hover:text-[var(--land-footer-accent)] text-xs font-semibold tracking-wider transition-colors"
+                  className="group flex items-center gap-2 text-white/80 hover:text-[var(--land-gold)] text-xs sm:text-sm font-bold tracking-wide transition-all duration-200 text-left py-1 px-2 rounded-lg hover:bg-white/10"
                 >
-                  → {link.label}
+                  <span className="text-[var(--land-gold)] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-transform">➔</span>
+                  <span>{link.label}</span>
                 </button>
               ))}
             </nav>
-
-            {/* Values tags */}
-            <div className="flex flex-wrap justify-center gap-2 mt-2">
-              {currentText.values.map((v, i) => (
-                <span key={i} className="text-[9px] font-black text-[var(--land-link)] border border-[var(--land-link)]/30 px-2 py-0.5 rounded-full uppercase tracking-wider">
-                  {v}
-                </span>
-              ))}
-            </div>
           </div>
 
-          {/* RIGHT: Contact + Social */}
-          <div className="flex flex-col items-center md:items-end gap-4">
-            <h4 className="text-[var(--land-footer-accent)] font-black text-sm uppercase tracking-widest border-b border-[var(--land-footer-accent)]/30 pb-2 w-full text-center md:text-right">
-              {currentText.footerContact}
+          {/* RIGHT COLUMN: Official Contact & Headquarters Info (4 Cols) */}
+          <div className="md:col-span-4 flex flex-col items-center md:items-start gap-4">
+            <h4 className="text-[var(--land-gold)] font-black text-sm uppercase tracking-widest flex items-center gap-2 border-b-2 border-[var(--land-gold)]/40 pb-2 w-full">
+              <span>✦</span>
+              <span>{currentText.footerContact}</span>
             </h4>
 
-            <div className="flex flex-col gap-2 text-right items-center md:items-end">
-              <a href={content.contact?.phoneHref} className="flex items-center gap-2 text-white/60 hover:text-[var(--land-footer-accent)] text-xs transition-colors">
-                <FaPhoneAlt className="w-3 h-3 text-[var(--land-link)] shrink-0" />
-                <span>{content.contact?.phone}</span>
+            <div className="flex flex-col gap-3 w-full">
+              {/* Phone Link */}
+              <a
+                href={content.contact?.phoneHref}
+                className="flex items-center gap-3 bg-white/5 border border-white/15 hover:border-[var(--land-gold)] p-3 rounded-2xl text-white/90 hover:text-white transition-all shadow-md group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-[var(--land-gold)] text-slate-950 flex items-center justify-center shrink-0 shadow-md">
+                  <FaPhoneAlt className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold group-hover:text-[var(--land-gold)] transition-colors">
+                  {content.contact?.phone}
+                </span>
               </a>
-              <a href={`mailto:${content.contact?.email}`} className="flex items-center gap-2 text-white/60 hover:text-[var(--land-footer-accent)] text-xs transition-colors">
-                <FaEnvelope className="w-3 h-3 text-[var(--land-link)] shrink-0" />
-                <span>{content.contact?.email}</span>
+
+              {/* Email Link */}
+              <a
+                href={`mailto:${content.contact?.email}`}
+                className="flex items-center gap-3 bg-white/5 border border-white/15 hover:border-[var(--land-gold)] p-3 rounded-2xl text-white/90 hover:text-white transition-all shadow-md group"
+              >
+                <div className="w-8 h-8 rounded-xl bg-blue-500 text-white flex items-center justify-center shrink-0 shadow-md">
+                  <FaEnvelope className="w-3.5 h-3.5" />
+                </div>
+                <span className="text-xs sm:text-sm font-bold group-hover:text-[var(--land-gold)] transition-colors truncate">
+                  {content.contact?.email}
+                </span>
               </a>
-              <p className="text-white/40 text-[10px] max-w-[200px] text-center md:text-right leading-relaxed mt-1">
-                {currentText.footerAddress}
-              </p>
+
+              {/* Office Address */}
+              <div className="bg-white/5 border border-white/15 p-3 rounded-2xl flex items-start gap-3">
+                <span className="text-base mt-0.5">📍</span>
+                <p className="text-white/70 text-xs leading-relaxed font-semibold">
+                  {currentText.footerAddress}
+                </p>
+              </div>
             </div>
 
-            {/* Social icons */}
-            <div className="flex items-center gap-3 mt-2">
+            {/* Branded Social Media Buttons */}
+            <div className="flex items-center gap-3 mt-1">
               {[
-                { icon: FaFacebookF, href: "https://facebook.com", label: "Facebook" },
-                { icon: FaInstagram, href: "https://instagram.com", label: "Instagram" },
-                { icon: FaYoutube, href: "https://youtube.com", label: "YouTube" },
-                { icon: FaTwitter, href: "https://twitter.com", label: "Twitter" },
-              ].map(({ icon: Icon, href, label }) => (
+                { icon: FaFacebookF, href: content.contact?.facebook || "https://facebook.com", label: "Facebook", color: "bg-[#1877F2]" },
+                { icon: FaInstagram, href: content.contact?.instagram || "https://instagram.com", label: "Instagram", color: "bg-gradient-to-tr from-[#f09433] via-[#dc2743] to-[#bc1888]" },
+                { icon: FaYoutube, href: content.contact?.youtube || "https://youtube.com", label: "YouTube", color: "bg-[#FF0000]" },
+                { icon: FaTwitter, href: content.contact?.twitter || "https://twitter.com", label: "Twitter", color: "bg-[#1DA1F2]" },
+              ].map(({ icon: Icon, href, label, color }) => (
                 <a
                   key={label}
                   href={href}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={label}
-                  className="w-8 h-8 rounded-full bg-[#282c2d] border border-[var(--land-footer-accent)]/20 flex items-center justify-center text-white/60 hover:text-[var(--land-link)] hover:border-[var(--land-link)] transition-all duration-300"
+                  className={`w-9 h-9 rounded-xl ${color} text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform duration-200 border border-white/30`}
                 >
-                  <Icon className="w-3.5 h-3.5" />
+                  <Icon className="w-4 h-4" />
                 </a>
               ))}
             </div>
 
-            {/* Logos row */}
-            <div className="flex items-center gap-4 mt-2 opacity-60">
-              <div className="relative w-10 h-10">
-                <MediaImage src={site.karnatakaLogo} alt="Karnataka Seal" fill className="object-contain" sizes="40px" />
+            {/* Official Emblem Container */}
+            <div className="flex items-center gap-4 bg-white/10 border border-white/20 px-4 py-2 rounded-2xl shadow-md mt-1">
+              <div className="relative w-8 h-8">
+                <MediaImage src={site.karnatakaLogo} alt="Karnataka Seal" fill className="object-contain" sizes="32px" />
               </div>
-              <div className="relative w-10 h-10">
-                <MediaImage src={site.partyLogo} alt="INC Logo" fill className="object-contain" sizes="40px" />
+              <div className="h-6 w-px bg-white/30" />
+              <div className="relative w-8 h-8">
+                <MediaImage src={site.partyLogo} alt="INC Logo" fill className="object-contain" sizes="32px" />
               </div>
             </div>
           </div>
+
         </div>
 
-        {/* Bottom bar */}
-        <div className="border-t border-[var(--land-footer-accent)]/10 py-4 px-4 text-center flex flex-col sm:flex-row items-center justify-between max-w-7xl mx-auto gap-2">
-          <span className="text-white/30 text-[10px]">{currentText.footerCopy}</span>
-          <span className="text-white/20 text-[10px]">{currentText.footerDev}</span>
+        {/* Bottom Bar: Copyright & Compliance */}
+        <div className="border-t border-white/15 py-5 px-4 bg-[#00081B] text-center relative z-10">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <span className="text-white/60 font-semibold">{currentText.footerCopy}</span>
+            <span className="text-[var(--land-gold)] font-bold">{currentText.footerDev}</span>
+          </div>
         </div>
 
       </footer>

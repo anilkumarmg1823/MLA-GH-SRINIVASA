@@ -1,6 +1,7 @@
 import { api, apiUpload } from "@/lib/api";
 
-const LIST_LIMIT = 100;
+const LIST_LIMIT = 200;
+const MAX_PAGES = 20;
 
 function stripMedia(record) {
   const {
@@ -15,9 +16,25 @@ function stripMedia(record) {
 }
 
 export async function loadDevelopments(params = {}) {
-  const qs = new URLSearchParams({ limit: String(LIST_LIMIT), ...params });
-  const { data } = await api(`/developments?${qs}`);
-  return Array.isArray(data) ? data : [];
+  const all = [];
+  let page = 1;
+  const light = params.light ? { light: "1" } : {};
+  const { light: _l, ...rest } = params;
+  while (page <= MAX_PAGES) {
+    const qs = new URLSearchParams({
+      limit: String(LIST_LIMIT),
+      page: String(page),
+      ...rest,
+      ...light,
+    });
+    const { data, meta } = await api(`/developments?${qs}`);
+    const rows = Array.isArray(data) ? data : [];
+    all.push(...rows);
+    const total = Number(meta?.total) || all.length;
+    if (all.length >= total || rows.length < LIST_LIMIT) break;
+    page += 1;
+  }
+  return all;
 }
 
 export async function getDevelopmentsForVillage(gramPanchayat, village) {
@@ -28,8 +45,9 @@ export async function getDevelopmentsForGp(gramPanchayat) {
   return loadDevelopments({ gramPanchayat });
 }
 
-export async function getAllDevelopments() {
-  return loadDevelopments();
+/** Full list — prefer light=true for charts/search (no media join). */
+export async function getAllDevelopments({ light = true } = {}) {
+  return loadDevelopments(light ? { light: true } : {});
 }
 
 async function uploadMediaFiles(developmentId, mediaItems) {

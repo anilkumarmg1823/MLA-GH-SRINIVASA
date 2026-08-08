@@ -12,6 +12,8 @@ import {
   FaUserShield,
   FaGlobe,
   FaCommentDots,
+  FaUserTie,
+  FaCalendarAlt,
   FaBars,
   FaTimes,
 } from "react-icons/fa";
@@ -49,6 +51,13 @@ const links = [
     match: (p) => p?.startsWith("/dashboard/complaints"),
   },
   {
+    href: "/dashboard/medical-referrals",
+    icon: FaUserShield,
+    labelKey: "medicalReferrals",
+    labelFallback: "Medical Referrals",
+    match: (p) => p?.startsWith("/dashboard/medical-referrals"),
+  },
+  {
     href: "/dashboard/assembly-qa",
     icon: FaBalanceScale,
     labelKey: "navAssembly",
@@ -59,6 +68,18 @@ const links = [
     icon: FaGlobe,
     labelKey: "landingPage",
     match: (p) => p?.startsWith("/dashboard/landing"),
+  },
+  {
+    href: "/dashboard/leaders",
+    icon: FaUserTie,
+    labelKey: "navLeaders",
+    match: (p) => p?.startsWith("/dashboard/leaders"),
+  },
+  {
+    href: "/dashboard/tour-schedules",
+    icon: FaCalendarAlt,
+    labelKey: "navTourSchedules",
+    match: (p) => p?.startsWith("/dashboard/tour-schedules"),
   },
   {
     href: "/dashboard/access",
@@ -97,13 +118,13 @@ export default function AdminSidebar({
               isCollapsed ? "justify-center px-2 py-2.5" : "gap-2.5 px-3 py-2.5"
             } ${
               active
-                ? "bg-[#CCBCA5] text-[#1e2223]"
-                : "text-[var(--dash-text-70)] hover:bg-[var(--dash-hover)] hover:text-[#CCBCA5]"
+                ? "bg-[var(--dash-accent)] text-white shadow-sm"
+                : "text-[var(--dash-text-70)] hover:bg-[var(--dash-hover)] hover:text-[var(--dash-heading)]"
             }`}
           >
             <Icon className="text-sm shrink-0" />
             {!isCollapsed ? (
-              <span className="leading-tight">{t[item.labelKey]}</span>
+              <span className="leading-tight">{t[item.labelKey] || item.labelFallback}</span>
             ) : null}
           </Link>
         );

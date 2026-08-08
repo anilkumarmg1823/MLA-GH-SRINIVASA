@@ -3,6 +3,11 @@ import { z } from "zod";
 import { prisma } from "../lib/prisma.js";
 import { AppError, asyncHandler, ok } from "../middleware/error.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
+import {
+  buildOtpauthUrl,
+  generateTotpSecret,
+  otpauthToQrDataUrl,
+} from "../lib/totp.js";
 
 const router = Router();
 router.use(requireAuth, requireAdmin);
@@ -40,6 +45,7 @@ router.get(
       name: u.name,
       nameKn: u.nameKn,
       role: u.role,
+      totpEnabled: Boolean(u.totpEnabled),
       modules: u.permissions?.modules || {
         development: emptyPerms(),
         department_records: emptyPerms(),
@@ -115,11 +121,63 @@ router.post(
         name: user.name,
         nameKn: user.nameKn,
         role: user.role,
+        totpEnabled: Boolean(user.totpEnabled),
         modules: user.permissions.modules,
       },
       null,
       existing ? 200 : 201
     );
+  })
+);
+
+async function enrollStaffTotp(userId) {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || user.role === "admin" || !user.phone) {
+    throw new AppError(404, "NOT_FOUND", "Staff not found");
+  }
+
+  const secret = generateTotpSecret();
+  const otpauthUrl = buildOtpauthUrl(user.phone, secret);
+  const qrDataUrl = await otpauthToQrDataUrl(otpauthUrl);
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { totpSecret: secret, totpEnabled: true },
+  });
+
+  return {
+    phone: user.phone,
+    name: user.name,
+    secret,
+    otpauthUrl,
+    qrDataUrl,
+    totpEnabled: true,
+  };
+}
+
+/** Generate / rotate Authenticator secret; returns QR once. */
+router.post(
+  "/:id/totp/enroll",
+  asyncHandler(async (req, res) => {
+    const data = await enrollStaffTotp(req.params.id);
+    return ok(res, data);
+  })
+);
+
+/** Clear TOTP then issue a fresh secret + QR. */
+router.post(
+  "/:id/totp/reset",
+  asyncHandler(async (req, res) => {
+    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    if (!user || user.role === "admin" || !user.phone) {
+      throw new AppError(404, "NOT_FOUND", "Staff not found");
+    }
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { totpSecret: null, totpEnabled: false },
+    });
+    const data = await enrollStaffTotp(user.id);
+    return ok(res, data);
   })
 );
 

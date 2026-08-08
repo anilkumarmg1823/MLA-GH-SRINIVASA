@@ -11,12 +11,23 @@ import staffAccessRoutes from "./routes/staffAccess.js";
 import landingRoutes from "./routes/landing.js";
 import complaintsRoutes from "./routes/complaints.js";
 import uploadsRoutes from "./routes/uploads.js";
+import medicalReferralsRoutes from "./routes/medicalReferrals.js";
 
 const app = express();
 
 app.use(
   cors({
-    origin: env.corsOrigin,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      if (
+        env.nodeEnv === "development" ||
+        /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin)
+      ) {
+        return callback(null, true);
+      }
+      if (origin === env.corsOrigin) return callback(null, true);
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true,
   })
 );
@@ -36,6 +47,10 @@ app.use("/api/v1/staff-access", staffAccessRoutes);
 app.use("/api/v1/landing", landingRoutes);
 app.use("/api/v1/complaints", complaintsRoutes);
 app.use("/api/v1/uploads", uploadsRoutes);
+
+// Medical Referral routes (mounted at /api/v1/medical-referrals & /api/medical-referrals)
+app.use("/api/v1/medical-referrals", medicalReferralsRoutes);
+app.use("/api/medical-referrals", medicalReferralsRoutes);
 
 app.use(errorHandler);
 

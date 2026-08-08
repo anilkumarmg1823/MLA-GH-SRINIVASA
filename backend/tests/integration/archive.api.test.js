@@ -23,22 +23,22 @@ describe("Archive soft-delete (catalog sample)", () => {
   });
 });
 
-describe("Staff OTP resend path", () => {
+describe("Staff TOTP login smoke", () => {
   beforeAll(async () => {
     await assertApiUp();
   });
 
-  it("staff OTP can be requested twice (resend path)", async () => {
+  it("staff can login with authenticator code", async () => {
+    const { currentTotpToken, DEMO_TOTP_SECRET } = await import(
+      "../../src/lib/totp.js"
+    );
     const phone = "9876543210";
-    const a = await req("/auth/staff/request-otp", {
+    const otp = currentTotpToken(DEMO_TOTP_SECRET);
+    const { res, json } = await req("/auth/staff/verify-totp", {
       method: "POST",
-      body: { phone },
+      body: { phone, otp },
     });
-    expect(a.res.ok).toBe(true);
-    const b = await req("/auth/staff/request-otp", {
-      method: "POST",
-      body: { phone },
-    });
-    expect(b.res.ok).toBe(true);
+    expect(res.ok).toBe(true);
+    expect(json?.data?.token).toBeTruthy();
   });
 });

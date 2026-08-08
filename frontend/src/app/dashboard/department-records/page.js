@@ -31,6 +31,7 @@ import UploadModal from "@/components/department-records/UploadModal";
 import DocumentList from "@/components/department-records/DocumentList";
 import DepartmentSearchModal from "@/components/department-records/DepartmentSearchModal";
 import ListDownloadModal from "@/components/shared/ListDownloadModal";
+import PageLoader from "@/components/ui/PageLoader";
 
 export default function DepartmentRecordsPage() {
   const router = useRouter();
@@ -104,10 +105,9 @@ export default function DepartmentRecordsPage() {
     await refresh();
   };
 
+
   if (!allowed) {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">Loading…</div>
-    );
+    return <PageLoader />;
   }
 
   const canAdd = canDo(session, "department_records", "add");

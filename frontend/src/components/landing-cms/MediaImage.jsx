@@ -52,6 +52,35 @@ export default function MediaImage({
     );
   }
 
+  const isRemote =
+    String(src).startsWith("http://") || String(src).startsWith("https://");
+
+  // Absolute remote URLs (signed S3, CDN) — use <img> to avoid next/image host config
+  if (isRemote) {
+    if (fill) {
+      return (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={src}
+          alt={alt}
+          className={`absolute inset-0 w-full h-full ${className || ""}`}
+          {...rest}
+        />
+      );
+    }
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        className={className}
+        {...rest}
+      />
+    );
+  }
+
   return (
     <Image
       src={src}

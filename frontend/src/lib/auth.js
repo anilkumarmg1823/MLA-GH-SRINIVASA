@@ -116,9 +116,13 @@ export async function loginAdmin(email, password) {
   return session;
 }
 
-export async function requestStaffOtp(phone) {
+/**
+ * Step 1: registered staff only.
+ * Returns needsScan + QR on first login; code-only on later logins.
+ */
+export async function beginStaffLogin(phone) {
   const digits = String(phone || "").replace(/\D/g, "");
-  const { data } = await api("/auth/staff/request-otp", {
+  const { data } = await api("/auth/staff/begin-login", {
     method: "POST",
     body: { phone: digits },
     token: null,
@@ -126,9 +130,10 @@ export async function requestStaffOtp(phone) {
   return data;
 }
 
-export async function verifyStaffOtp({ phone, otp, role }) {
+/** Step 2: phone + Authenticator TOTP (no SMS). */
+export async function verifyStaffTotp({ phone, otp, role }) {
   const digits = String(phone || "").replace(/\D/g, "");
-  const { data } = await api("/auth/staff/verify-otp", {
+  const { data } = await api("/auth/staff/verify-totp", {
     method: "POST",
     body: { phone: digits, otp, role },
     token: null,

@@ -1,11 +1,24 @@
-@import "tailwindcss";
 @import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=Noto+Sans:wght@400;600;700;900&family=Noto+Sans+Kannada:wght@400;700&family=Noto+Serif:wght@400;700;900&family=Noto+Serif+Kannada:wght@400;700&family=Source+Serif+4:wght@400;700&family=Tiro+Kannada&display=swap");
+@import "tailwindcss";
 
 :root {
   --background: #ffffff;
   --foreground: #171717;
   --land-font-display: "Noto Serif", "Noto Serif Kannada", serif;
   --land-font-body: "Noto Sans", "Noto Sans Kannada", sans-serif;
+
+  --land-blue-deep: #001438;
+  --land-blue: #001D56;
+  --land-blue-alt: #002B7F;
+  --land-blue-mid: #003B95;
+  --land-blue-bright: #0055C4;
+  --land-blue-light: #0077E6;
+
+  --land-surface: #ffffff;
+  --land-surface-alt: #F8FAFC;
+
+  --land-gold: #FFD700;
+  --land-gold-soft: #FFE44D;
 }
 
 /* Dashboard portal theme tokens (landing/login excluded) */
@@ -36,29 +49,63 @@
 }
 
 [data-theme="light"] {
-  --dash-bg: #f3f1ec;
+  --dash-bg: #f4f6f8;
   --dash-panel: #ffffff;
-  --dash-panel-soft: rgba(255, 255, 255, 0.92);
-  --dash-text: #1e2223;
-  --dash-text-80: rgba(30, 34, 35, 0.85);
-  --dash-text-70: rgba(30, 34, 35, 0.75);
-  --dash-text-60: rgba(30, 34, 35, 0.65);
-  --dash-text-55: rgba(30, 34, 35, 0.55);
-  --dash-text-50: rgba(30, 34, 35, 0.5);
-  --dash-text-45: rgba(30, 34, 35, 0.45);
-  --dash-text-40: rgba(30, 34, 35, 0.4);
-  --dash-text-30: rgba(30, 34, 35, 0.3);
-  --dash-text-25: rgba(30, 34, 35, 0.25);
-  --dash-muted: rgba(30, 34, 35, 0.55);
-  --dash-border: rgba(154, 133, 104, 0.35);
-  --dash-border-soft: rgba(30, 34, 35, 0.14);
-  --dash-border-faint: rgba(30, 34, 35, 0.08);
-  --dash-accent: #9a8568;
-  --dash-heading: #001d56;
-  --dash-hover: rgba(30, 34, 35, 0.05);
-  --dash-hover-strong: rgba(30, 34, 35, 0.08);
-  --dash-overlay: rgba(30, 34, 35, 0.45);
-  --dash-input: #f7f5f1;
+  --dash-panel-soft: rgba(255, 255, 255, 0.96);
+  --dash-text: #0f172a;
+  --dash-text-80: #1e293b;
+  --dash-text-70: #334155;
+  --dash-text-60: #475569;
+  --dash-text-55: #64748b;
+  --dash-text-50: #64748b;
+  --dash-text-45: #64748b;
+  --dash-text-40: #94a3b8;
+  --dash-text-30: #cbd5e1;
+  --dash-text-25: #e2e8f0;
+  --dash-muted: #64748b;
+  --dash-border: #cbd5e1;
+  --dash-border-soft: #e2e8f0;
+  --dash-border-faint: #f1f5f9;
+  --dash-accent: #b45309;
+  --dash-heading: #0f172a;
+  --dash-hover: rgba(15, 23, 42, 0.04);
+  --dash-hover-strong: rgba(15, 23, 42, 0.08);
+  --dash-overlay: rgba(15, 23, 42, 0.4);
+  --dash-input: #ffffff;
+
+  /* Global light-theme contrast overrides for hardcoded #CCBCA5 elements */
+  [class*="text-[#CCBCA5]"],
+  [class*="text-[#ccbca5]"] {
+    color: #334155;
+  }
+
+  [class*="border-[#CCBCA5]"],
+  [class*="border-[#ccbca5]"] {
+    border-color: #cbd5e1;
+  }
+
+  [class*="bg-[#CCBCA5]"],
+  [class*="bg-[#ccbca5]"] {
+    background-color: #0f172a;
+    color: #ffffff;
+  }
+
+  [class*="bg-[#CCBCA5]/15"],
+  [class*="bg-[#ccbca5]/15"] {
+    background-color: rgba(15, 23, 42, 0.06);
+    color: #0f172a;
+  }
+
+  [class*="hover:bg-[#CCBCA5]"]:hover,
+  [class*="hover:bg-[#ccbca5]"]:hover {
+    background-color: #0f172a;
+    color: #ffffff;
+  }
+
+  [class*="hover:text-[#CCBCA5]"]:hover,
+  [class*="hover:text-[#ccbca5]"]:hover {
+    color: #0f172a;
+  }
 }
 
 @theme inline {
@@ -197,3 +244,84 @@ div[id*="vsc-"],
   }
 }
 
+/* ——— Kudligi seal loader ——— */
+@keyframes kudligiKolamSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes kudligiOrbitSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes kudligiSealBreath {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 20px rgba(204, 188, 165, 0.28);
+  }
+  50% {
+    transform: scale(1.04);
+    box-shadow: 0 0 34px rgba(204, 188, 165, 0.5);
+  }
+}
+@keyframes kudligiTextPulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.kudligi-loader-kolam {
+  animation: kudligiKolamSpin 14s linear infinite;
+}
+.kudligi-loader-orbit {
+  animation: kudligiOrbitSpin 3.2s linear infinite;
+}
+.kudligi-loader-orbit-rev {
+  animation: kudligiKolamSpin 5.5s linear infinite;
+}
+.kudligi-loader-pin {
+  animation: kudligiOrbitSpin 2.4s linear infinite;
+}
+.kudligi-loader-seal {
+  animation: kudligiSealBreath 2.8s ease-in-out infinite;
+}
+.kudligi-loader-pulse {
+  animation: kudligiTextPulse 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kudligi-loader-kolam,
+  .kudligi-loader-orbit,
+  .kudligi-loader-orbit-rev,
+  .kudligi-loader-pin,
+  .kudligi-loader-seal,
+  .kudligi-loader-pulse {
+    animation: none !important;
+  }
+}
+
+/* Scrollbar hiding utilities for clean horizontal filters */
+.no-scrollbar::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.no-scrollbar,
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}

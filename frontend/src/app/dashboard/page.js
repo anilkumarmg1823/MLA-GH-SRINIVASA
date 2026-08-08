@@ -24,15 +24,14 @@ import {
   getGramPanchayatCount,
   getVillageCount,
 } from "@/data/gramPanchayats";
+import PageLoader from "@/components/ui/PageLoader";
 
 const AdminDashboardCharts = dynamic(
   () => import("@/components/dashboard/AdminDashboardCharts"),
   {
     ssr: false,
     loading: () => (
-      <div className="rounded-2xl border border-[#CCBCA5]/20 bg-[var(--dash-panel-soft)] px-6 py-16 text-center text-[var(--dash-text-40)] text-sm">
-        Loading charts…
-      </div>
+      <PageLoader subKn="ಚಾರ್ಟ್‌ಗಳು ತಯಾರಾಗುತ್ತಿವೆ…" subEn="Loading charts…" />
     ),
   }
 );
@@ -127,9 +126,7 @@ export default function DashboardHomePage() {
   }, [works, documents, staff]);
 
   if (!session || session.role !== "admin") {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">Loading…</div>
-    );
+    return <PageLoader />;
   }
 
   return (

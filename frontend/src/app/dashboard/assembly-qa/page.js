@@ -20,6 +20,7 @@ import AssemblyQaFormModal from "@/components/assembly-qa/AssemblyQaFormModal";
 import AssemblyQaDetailModal from "@/components/assembly-qa/AssemblyQaDetailModal";
 import AssemblyQaSearchModal from "@/components/assembly-qa/AssemblyQaSearchModal";
 import ListDownloadModal from "@/components/shared/ListDownloadModal";
+import PageLoader from "@/components/ui/PageLoader";
 
 export default function AssemblyQaPage() {
   const router = useRouter();
@@ -85,10 +86,9 @@ export default function AssemblyQaPage() {
     await refresh();
   };
 
+
   if (!allowed) {
-    return (
-      <div className="text-[var(--dash-text-50)] text-sm py-8 text-center">Loading…</div>
-    );
+    return <PageLoader />;
   }
 
   const canAdd = canDo(session, "assembly_qa", "add");

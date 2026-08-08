@@ -73,24 +73,24 @@ export default function DevelopmentTable({ rows, onOpen, onAdd }) {
 
               {/* Side information */}
               <div className="flex-1 min-w-0 p-3.5 sm:p-5 flex flex-col justify-center gap-2">
-                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] line-clamp-1">
+                <p className="text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-[var(--dash-text-70)] line-clamp-1">
                   {scheme}
                 </p>
-                <h3 className="text-sm sm:text-lg font-black text-[var(--dash-text)] leading-snug line-clamp-2 group-hover:text-[#CCBCA5] transition-colors">
+                <h3 className="text-sm sm:text-lg font-black text-[var(--dash-text)] leading-snug line-clamp-2 group-hover:text-[var(--dash-accent)] transition-colors">
                   {title}
                 </h3>
                 {description ? (
-                  <p className="text-[11px] sm:text-sm text-[var(--dash-text-55)] leading-relaxed line-clamp-3">
+                  <p className="text-[11px] sm:text-sm text-[var(--dash-text-70)] leading-relaxed line-clamp-3">
                     {description}
                   </p>
                 ) : null}
                 <p className="text-base sm:text-xl font-black text-[var(--dash-text)] flex items-center gap-1.5 mt-1">
-                  <FaRupeeSign className="text-[#CCBCA5] text-xs sm:text-sm shrink-0" />
+                  <FaRupeeSign className="text-[var(--dash-accent)] text-xs sm:text-sm shrink-0" />
                   <span>
                     {formatInr(row.amountSanctioned).replace("₹", "").trim()}
                   </span>
                 </p>
-                <p className="text-[10px] text-[var(--dash-text-30)] mt-auto pt-1">
+                <p className="text-[11px] font-bold text-[var(--dash-text-60)] mt-auto pt-1">
                   {t.viewDetails} →
                 </p>
               </div>

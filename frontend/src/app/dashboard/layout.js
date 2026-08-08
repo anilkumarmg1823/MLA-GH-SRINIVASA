@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { getSession } from "@/lib/auth";
 import DashboardNavbar from "@/components/dashboard/DashboardNavbar";
 import DashboardWaveBackground from "@/components/dashboard/DashboardWaveBackground";
 import AdminSidebar from "@/components/dashboard/AdminSidebar";
+import KudligiLoader from "@/components/ui/KudligiLoader";
 
 function DashboardShell({ children }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { theme } = useTheme();
   const [session, setSessionState] = useState(null);
   const [ready, setReady] = useState(false);
@@ -29,11 +31,26 @@ function DashboardShell({ children }) {
 
   if (!ready || !session) {
     return (
+      <div data-theme={theme}>
+        <KudligiLoader
+          variant="full"
+          subKn="ಪ್ರವೇಶ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…"
+          subEn="Checking access…"
+        />
+      </div>
+    );
+  }
+
+  const isStudioMode = pathname === "/dashboard/landing/studio";
+
+  if (isStudioMode) {
+    return (
       <div
-        className="min-h-screen flex items-center justify-center bg-[var(--dash-bg)] text-[var(--dash-text-50)]"
+        className="relative min-h-screen bg-[var(--dash-bg)] text-[var(--dash-text)] overflow-x-hidden"
         data-theme={theme}
       >
-        Loading…
+        <DashboardWaveBackground />
+        <div className="relative z-10 min-h-screen flex flex-col">{children}</div>
       </div>
     );
   }

@@ -16,22 +16,31 @@ export default function GpVillageFilters({
   sortBy,
   onSortByChange,
   showExtraFilters = true,
+  /** Optional extra villages (e.g. Kannada labels from Excel imports) */
+  extraVillages = [],
 }) {
   const { lang, t } = useLanguage();
-  const villages = gramPanchayat ? getVillagesForGp(gramPanchayat) : [];
+  const master = gramPanchayat ? getVillagesForGp(gramPanchayat) : [];
+  const seen = new Set(master.map((v) => v.name));
+  const villages = [
+    ...master,
+    ...extraVillages
+      .filter((name) => name && !seen.has(name))
+      .map((name) => ({ name, nameKn: name })),
+  ];
   const hasSelection = Boolean(gramPanchayat || village);
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
+          <label className="block text-sm font-bold text-[var(--dash-text-70)] mb-1.5">
             {t.gp}
           </label>
           <select
             value={gramPanchayat}
             onChange={(e) => onGpChange(e.target.value)}
-            className="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
+            className="w-full rounded-xl border border-[var(--dash-border)] bg-[var(--dash-input)] px-3.5 py-2.5 text-[var(--dash-text)] outline-none focus:border-[var(--dash-accent)] focus:ring-2 focus:ring-[var(--dash-accent)]/20 shadow-sm"
           >
             <option value="">{t.selectGp}</option>
             {gramPanchayats.map((gp) => (
@@ -42,14 +51,14 @@ export default function GpVillageFilters({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
+          <label className="block text-sm font-bold text-[var(--dash-text-70)] mb-1.5">
             {t.village}
           </label>
           <select
             value={village}
             onChange={(e) => onVillageChange(e.target.value)}
             disabled={!gramPanchayat}
-            className="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20 disabled:opacity-40"
+            className="w-full rounded-xl border border-[var(--dash-border)] bg-[var(--dash-input)] px-3.5 py-2.5 text-[var(--dash-text)] outline-none focus:border-[var(--dash-accent)] focus:ring-2 focus:ring-[var(--dash-accent)]/20 disabled:opacity-40 shadow-sm"
           >
             <option value="">{t.selectVillage}</option>
             {villages.map((v) => (
@@ -62,15 +71,15 @@ export default function GpVillageFilters({
       </div>
 
       {showExtraFilters && gramPanchayat && village && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 border-t border-[#CCBCA5]/15">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1 border-t border-[var(--dash-border-soft)]">
           <div>
-            <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
+            <label className="block text-sm font-bold text-[var(--dash-text-70)] mb-1.5">
               {t.filterStatus}
             </label>
             <select
               value={statusFilter}
               onChange={(e) => onStatusFilterChange(e.target.value)}
-              className="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
+              className="w-full rounded-xl border border-[var(--dash-border)] bg-[var(--dash-input)] px-3.5 py-2.5 text-[var(--dash-text)] outline-none focus:border-[var(--dash-accent)] focus:ring-2 focus:ring-[var(--dash-accent)]/20 shadow-sm"
             >
               <option value="all">{t.filterStatusAll}</option>
               <option value="Ongoing">{t.chartOngoing}</option>
@@ -78,13 +87,13 @@ export default function GpVillageFilters({
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
+            <label className="block text-sm font-bold text-[var(--dash-text-70)] mb-1.5">
               {t.sortBy}
             </label>
             <select
               value={sortBy}
               onChange={(e) => onSortByChange(e.target.value)}
-              className="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
+              className="w-full rounded-xl border border-[var(--dash-border)] bg-[var(--dash-input)] px-3.5 py-2.5 text-[var(--dash-text)] outline-none focus:border-[var(--dash-accent)] focus:ring-2 focus:ring-[var(--dash-accent)]/20 shadow-sm"
             >
               <option value="newest">{t.sortNewest}</option>
               <option value="oldest">{t.sortOldest}</option>
