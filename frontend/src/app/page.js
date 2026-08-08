@@ -555,59 +555,89 @@ export default function Home() {
           );
         })()}
 
-        {/* Banner Main Content with Animated Slogan & Photo Carousel */}
-        <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12 w-full h-full flex flex-col justify-center py-6 lg:py-0">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center my-auto">
+        {/* Banner Main Content — mobile: pin text+photo to bottom gold border */}
+        <div className="relative z-20 max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 w-full h-full flex items-end sm:items-center pb-0 pt-5 sm:py-6 lg:py-0 min-h-[420px] sm:min-h-[460px] lg:min-h-0 lg:h-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-6 items-end sm:items-center w-full mt-auto sm:my-auto">
 
-            {/* LEFT COLUMN: Animated Development Work Slogans (Expanded Width 8 Cols) */}
-            <div className="lg:col-span-8 flex flex-col gap-3.5 text-left items-start z-30 max-w-3xl pr-0 sm:pr-[38%] md:pr-0">
+            {/* LEFT: slogans — sit low on mobile beside portrait */}
+            <div className="lg:col-span-8 flex flex-col gap-2 sm:gap-3.5 text-left items-start z-30 max-w-3xl min-w-0 w-[58%] sm:w-full pr-1 sm:pr-[36%] md:pr-[40%] lg:pr-0 pb-3 sm:pb-0 self-end">
 
               <motion.div
                 key={`badge-${currentSlide}`}
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
-                className="inline-flex items-center gap-2.5 bg-[var(--land-gold)] text-slate-950 text-xs sm:text-sm font-black px-4.5 py-1.5 rounded-full shadow-xl border border-white"
+                className="inline-flex items-center gap-1.5 sm:gap-2.5 bg-[var(--land-gold)] text-slate-950 text-[10px] sm:text-sm font-black px-2.5 sm:px-4.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white max-w-full"
               >
-                <span className="w-2.5 h-2.5 rounded-full bg-[var(--land-blue)] animate-pulse" />
-                <span>
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[var(--land-blue)] animate-pulse shrink-0" />
+                <span className="leading-snug line-clamp-2">
                   {lang === "kn"
                     ? (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleKn
                     : (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleEn}
                 </span>
               </motion.div>
 
-              {/* Slogan & Description Text Card */}
               <motion.div
                 key={`text-${currentSlide}`}
                 initial={{ opacity: 0, x: -15 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.5 }}
-                className="flex flex-col gap-2 text-white w-full"
+                className="flex flex-col gap-1.5 sm:gap-2 text-white w-full min-w-0"
               >
-                {/* Main Heading & Sub Heading in ONE Single Line */}
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black leading-tight tracking-tight drop-shadow-md flex flex-wrap items-center gap-2 text-white">
-                  <span>{lang === "kn" ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1Kn : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1En}</span>
-                  <span className="text-[var(--land-gold)] font-extrabold">• {lang === "kn" ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2Kn : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2En}</span>
+                <h1 className="text-sm sm:text-2xl md:text-3xl lg:text-4xl font-black leading-snug tracking-tight drop-shadow-md flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0.5 sm:gap-2 text-white">
+                  <span>
+                    {lang === "kn"
+                      ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1Kn
+                      : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1En}
+                  </span>
+                  <span className="text-[var(--land-gold)] font-extrabold text-[11px] sm:text-inherit">
+                    •{" "}
+                    {lang === "kn"
+                      ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2Kn
+                      : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2En}
+                  </span>
                 </h1>
 
-                <div className="inline-flex items-center gap-2 text-xs sm:text-sm font-black text-[var(--land-gold)] bg-[var(--land-blue-deep)]/80 backdrop-blur-md px-4 py-1.5 rounded-xl w-fit mt-0.5 shadow-lg border border-[var(--land-gold)]/60">
-                  <span>✦ {lang === "kn" ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3Kn : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3En}</span>
+                <div className="inline-flex items-center gap-1.5 text-[10px] sm:text-sm font-black text-[var(--land-gold)] bg-[var(--land-blue-deep)]/80 backdrop-blur-md px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl w-fit shadow-lg border border-[var(--land-gold)]/60 max-w-full">
+                  <span className="line-clamp-2 leading-snug">
+                    ✦{" "}
+                    {lang === "kn"
+                      ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3Kn
+                      : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3En}
+                  </span>
                 </div>
-                <p className="text-xs sm:text-sm font-bold text-slate-100 w-full max-w-2xl lg:max-w-3xl mt-1.5 leading-relaxed bg-[var(--land-blue-deep)]/80 backdrop-blur-xl p-4 sm:p-5 rounded-2xl border-2 border-[var(--land-gold)]/40 shadow-2xl">
+                <p className="text-[10px] sm:text-sm font-bold text-slate-100 w-full max-w-2xl lg:max-w-3xl mt-0.5 leading-relaxed bg-[var(--land-blue-deep)]/80 backdrop-blur-xl p-2.5 sm:p-5 rounded-xl sm:rounded-2xl border border-[var(--land-gold)]/40 shadow-2xl line-clamp-4 sm:line-clamp-none">
                   {lang === "kn"
                     ? (heroSlides[currentSlide] || heroSlides[0] || {}).subKn
                     : (heroSlides[currentSlide] || heroSlides[0] || {}).subEn}
                 </p>
               </motion.div>
-
             </div>
-
           </div>
         </div>
 
-        {/* Right End Flushed Dynamic MLA Portrait — hidden on very small screens to protect copy */}
-        <div className="absolute right-0 bottom-0 z-30 hidden sm:block w-[200px] sm:w-[300px] md:w-[330px] lg:w-[420px] xl:w-[450px] h-[240px] sm:h-[340px] lg:h-[400px] xl:h-[425px] pointer-events-none opacity-90 sm:opacity-100">
+        {/* Mobile MLA portrait — flush to bottom border (like desktop) */}
+        <div className="absolute right-0 bottom-0 z-30 sm:hidden w-[46%] max-w-[190px] h-[280px] pointer-events-none">
+          <motion.div
+            key={`mla-portrait-mobile-${currentSlide}`}
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.4 }}
+            className="relative w-full h-full"
+          >
+            <MediaImage
+              src={(heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage}
+              alt="Dr. Srinivas N. T. MLA Kudligi"
+              fill
+              sizes="190px"
+              className="object-contain object-bottom object-right drop-shadow-2xl"
+              priority
+            />
+          </motion.div>
+        </div>
+
+        {/* Desktop / large: right-flushed MLA portrait */}
+        <div className="absolute right-0 bottom-0 z-30 hidden sm:block w-[280px] md:w-[330px] lg:w-[420px] xl:w-[450px] h-[320px] md:h-[360px] lg:h-[400px] xl:h-[425px] pointer-events-none">
           <motion.div
             key={`mla-portrait-${currentSlide}`}
             initial={{ opacity: 0, scale: 0.96 }}
@@ -620,7 +650,7 @@ export default function Home() {
               src={(heroSlides[currentSlide] || heroSlides[0] || {}).mlaImage}
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
-              sizes="(max-width: 640px) 200px, (max-width: 1024px) 330px, 450px"
+              sizes="(max-width: 1024px) 330px, 450px"
               className="object-contain object-bottom object-right drop-shadow-2xl"
               priority
             />
@@ -648,22 +678,22 @@ export default function Home() {
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
 
-          {/* Constituency Math Equation Layout (33 G.P. + 160+ Villages + 4 Hoblis = 1 MLA) */}
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-3 sm:gap-3.5 w-full">
+          {/* Constituency stats — 2×2 on mobile/tablet, equation row on desktop */}
+          <div className="grid grid-cols-2 lg:flex lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3.5 w-full">
 
             {/* 1. Gram Panchayats */}
-            <div className="flex-1 w-full flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-4 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#FFD700] to-[#FFA500] text-slate-950 shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
-                <FaBuilding className="w-6 h-6 text-slate-950" />
+            <div className="flex-1 w-full flex items-center gap-2 sm:gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-2.5 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all min-w-0">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#FFD700] to-[#FFA500] text-slate-950 shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaBuilding className="w-4 h-4 sm:w-6 sm:h-6 text-slate-950" />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white drop-shadow-md">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                  <span className="text-xl sm:text-3xl font-black text-white drop-shadow-md">
                     <AnimatedCounter end={Number(content.stats?.gpCount) || 33} duration={1.8} />
                   </span>
-                  <span className="text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">G.P.</span>
+                  <span className="text-[9px] sm:text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">G.P.</span>
                 </div>
-                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide">
+                <span className="text-[9px] sm:text-xs font-black text-white uppercase tracking-wide truncate">
                   {currentText.gpLabel}
                 </span>
               </div>
@@ -677,18 +707,18 @@ export default function Home() {
             </div>
 
             {/* 2. Revenue Villages */}
-            <div className="flex-1 w-full flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-4 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 text-white shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
-                <FaHome className="w-6 h-6 text-white" />
+            <div className="flex-1 w-full flex items-center gap-2 sm:gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-2.5 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all min-w-0">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-emerald-400 to-teal-600 text-white shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaHome className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white drop-shadow-md">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                  <span className="text-xl sm:text-3xl font-black text-white drop-shadow-md">
                     <AnimatedCounter end={Number(content.stats?.villagesCount) || 160} duration={2.2} suffix={content.stats?.villagesSuffix || "+"} />
                   </span>
-                  <span className="text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">Villages</span>
+                  <span className="text-[9px] sm:text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">Villages</span>
                 </div>
-                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide">
+                <span className="text-[9px] sm:text-xs font-black text-white uppercase tracking-wide truncate">
                   {currentText.villagesLabel}
                 </span>
               </div>
@@ -702,18 +732,18 @@ export default function Home() {
             </div>
 
             {/* 3. Hoblis */}
-            <div className="flex-1 w-full flex items-center gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-4 py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
-                <FaMapMarkerAlt className="w-6 h-6 text-white" />
+            <div className="flex-1 w-full flex items-center gap-2 sm:gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-2.5 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all min-w-0">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-600 text-white shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaMapMarkerAlt className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-white drop-shadow-md">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                  <span className="text-xl sm:text-3xl font-black text-white drop-shadow-md">
                     <AnimatedCounter end={Number(content.stats?.hoblisCount) || 4} duration={1.5} />
                   </span>
-                  <span className="text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">Hoblis</span>
+                  <span className="text-[9px] sm:text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">Hoblis</span>
                 </div>
-                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide">
+                <span className="text-[9px] sm:text-xs font-black text-white uppercase tracking-wide truncate">
                   {currentText.hoblisLabel}
                 </span>
               </div>
@@ -726,9 +756,9 @@ export default function Home() {
               </div>
             </div>
 
-            {/* 4. Constituency MLA (Equation Result Card) */}
-            <div className="flex-1 w-full flex items-center gap-3.5 bg-gradient-to-r from-[var(--land-gold)]/30 to-amber-500/20 backdrop-blur-md border-2 border-[var(--land-gold)] px-4 py-3.5 rounded-2xl shadow-2xl hover:bg-white/30 transition-all ring-2 ring-[var(--land-gold)]/40">
-              <div className="relative w-12 h-12 rounded-2xl overflow-hidden border-2 border-white bg-white shadow-lg shrink-0">
+            {/* 4. Constituency MLA */}
+            <div className="flex-1 w-full flex items-center gap-2 sm:gap-3.5 bg-gradient-to-r from-[var(--land-gold)]/30 to-amber-500/20 backdrop-blur-md border-2 border-[var(--land-gold)] px-2.5 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl shadow-2xl hover:bg-white/30 transition-all ring-2 ring-[var(--land-gold)]/40 min-w-0">
+              <div className="relative w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl overflow-hidden border-2 border-white bg-white shadow-lg shrink-0">
                 <MediaImage
                   src={site.mlaPortrait}
                   alt="Dr. Srinivas N. T. MLA"
@@ -737,16 +767,16 @@ export default function Home() {
                   className="object-cover object-top scale-110"
                 />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-2xl sm:text-3xl font-black text-[var(--land-gold)] drop-shadow-md">
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
+                  <span className="text-xl sm:text-3xl font-black text-[var(--land-gold)] drop-shadow-md">
                     <AnimatedCounter end={1} duration={1} />
                   </span>
-                  <span className="text-xs font-black text-white uppercase tracking-wider">
+                  <span className="text-[9px] sm:text-xs font-black text-white uppercase tracking-wider">
                     {lang === 'kn' ? 'ಕ್ಷೇತ್ರ / ಶಾಸಕರು' : 'Constituency MLA'}
                   </span>
                 </div>
-                <span className="text-[11px] sm:text-xs font-black text-white uppercase tracking-wide">
+                <span className="text-[9px] sm:text-xs font-black text-white uppercase tracking-wide truncate">
                   {lang === 'kn' ? site.nameShortKn : site.nameShortEn}
                 </span>
               </div>
@@ -958,8 +988,8 @@ export default function Home() {
             <div className="w-24 h-1.5 bg-[#FFD700] mx-auto mt-2 rounded-full shadow-md" />
           </div>
 
-          {/* Unified 4-Card Grid Layout (Tourist Places + Farmers) */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {/* Horizontal snap carousel on phones; grid from tablet up */}
+          <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-2 md:pb-0 -mx-1 px-1 scrollbar-none">
             {[
               ...galleryItems.map((item, index) => ({
                 id: item.id || `g-${index}`,
@@ -984,7 +1014,7 @@ export default function Home() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="bg-gradient-to-b from-[#001D56]/90 via-[#002B7F]/80 to-[#001438]/95 border-2 border-white/20 hover:border-[#FFD700] rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-300 flex flex-col group"
+                className="bg-gradient-to-b from-[#001D56]/90 via-[#002B7F]/80 to-[#001438]/95 border-2 border-white/20 hover:border-[#FFD700] rounded-3xl overflow-hidden backdrop-blur-xl shadow-2xl hover:shadow-[#FFD700]/20 transition-all duration-300 flex flex-col group snap-center shrink-0 w-[78vw] max-w-[300px] md:w-auto md:max-w-none md:shrink"
               >
                 {/* Top Image Container */}
                 <div className="relative w-full h-[210px] overflow-hidden shrink-0">

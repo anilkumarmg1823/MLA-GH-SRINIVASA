@@ -115,13 +115,13 @@ export default function DashboardNavbar({ session, onMenuClick }) {
   return (
     <>
       <header className="sticky top-0 z-50 bg-[var(--dash-panel-soft)] border-b-2 border-[#CCBCA5] shadow-lg backdrop-blur-md">
-        <div className="w-full px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+        <div className="w-full px-3 sm:px-6 lg:px-8 h-16 sm:h-20 flex items-center justify-between gap-2 overflow-hidden">
+          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1">
             {isAdmin && onMenuClick ? (
               <button
                 type="button"
                 onClick={onMenuClick}
-                className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-xl border border-[#CCBCA5]/40 text-[#CCBCA5] hover:bg-[#CCBCA5]/15 shrink-0"
+                className="lg:hidden inline-flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl border border-[#CCBCA5]/40 text-[#CCBCA5] hover:bg-[#CCBCA5]/15 shrink-0"
                 aria-label={t.sidebarExpand}
               >
                 <FaBars />
@@ -130,49 +130,46 @@ export default function DashboardNavbar({ session, onMenuClick }) {
 
             <Link
               href={homePath}
-              className="flex items-center gap-2 sm:gap-2.5 shrink-0 min-w-0 group"
+              className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 group"
             >
-              {/* Government Seal */}
               <div className="relative w-9 h-9 sm:w-10 sm:h-10 hidden md:block filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src="/karnataka_logo.png"
                   alt="Government of Karnataka Seal"
                   fill
-                  sizes="(max-width: 640px) 36px, 40px"
+                  sizes="40px"
                   className="object-contain"
                   priority
                 />
               </div>
 
-              {/* Official Circular MLA Logo (In Middle) */}
-              <div className="relative w-9.5 h-9.5 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[var(--dash-accent)] shadow-md shrink-0 transition-transform group-hover:scale-105">
+              <div className="relative w-9 h-9 sm:w-11 sm:h-11 rounded-full overflow-hidden border-2 border-[var(--dash-accent)] shadow-md shrink-0 transition-transform group-hover:scale-105">
                 <Image
                   src="/mla_official_circle_logo.jpg"
                   alt="Dr. Srinivas N.T. MLA"
                   fill
-                  sizes="(max-width: 640px) 38px, 44px"
+                  sizes="44px"
                   className="object-contain"
                   priority
                 />
               </div>
 
-              {/* INC Party Logo */}
-              <div className="relative w-9 h-9 sm:w-10 sm:h-10 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] shrink-0 transition-transform group-hover:scale-105">
+              <div className="relative w-8 h-8 sm:w-10 sm:h-10 filter drop-shadow-[0_2px_4px_rgba(0,0,0,0.15)] shrink-0 transition-transform group-hover:scale-105 hidden sm:block">
                 <Image
                   src="/party_logo_v2.png"
                   alt="Indian National Congress Hand Logo"
                   fill
-                  sizes="(max-width: 640px) 36px, 40px"
+                  sizes="40px"
                   className="object-contain"
                   priority
                 />
               </div>
 
-              <div className="flex flex-col text-left min-w-0 ml-0.5">
-                <span className="font-black text-xs sm:text-base tracking-wider uppercase text-[var(--dash-text)] leading-tight truncate">
+              <div className="hidden md:flex flex-col text-left min-w-0 ml-0.5">
+                <span className="font-black text-sm sm:text-base tracking-wider uppercase text-[var(--dash-text)] leading-tight truncate">
                   {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ." : "DR. SRINIVAS N. T."}
                 </span>
-                <span className="text-[var(--dash-accent)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5">
+                <span className="text-[var(--dash-accent)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5 truncate">
                   MBBS, MD, AIIMS Delhi
                 </span>
               </div>
@@ -222,17 +219,15 @@ export default function DashboardNavbar({ session, onMenuClick }) {
                 </Link>
               )}
             </nav>
-          ) : (
-            <div className="flex-1" />
-          )}
+          ) : null}
 
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <button
               type="button"
               onClick={toggleTheme}
               title={theme === "dark" ? t.themeLight : t.themeDark}
               aria-label={t.themeToggle}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-full border border-[var(--dash-border)] text-[var(--dash-accent)] hover:bg-[var(--dash-hover)] transition-colors shrink-0"
+              className="inline-flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border border-[var(--dash-border)] text-[var(--dash-accent)] hover:bg-[var(--dash-hover)] transition-colors shrink-0"
             >
               {theme === "dark" ? (
                 <FaSun className="text-sm" />
@@ -241,11 +236,11 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               )}
             </button>
 
-            <div className="flex items-center gap-1 bg-[var(--dash-bg)]/80 p-1 rounded-full border border-[var(--dash-border-soft)] h-fit">
+            <div className="flex items-center gap-0.5 sm:gap-1 bg-[var(--dash-bg)]/80 p-0.5 sm:p-1 rounded-full border border-[var(--dash-border-soft)] h-fit">
               <button
                 type="button"
                 onClick={() => setLang("en")}
-                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
+                className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
                   lang === "en"
                     ? "bg-[var(--dash-accent)] text-white shadow-md"
                     : "text-[var(--dash-text-60)] hover:text-[var(--dash-text)]"
@@ -256,7 +251,7 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               <button
                 type="button"
                 onClick={() => setLang("kn")}
-                className={`px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
+                className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-black rounded-full transition-all duration-300 ${
                   lang === "kn"
                     ? "bg-[var(--dash-accent)] text-white shadow-md"
                     : "text-[var(--dash-text-60)] hover:text-[var(--dash-text)]"
@@ -266,7 +261,7 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               </button>
             </div>
 
-            <div className="hidden md:flex items-center gap-2 bg-[var(--dash-panel)] px-3 py-1 rounded-full border border-[var(--dash-border)] shadow-sm h-fit">
+            <div className="hidden lg:flex items-center gap-2 bg-[var(--dash-panel)] px-3 py-1 rounded-full border border-[var(--dash-border)] shadow-sm h-fit">
               <div className="relative w-8 h-8 rounded-full overflow-hidden border border-[var(--dash-border)] bg-white shrink-0">
                 <Image
                   src="/cm_photo.png"
@@ -293,9 +288,12 @@ export default function DashboardNavbar({ session, onMenuClick }) {
             <button
               type="button"
               onClick={() => setLogoutOpen(true)}
-              className="px-3.5 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-bold text-[var(--dash-text)] border border-[var(--dash-border)] bg-[var(--dash-panel)] hover:bg-[var(--dash-hover)] rounded-full transition-all duration-300 shadow-sm whitespace-nowrap"
+              className="inline-flex items-center justify-center gap-1.5 w-9 h-9 sm:w-auto sm:h-auto sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-bold text-[var(--dash-text)] border border-[var(--dash-border)] bg-[var(--dash-panel)] hover:bg-[var(--dash-hover)] rounded-full transition-all duration-300 shadow-sm"
+              aria-label={t.logout}
+              title={t.logout}
             >
-              {t.logout}
+              <FaPowerOff className="text-xs sm:hidden" />
+              <span className="hidden sm:inline whitespace-nowrap">{t.logout}</span>
             </button>
           </div>
         </div>

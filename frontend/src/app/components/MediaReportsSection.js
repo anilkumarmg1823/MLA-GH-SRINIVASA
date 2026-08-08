@@ -118,9 +118,9 @@ export default function MediaReportsSection({
           <div className="w-24 h-1.5 bg-[#FFD700] rounded-full mt-1 shadow-md" />
         </div>
 
-        {/* Filter Bar: Month Selector Pills (Centered) */}
-        <div className="flex items-center justify-center gap-4 bg-white/10 border-2 border-white/20 p-4 rounded-3xl backdrop-blur-md shadow-xl">
-          <div className="flex items-center justify-center flex-wrap gap-2 overflow-x-auto w-full pb-1 sm:pb-0 scrollbar-none">
+        {/* Filter Bar: Month Selector Pills */}
+        <div className="flex items-center justify-center gap-4 bg-white/10 border-2 border-white/20 p-3 sm:p-4 rounded-3xl backdrop-blur-md shadow-xl">
+          <div className="flex items-center flex-nowrap gap-2 overflow-x-auto w-full pb-0.5 scrollbar-none justify-start sm:justify-center">
             {monthOptions.map((opt) => {
               const isActive = selectedMonth === opt.key;
               return (
@@ -128,7 +128,7 @@ export default function MediaReportsSection({
                   key={opt.key}
                   type="button"
                   onClick={() => setSelectedMonth(opt.key)}
-                  className={`px-4 py-2 rounded-2xl text-xs sm:text-sm font-black transition-all shrink-0 cursor-pointer ${
+                  className={`px-3.5 sm:px-4 py-2 rounded-2xl text-xs sm:text-sm font-black transition-all shrink-0 cursor-pointer ${
                     isActive
                       ? "bg-[#FFD700] text-slate-950 ring-4 ring-[#FFD700]/30 shadow-lg scale-105"
                       : "bg-white/10 text-white hover:bg-white/20 border border-white/20"
@@ -141,22 +141,28 @@ export default function MediaReportsSection({
           </div>
         </div>
 
-        {/* 2 Full Rows x 4-Column Newspaper Clipping Cards Grid (Full Occupy Image Layout) */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+        {/* Horizontal snap carousel on phones (same pattern as gallery); grid from tablet up */}
+        <div className="flex md:grid md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5 overflow-x-auto md:overflow-visible snap-x snap-mandatory pb-2 md:pb-0 -mx-1 px-1 scrollbar-none">
           {displayReports.map((report) => (
             <div
               key={report.id}
               onClick={() => setActiveModalReport(report)}
-              className="bg-white border-2 border-white/40 shadow-xl hover:shadow-2xl hover:border-[#FFD700] transition-all duration-300 cursor-pointer relative h-[260px] sm:h-[300px] lg:h-[320px] flex items-center justify-center overflow-hidden group rounded-2xl"
+              className="bg-white border-2 border-white/40 shadow-xl hover:shadow-2xl hover:border-[#FFD700] transition-all duration-300 cursor-pointer relative h-[240px] sm:h-[300px] lg:h-[320px] flex items-center justify-center overflow-hidden group rounded-2xl snap-center shrink-0 w-[78vw] max-w-[300px] md:w-auto md:max-w-none md:shrink"
             >
               <Image
                 src={report.imageUrl || "/kannada_newspaper_clipping_main.jpg"}
                 alt={report.paperKn || "Kannada Newspaper Clipping"}
                 fill
-                sizes="(max-width: 768px) 100vw, 25vw"
+                sizes="(max-width: 768px) 78vw, 25vw"
                 className="object-cover group-hover:scale-105 transition-transform duration-300"
                 unoptimized
               />
+              <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-[#001438]/95 to-transparent px-3 py-2.5">
+                <p className="text-[11px] font-black text-[#FFD700] truncate">
+                  {report.paperKn}
+                </p>
+                <p className="text-[10px] font-bold text-white/80">{report.date}</p>
+              </div>
             </div>
           ))}
         </div>

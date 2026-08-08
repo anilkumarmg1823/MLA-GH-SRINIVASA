@@ -251,28 +251,75 @@ export default function VillageDevelopmentMap({
         ))}
       </div>
 
-      {/* Main Grid: Interactive Map (Left - 7-8 Cols) + Clean Side Drawer (Right - 4-5 Cols) */}
+      {/* Main Grid: map (desktop) + side list */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
-        
-        {/* Left Interactive Map Container */}
-        <div className="lg:col-span-7 xl:col-span-8 relative w-full bg-slate-950/40 backdrop-blur-md border-2 border-white/30 rounded-2xl p-3 sm:p-4 shadow-2xl overflow-hidden min-h-[360px] sm:min-h-[440px] lg:min-h-[520px] lg:h-[590px] flex flex-col items-center justify-center">
-          
-          {/* Map Controls Header */}
-          <div className="absolute top-3 left-3 right-16 sm:right-auto sm:top-4 sm:left-4 z-30 flex items-center gap-2 bg-[#001D56]/90 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/30 text-[10px] sm:text-xs text-white shadow-lg max-w-[calc(100%-5.5rem)] sm:max-w-none min-w-0">
+
+        {/* Mobile: no pin map — chips carousel + selected summary */}
+        <div className="lg:hidden w-full bg-slate-950/50 border-2 border-white/30 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#FFD700]">
+                {lang === "kn" ? "ಆಯ್ದ ಪಂಚಾಯತಿ" : "Selected Panchayat"}
+              </p>
+              <h3 className="text-lg font-black text-white truncate">
+                {selectedPin.fullName}
+              </h3>
+            </div>
+            <span className="shrink-0 px-2.5 py-1 rounded-full bg-[#FFD700] text-slate-900 text-[10px] font-black">
+              {worksReady
+                ? lang === "kn"
+                  ? `${displayProjects.length} ಕಾಮಗಾರಿ`
+                  : `${displayProjects.length} works`
+                : "…"}
+            </span>
+          </div>
+          <p className="text-[11px] text-white/75 font-semibold leading-relaxed">
+            {lang === "kn"
+              ? "ಕೆಳಗಿನ ಕಾರ್ಡ್‌ಗಳನ್ನು ಸ್ವೈಪ್ ಮಾಡಿ ಪಂಚಾಯತಿ ಆಯ್ಕೆ ಮಾಡಿ. ವಿವರಗಳು ಕೆಳಗಿನ ಪಟ್ಟಿಯಲ್ಲಿವೆ."
+              : "Swipe cards below to pick a panchayat. Details are in the list below."}
+          </p>
+          <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pb-1 scrollbar-none -mx-1 px-1">
+            {VILLAGE_PINS.map((pin) => {
+              const active = activeGp === pin.gpName;
+              return (
+                <button
+                  key={`mcard-${pin.id}`}
+                  type="button"
+                  onClick={() => selectGp(pin)}
+                  className={`snap-center shrink-0 w-[72%] max-w-[240px] rounded-2xl border-2 px-3.5 py-3.5 text-left transition-all ${
+                    active
+                      ? "bg-[#FFD700] text-slate-900 border-white shadow-lg"
+                      : "bg-white/10 text-white border-white/25"
+                  }`}
+                >
+                  <p className="text-sm font-black truncate">
+                    {lang === "kn" ? pin.name : pin.gpName}
+                  </p>
+                  <p
+                    className={`text-[10px] font-bold mt-1 ${
+                      active ? "text-slate-700" : "text-white/70"
+                    }`}
+                  >
+                    {lang === "kn" ? "ಆಯ್ಕೆ ಮಾಡಿ →" : "Select →"}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Desktop map only */}
+        <div className="hidden lg:flex lg:col-span-7 xl:col-span-8 relative w-full bg-slate-950/40 backdrop-blur-md border-2 border-white/30 rounded-2xl p-4 shadow-2xl overflow-hidden min-h-[520px] h-[590px] flex-col items-center justify-center">
+          <div className="absolute top-4 left-4 z-30 flex items-center gap-2 bg-[#001D56]/90 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/30 text-xs text-white shadow-lg min-w-0 max-w-[60%]">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <span className="font-bold truncate">
               {lang === "kn"
                 ? `ಆಯ್ದ ಪಂಚಾಯತಿ: ${selectedPin.fullName}`
                 : `Selected: ${selectedPin.fullName}`}
-              {selectedVillage !== "All"
-                ? lang === "kn"
-                  ? ` · ಗ್ರಾಮ: ${selectedVillage}`
-                  : ` · Village: ${selectedVillage}`
-                : ""}
             </span>
           </div>
 
-          <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
+          <div className="absolute top-4 right-4 z-30">
             <button
               type="button"
               onClick={() => setIsZoomed(!isZoomed)}
@@ -289,26 +336,25 @@ export default function VillageDevelopmentMap({
             </button>
           </div>
 
-          {/* Zoomable Map Wrapper */}
           <div
-            className={`relative w-full h-[460px] lg:h-[510px] transition-transform duration-700 ease-out transform ${
+            className={`relative w-full h-[510px] transition-transform duration-700 ease-out transform ${
               isZoomed ? "scale-135" : "scale-100"
             }`}
             style={{
-              transformOrigin: selectedPin ? `${selectedPin.x}% ${selectedPin.y}%` : "center center",
+              transformOrigin: selectedPin
+                ? `${selectedPin.x}% ${selectedPin.y}%`
+                : "center center",
             }}
           >
-            {/* Kudligi Constituency Map Graphic */}
             <Image
               src="/kudligi_taluk_map_v2.png"
               alt="Kudligi Constituency Interactive Map"
               fill
-              sizes="(max-width: 1024px) 100vw, 65vw"
+              sizes="65vw"
               className="object-contain filter brightness-110 contrast-125 drop-shadow-xl"
               priority
             />
 
-            {/* GP pins — dim others when zoomed into one panchayat */}
             {VILLAGE_PINS.map((v) => {
               const isSelected =
                 selectedPin.id === v.id ||
@@ -334,10 +380,10 @@ export default function VillageDevelopmentMap({
                       <span className="absolute inset-0 rounded-full bg-[#FFD700]/60 animate-ping filter blur-sm" />
                     )}
                     <div
-                      className={`px-2.5 py-0.5 rounded-lg text-[10px] sm:text-xs font-black shadow-2xl border transition-all flex items-center gap-1 whitespace-nowrap ${
+                      className={`flex px-2.5 py-0.5 rounded-lg text-xs font-black shadow-2xl border transition-all items-center gap-1 whitespace-nowrap ${
                         isSelected
-                          ? "bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] text-slate-900 border-white ring-2 ring-amber-300 shadow-amber-500/40"
-                          : "bg-gradient-to-r from-[#002B7F] via-[#0055C4] to-[#0077E6] text-white border-white/80 shadow-md group-hover:border-[#FFD700]"
+                          ? "bg-gradient-to-r from-[#FFD700] via-[#FFA500] to-[#FFD700] text-slate-900 border-white ring-2 ring-amber-300"
+                          : "bg-gradient-to-r from-[#002B7F] via-[#0055C4] to-[#0077E6] text-white border-white/80"
                       }`}
                     >
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -348,7 +394,6 @@ export default function VillageDevelopmentMap({
               );
             })}
 
-            {/* Village pins around selected GP (only when zoomed) */}
             <AnimatePresence>
               {isZoomed &&
                 mapVillagePins.map((v) => {
@@ -381,10 +426,10 @@ export default function VillageDevelopmentMap({
                           }`}
                         />
                         <span
-                          className={`px-1.5 py-0.5 rounded-md text-[8px] sm:text-[9px] font-black whitespace-nowrap border shadow-lg max-w-[7.5rem] truncate ${
+                          className={`inline-block px-1.5 py-0.5 rounded-md text-[9px] font-black whitespace-nowrap border shadow-lg max-w-[7.5rem] truncate ${
                             isActive
                               ? "bg-[#FFD700] text-slate-900 border-white"
-                              : "bg-[#001D56]/95 text-white border-emerald-400/70 group-hover:border-[#FFD700]"
+                              : "bg-[#001D56]/95 text-white border-emerald-400/70"
                           }`}
                         >
                           {lang === "kn" ? v.nameKn || v.name : v.name}
@@ -396,7 +441,6 @@ export default function VillageDevelopmentMap({
                 })}
             </AnimatePresence>
           </div>
-
         </div>
 
         {/* Right Clean Side Panel (Height Aligned with Map) */}
