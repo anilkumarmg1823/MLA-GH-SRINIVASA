@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { decodeRoute, encodeRoute } from "./lib/routeEncoder";
+import { decodeRoute, encodeRoute } from "@/lib/routeEncoder";
 
 export function middleware(req) {
   const { pathname, search } = req.nextUrl;
