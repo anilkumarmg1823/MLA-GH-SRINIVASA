@@ -16,6 +16,7 @@ import AssemblyQaPage from "@/app/dashboard/assembly-qa/page";
 import LandingCmsPage from "@/app/dashboard/landing/page";
 import StudioPage from "@/app/dashboard/landing/studio/page";
 import TourSchedulesPage from "@/app/dashboard/tour-schedules/page";
+import DashboardLeadersPage from "@/app/dashboard/leaders/page";
 import AccessPage from "@/app/dashboard/access/page";
 import DashboardLayout from "@/app/dashboard/layout";
 
@@ -91,6 +92,13 @@ export default function EncodedRoutePage({ params: paramsProp }) {
     return (
       <DashboardLayout>
         <StudioPage />
+      </DashboardLayout>
+    );
+  }
+  if (decodedPath === "/dashboard/leaders" || decodedPath === "/leaders") {
+    return (
+      <DashboardLayout>
+        <DashboardLeadersPage />
       </DashboardLayout>
     );
   }

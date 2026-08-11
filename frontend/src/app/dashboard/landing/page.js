@@ -220,7 +220,24 @@ export default function LandingCmsPreviewPage() {
           </span>
         </div>
 
-        <div className="overflow-hidden rounded-xl border border-[var(--dash-border)] p-1 bg-slate-950/40 min-h-[750px]">
+        <div className="relative overflow-hidden rounded-xl border border-[var(--dash-border)] p-1 bg-slate-950/40 min-h-[750px]">
+          {/* Coming Soon Overlay Layer */}
+          <div className="absolute inset-0 z-30 pointer-events-none bg-slate-950/50 backdrop-blur-[3px] flex items-center justify-center p-6 text-center">
+            <div className="max-w-md p-6 rounded-3xl bg-slate-900/95 border-2 border-amber-400/50 shadow-2xl text-white space-y-3 pointer-events-auto">
+              <span className="inline-block px-4 py-1.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/50 text-xs font-black uppercase tracking-widest shadow-sm">
+                🚀 Coming Soon
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black tracking-wide text-amber-400">
+                {isKn ? "ಎಡಿಟರ್ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ" : "CMS Studio Editor - Coming Soon"}
+              </h2>
+              <p className="text-xs text-slate-300 font-medium leading-relaxed">
+                {isKn 
+                  ? "ಲ್ಯಾಂಡಿಂಗ್ ಪುಟದ ಸುಧಾರಿತ ಲೈವ್ ಎಡಿಟರ್ ಸದ್ಯದಲ್ಲೇ ಬರಲಿದೆ. ಸದ್ಯಕ್ಕೆ ಮುನ್ನೋಟ ಲಭ್ಯವಿದೆ." 
+                  : "Advanced visual CMS customization tools are coming soon. Current site preview is active below."}
+              </p>
+            </div>
+          </div>
+
           <LandingCmsLiveCanvas
             content={draft}
             lang={previewLang}

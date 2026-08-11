@@ -25,39 +25,41 @@ import {
   FaCheckCircle,
   FaExclamationTriangle,
   FaInfoCircle,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import KudligiLoader from "@/components/ui/KudligiLoader";
 
 const MLA_PHOTO = "/Picsart_26-02-05_14-31-10-288 (1).png";
 const KN = {
-  "mlaName": "DR. SRINIVAS N. T.",
-  "mlaTitle": "MLA - KUDLIGI CONSTITUENCY",
-  "home": "Return to Home Page",
-  "withYou": "MBBS, MD, AIIMS Delhi",
-  "congress": "INDIAN NATIONAL CONGRESS - KUDLIGI",
-  "loginTitle": "MLA Office Login",
-  "loginSub": "Kudligi Constituency Digital Portal",
-  "kudligi": "Kudligi",
-  "staffTab": "Staff Login",
-  "adminTab": "Admin Login",
-  "role": "Select Staff Role",
-  "phone": "Mobile Number",
-  "continue": "Continue",
-  "changePhone": "Change phone",
-  "staff": "Staff",
-  "scanQr": "Scan Authenticator QR",
-  "login": "Verify and Login",
-  "soon": "Coming Soon",
-  "active": "Active Module",
-  "notReg": "Phone not registered. Admin must add this staff in Access first.",
-  "notRegShort": "Staff phone not registered",
-  "enterCode": "Enter the 6-digit code from your Authenticator app",
-  "badCode": "Invalid authenticator code",
-  "fail": "Could not continue",
-  "hint": "Only staff added by admin in Access can login. Next: scan QR (first time).",
-  "scanHelp": "After admin enroll/reset, scan this QR in Google / Microsoft Authenticator, then enter the 6-digit code. QR stays until first successful login.",
-  "already": "Authenticator already set up. Enter the code from your app.",
-  "authCode": "Authenticator code"
+  mlaName: "DR. SRINIVAS N. T.",
+  mlaTitle: "MLA - KUDLIGI CONSTITUENCY",
+  home: "Return to Home Page",
+  withYou: "MBBS, MD, AIIMS Delhi",
+  congress: "INDIAN NATIONAL CONGRESS - KUDLIGI",
+  loginTitle: "MLA Office Login",
+  loginSub: "Kudligi Constituency Digital Portal",
+  kudligi: "Kudligi",
+  staffTab: "Staff Login",
+  adminTab: "Admin Login",
+  role: "Select Staff Role",
+  phone: "Mobile Number",
+  continue: "Continue",
+  changePhone: "Change phone",
+  staff: "Staff",
+  scanQr: "Scan Authenticator QR",
+  login: "Verify and Login",
+  soon: "Coming Soon",
+  active: "Active Module",
+  notReg: "Phone not registered. Admin must add this staff in Access first.",
+  notRegShort: "Staff phone not registered",
+  enterCode: "Enter the 6-digit code from your Authenticator app",
+  badCode: "Invalid authenticator code",
+  fail: "Could not continue",
+  hint: "Only staff added by admin in Access can login. Next: scan QR (first time).",
+  scanHelp: "After admin enroll/reset, scan this QR in Google / Microsoft Authenticator, then enter the 6-digit code. QR stays until first successful login.",
+  already: "Authenticator already set up. Enter the code from your app.",
+  authCode: "Authenticator code",
 };
 
 export default function LoginForm() {
@@ -67,6 +69,7 @@ export default function LoginForm() {
   const [mode, setMode] = useState("staff");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [phone, setPhone] = useState("");
   const [role, setRole] = useState("development");
   const [otp, setOtp] = useState("");
@@ -178,16 +181,28 @@ export default function LoginForm() {
 
   return (
     <div className="relative min-h-[100dvh] w-full bg-[#F8FAFC] text-slate-900 flex overflow-x-hidden overflow-y-auto select-none">
+      {/* Dynamic Animated Background */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div className="absolute inset-0 opacity-40">
-          <Image src="/kudligi_3d_map_blue.png" alt="Kudligi Constituency Map" fill priority className="object-cover filter brightness-110 contrast-125" />
+          <Image
+            src="/kudligi_3d_map_blue.png"
+            alt="Kudligi Constituency Map"
+            fill
+            priority
+            className="object-cover filter brightness-110 contrast-125"
+          />
         </div>
-        <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-[#0055C4]/30 via-[#002B7F]/20 to-transparent blur-[140px]" />
-        <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tl from-[#FFD700]/30 via-[#001438]/20 to-transparent blur-[140px]" />
+        <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-[#0055C4]/30 via-[#002B7F]/20 to-transparent blur-[140px] animate-pulse duration-10000" />
+        <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tl from-[#FFD700]/30 via-[#001438]/20 to-transparent blur-[140px] animate-pulse duration-10000" />
       </div>
 
+      {/* Top Header Buttons */}
       <div className="absolute top-5 left-6 right-6 z-30 flex items-center justify-between pointer-events-auto">
-        <Link href="/" className="relative w-12 h-12 rounded-full bg-[#001438] border-2 border-[#FFD700] p-1.5 shadow-2xl hover:scale-110 hover:border-white transition-all flex items-center justify-center cursor-pointer group" title={KN.home}>
+        <Link
+          href="/"
+          className="relative w-12 h-12 rounded-full bg-[#001438] border-2 border-[#FFD700] p-1.5 shadow-2xl hover:scale-110 hover:border-white transition-all flex items-center justify-center cursor-pointer group"
+          title={KN.home}
+        >
           <div className="relative w-full h-full">
             <Image src="/party_logo_v2.png" alt="INC Logo" fill className="object-contain" />
           </div>
@@ -195,10 +210,19 @@ export default function LoginForm() {
         <LanguageToggle className="bg-[#001438] text-white backdrop-blur-md shadow-lg border border-[#FFD700]/40 rounded-full" />
       </div>
 
+      {/* 2-Column Main Layout Container */}
       <div className="relative z-10 w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 p-4 sm:p-8 lg:p-12 items-center py-20 sm:py-16 lg:my-auto">
+        {/* Left Column: MLA Official Photo & Info Banner (Desktop) */}
         <div className="hidden lg:flex lg:col-span-6 relative h-[580px] flex-col justify-between p-6 xl:p-10 select-none overflow-hidden rounded-3xl">
           <div className="absolute inset-0 z-0 overflow-hidden rounded-3xl">
-            <Image src={MLA_PHOTO} alt={mlaName} fill priority sizes="50vw" className="object-cover object-[center_10%] brightness-110 contrast-105" />
+            <Image
+              src={MLA_PHOTO}
+              alt={mlaName}
+              fill
+              priority
+              sizes="50vw"
+              className="object-cover object-[center_10%] brightness-110 contrast-105"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-[#001438] via-[#001438]/30 to-transparent" />
             <div className="absolute inset-0 bg-gradient-to-r from-[#001438]/40 via-transparent to-[#F8FAFC]" />
           </div>
@@ -220,14 +244,17 @@ export default function LoginForm() {
               </p>
             </div>
             <div className="pt-3 border-t border-white/20 flex items-center justify-between text-[11px] text-slate-200 font-semibold">
-              <span>(c) 2026 Dr. Srinivas N. T. MLA Office Kudligi</span>
+              <span>&copy; 2026 Dr. Srinivas N. T. MLA Office Kudligi</span>
               <span className="text-[#FFD700] font-black">Government of Karnataka Portal</span>
             </div>
           </div>
         </div>
 
+        {/* Right Column: Login Card Container */}
         <div className="lg:col-span-6 relative w-full flex flex-col items-center justify-center">
           <div className="w-full max-w-[460px] rounded-3xl border-2 border-slate-200 bg-white/95 backdrop-blur-2xl p-6 sm:p-8 shadow-2xl border-t-4 border-t-[#0055C4]">
+            
+            {/* Header Title */}
             <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-6 pb-4 border-b border-slate-100">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="relative w-11 h-11 rounded-2xl overflow-hidden border-2 border-[#FFD700] bg-[#001438] p-1.5 shrink-0 shadow-md">
@@ -248,6 +275,7 @@ export default function LoginForm() {
               </span>
             </div>
 
+            {/* Mode Switcher Tabs */}
             <div className="flex p-1 mb-6 rounded-2xl bg-slate-100 border border-slate-200">
               <button
                 type="button"
@@ -266,6 +294,7 @@ export default function LoginForm() {
                 <FaUsers className="w-3.5 h-3.5" />
                 <span>{t.tabStaff || KN.staffTab}</span>
               </button>
+
               <button
                 type="button"
                 onClick={() => {
@@ -283,6 +312,7 @@ export default function LoginForm() {
               </button>
             </div>
 
+            {/* Feedback Notifications */}
             <AnimatePresence>
               {info ? (
                 <motion.div
@@ -311,6 +341,7 @@ export default function LoginForm() {
               ) : null}
             </AnimatePresence>
 
+            {/* Admin Form */}
             {mode === "admin" ? (
               <form onSubmit={handleAdminLogin} className="flex-1 flex flex-col justify-between space-y-4 pt-2">
                 <div className="space-y-4">
@@ -325,11 +356,12 @@ export default function LoginForm() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-10 pr-3.5 text-sm text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                        placeholder=""
+                        placeholder="admin@example.com"
                         required
                       />
                     </div>
                   </div>
+
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-[#001D56] mb-1.5">
                       {t.password || "Password"}
@@ -337,16 +369,29 @@ export default function LoginForm() {
                     <div className="relative">
                       <FaLock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-10 pr-3.5 text-sm text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                        placeholder=""
+                        className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-10 pr-10 text-sm text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
+                        placeholder="Enter your password"
                         required
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword((v) => !v)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-700 transition-colors"
+                        title={showPassword ? "Hide password" : "Show password"}
+                      >
+                        {showPassword ? (
+                          <FaEyeSlash className="w-4 h-4" />
+                        ) : (
+                          <FaEye className="w-4 h-4" />
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
+
                 <button
                   type="submit"
                   disabled={busy}
@@ -357,6 +402,7 @@ export default function LoginForm() {
                 </button>
               </form>
             ) : !staffStep ? (
+              /* Staff Step 1 Form */
               <form onSubmit={handleStaffBegin} className="flex-1 flex flex-col justify-between space-y-4 pt-2">
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-[#001D56] mb-1.5">
@@ -374,6 +420,7 @@ export default function LoginForm() {
                     ))}
                   </select>
                 </div>
+
                 <div>
                   <label className="block text-xs font-black uppercase tracking-wider text-[#001D56] mb-1.5">
                     {t.phone || KN.phone}
@@ -389,16 +436,18 @@ export default function LoginForm() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-16 pr-3.5 text-sm text-slate-900 font-mono font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                      placeholder=""
+                      placeholder="Enter 10-digit mobile number"
                       maxLength={10}
                       required
                     />
                   </div>
                 </div>
+
                 <div className="p-3 rounded-2xl bg-blue-50 border border-blue-200 text-xs text-[#0055C4] font-bold flex items-start gap-2">
                   <FaInfoCircle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>{KN.hint}</span>
                 </div>
+
                 <button
                   type="submit"
                   disabled={busy}
@@ -409,6 +458,7 @@ export default function LoginForm() {
                 </button>
               </form>
             ) : (
+              /* Staff Step 2 Authenticator Form */
               <form onSubmit={handleStaffLogin} className="space-y-4">
                 <button
                   type="button"
@@ -418,6 +468,7 @@ export default function LoginForm() {
                   <FaArrowLeft className="w-3 h-3" />
                   {KN.changePhone}
                 </button>
+
                 <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
                   <p className="text-xs font-black text-[#001D56]">
                     {staffStep.name || KN.staff}
@@ -426,6 +477,7 @@ export default function LoginForm() {
                     +91 {staffStep.phone}
                   </p>
                 </div>
+
                 {staffStep.needsScan && staffStep.qrDataUrl ? (
                   <div className="space-y-2">
                     <p className="text-xs font-black uppercase tracking-wider text-[#001D56]">
@@ -453,6 +505,7 @@ export default function LoginForm() {
                     <span>{KN.already}</span>
                   </div>
                 )}
+
                 <div className="space-y-1.5">
                   <label className="block text-xs font-black uppercase tracking-wider text-[#001D56]">
                     {KN.authCode}
@@ -468,12 +521,13 @@ export default function LoginForm() {
                         setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
                       }
                       className="w-full h-12 rounded-xl bg-slate-50 border-2 border-[#0055C4] pl-10 pr-3.5 text-sm text-slate-900 font-mono font-bold placeholder:text-slate-400 focus:outline-none focus:bg-white transition-all shadow-inner"
-                      placeholder="000000"
+                      placeholder="Enter 6-digit code"
                       maxLength={6}
                       required
                     />
                   </div>
                 </div>
+
                 <button
                   type="submit"
                   disabled={busy}
