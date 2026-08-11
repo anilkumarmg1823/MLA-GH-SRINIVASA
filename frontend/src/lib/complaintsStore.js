@@ -9,6 +9,7 @@ export async function submitComplaint(payload) {
       name: (payload.name || "").trim(),
       phone: String(payload.phone || "").replace(/\D/g, ""),
       village: (payload.village || "").trim(),
+      gramPanchayat: (payload.gramPanchayat || "").trim(),
       subject: (payload.subject || "").trim(),
       message: (payload.message || "").trim(),
     },
@@ -31,6 +32,19 @@ export async function updateComplaintStatus(id, status) {
   const { data } = await api(`/complaints/${id}`, {
     method: "PATCH",
     body: { status },
+  });
+  return data;
+}
+
+/** Officer reply — optionally sends WhatsApp for source=whatsapp */
+export async function replyToComplaint(id, replyText, { status = "closed", sendWhatsApp = true } = {}) {
+  const { data } = await api(`/complaints/${id}`, {
+    method: "PATCH",
+    body: {
+      replyText: (replyText || "").trim(),
+      status,
+      sendWhatsApp,
+    },
   });
   return data;
 }

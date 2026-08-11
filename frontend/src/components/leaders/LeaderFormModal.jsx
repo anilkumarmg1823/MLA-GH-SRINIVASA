@@ -5,6 +5,12 @@ import { FaTimes } from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import { LEADER_CATEGORY_META } from "@/data/leadersSeed";
+import {
+  confirmEnglishSaveIfNeeded,
+  looksLikeEnglish,
+  toKannadaText,
+} from "@/lib/transliterateName";
+import KnTextField from "@/components/ui/KnTextField";
 
 const emptyForm = {
   nameEn: "",
@@ -64,6 +70,18 @@ export default function LeaderFormModal({ open, initial = null, onClose, onSubmi
       setError(t.leaderPhoneRequired || "Phone or WhatsApp number is required");
       return;
     }
+    const englishFields = [];
+    if (looksLikeEnglish(form.nameEn) && !form.nameKn.trim()) {
+      englishFields.push(form.nameEn);
+    }
+    if (looksLikeEnglish(form.roleEn) && !form.roleKn.trim()) {
+      englishFields.push(form.roleEn);
+    }
+    if (
+      !confirmEnglishSaveIfNeeded(lang, englishFields, t.confirmEnglishSave)
+    ) {
+      return;
+    }
     setError("");
     onSubmit?.({
       id: initial?.id,
@@ -115,17 +133,29 @@ export default function LeaderFormModal({ open, initial = null, onClose, onSubmi
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="block space-y-1">
-              <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
-                Name (EN)
-              </span>
-              <input
-                className={fieldClass}
-                value={form.nameEn}
-                onChange={(e) => setField("nameEn", e.target.value)}
-                placeholder="Name in English"
-              />
-            </label>
+            <div className="space-y-1">
+              <label className="block space-y-1">
+                <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
+                  Name (EN)
+                </span>
+                <input
+                  className={fieldClass}
+                  value={form.nameEn}
+                  onChange={(e) => setField("nameEn", e.target.value)}
+                  placeholder="Name in English"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setField("nameKn", toKannadaText(form.nameEn))
+                }
+                disabled={!form.nameEn.trim()}
+                className="text-[10px] font-black px-2.5 py-0.5 rounded-full border border-[var(--dash-accent)]/50 text-[var(--dash-accent)] hover:bg-[var(--dash-accent)]/10 disabled:opacity-40"
+              >
+                {t.accessFillKannada || t.translateToKannada || "Fill Kannada"}
+              </button>
+            </div>
             <label className="block space-y-1">
               <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
                 Name (KN)
@@ -137,16 +167,28 @@ export default function LeaderFormModal({ open, initial = null, onClose, onSubmi
                 placeholder="ಹೆಸರು"
               />
             </label>
-            <label className="block space-y-1">
-              <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
-                Role (EN)
-              </span>
-              <input
-                className={fieldClass}
-                value={form.roleEn}
-                onChange={(e) => setField("roleEn", e.target.value)}
-              />
-            </label>
+            <div className="space-y-1">
+              <label className="block space-y-1">
+                <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
+                  Role (EN)
+                </span>
+                <input
+                  className={fieldClass}
+                  value={form.roleEn}
+                  onChange={(e) => setField("roleEn", e.target.value)}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={() =>
+                  setField("roleKn", toKannadaText(form.roleEn))
+                }
+                disabled={!form.roleEn.trim()}
+                className="text-[10px] font-black px-2.5 py-0.5 rounded-full border border-[var(--dash-accent)]/50 text-[var(--dash-accent)] hover:bg-[var(--dash-accent)]/10 disabled:opacity-40"
+              >
+                {t.accessFillKannada || t.translateToKannada || "Fill Kannada"}
+              </button>
+            </div>
             <label className="block space-y-1">
               <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
                 Role (KN)
@@ -176,16 +218,12 @@ export default function LeaderFormModal({ open, initial = null, onClose, onSubmi
             </select>
           </label>
 
-          <label className="block space-y-1">
-            <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
-              {lang === "kn" ? "ಸ್ಥಳ" : "Location"}
-            </span>
-            <input
-              className={fieldClass}
-              value={form.locationKn}
-              onChange={(e) => setField("locationKn", e.target.value)}
-            />
-          </label>
+          <KnTextField
+            label={lang === "kn" ? "ಸ್ಥಳ" : "Location"}
+            value={form.locationKn}
+            onChange={(v) => setField("locationKn", v)}
+            inputClassName={fieldClass}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <label className="block space-y-1">
@@ -226,16 +264,14 @@ export default function LeaderFormModal({ open, initial = null, onClose, onSubmi
             />
           </label>
 
-          <label className="block space-y-1">
-            <span className="text-[11px] font-black uppercase tracking-wide text-[var(--dash-text-50)]">
-              Bio (KN)
-            </span>
-            <textarea
-              className={`${fieldClass} min-h-[80px] resize-y`}
-              value={form.bioKn}
-              onChange={(e) => setField("bioKn", e.target.value)}
-            />
-          </label>
+          <KnTextField
+            label="Bio (KN)"
+            value={form.bioKn}
+            onChange={(v) => setField("bioKn", v)}
+            multiline
+            rows={3}
+            inputClassName={`${fieldClass} min-h-[80px] resize-y`}
+          />
 
           <label className="inline-flex items-center gap-2 text-sm font-bold text-[var(--dash-text-70)]">
             <input

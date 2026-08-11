@@ -6,6 +6,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { getGpLabel, getVillageLabel } from "@/data/gramPanchayats";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import VoiceSearchButton from "@/components/ui/VoiceSearchButton";
+import KnTranslateButtons from "@/components/ui/KnTranslateButtons";
+import { textMatchesSearch } from "@/lib/transliterateName";
 
 export default function BedkeSearchModal({ open, onClose, records, onSelect }) {
   const { lang, t } = useLanguage();
@@ -24,9 +26,10 @@ export default function BedkeSearchModal({ open, onClose, records, onSelect }) {
   }, [open]);
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
+    if (!query.trim()) return [];
+    const seen = new Set();
     return (records || []).filter((r) => {
+      if (!r?.id || seen.has(r.id)) return false;
       const approach =
         r.approach === "personal" ? t.bedkeTabPersonal : t.bedkeTabCivil;
       const hay = [
@@ -41,9 +44,10 @@ export default function BedkeSearchModal({ open, onClose, records, onSelect }) {
         getVillageLabel(r.gramPanchayat, r.village, lang),
       ]
         .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
+        .join(" ");
+      if (!textMatchesSearch(hay, query)) return false;
+      seen.add(r.id);
+      return true;
     });
   }, [records, query, lang, t.bedkeTabCivil, t.bedkeTabPersonal]);
 
@@ -65,8 +69,9 @@ export default function BedkeSearchModal({ open, onClose, records, onSelect }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.bedkeSearchPlaceholder}
-            className="flex-1 bg-transparent text-[var(--dash-text)] text-base outline-none placeholder:text-[var(--dash-text-40)]"
+            className="flex-1 min-w-0 bg-transparent text-[var(--dash-text)] text-base outline-none placeholder:text-[var(--dash-text-40)]"
           />
+          <KnTranslateButtons value={query} onChange={setQuery} compact />
           <VoiceSearchButton active={open} onTranscript={setQuery} />
           <button
             type="button"

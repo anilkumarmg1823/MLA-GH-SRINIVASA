@@ -9,6 +9,7 @@ import {
   FaStethoscope, FaHome, FaAngleRight, FaShareAlt, FaCalendarCheck
 } from "react-icons/fa";
 import { gramPanchayats } from "@/data/gramPanchayats";
+import { ensureLocationsTree } from "@/lib/locations";
 
 // Animated Counting Number Component for Scroll Trigger
 function AnimatedNumber({ value, duration = 1.5 }) {
@@ -314,6 +315,10 @@ export default function MedicalReferralPage() {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [generatedRefId, setGeneratedRefId] = useState("");
+
+  useEffect(() => {
+    ensureLocationsTree().catch(() => {});
+  }, []);
 
   // Get active villages for selected Grama Panchayat
   const activeGpObj = gramPanchayats.find(gp => gp.name === selectedGpName || gp.nameKn === selectedGpName);

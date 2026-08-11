@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage, LanguageToggle } from "@/context/LanguageContext";
@@ -45,7 +45,7 @@ const KN = {
   "continue": "Continue",
   "changePhone": "Change phone",
   "staff": "Staff",
-  "scanQr": "Scan QR once",
+  "scanQr": "Scan Authenticator QR",
   "login": "Verify and Login",
   "soon": "Coming Soon",
   "active": "Active Module",
@@ -55,13 +55,14 @@ const KN = {
   "badCode": "Invalid authenticator code",
   "fail": "Could not continue",
   "hint": "Only staff added by admin in Access can login. Next: scan QR (first time).",
-  "scanHelp": "Scan with Google / Microsoft Authenticator, then enter the 6-digit code.",
+  "scanHelp": "After admin enroll/reset, scan this QR in Google / Microsoft Authenticator, then enter the 6-digit code. QR stays until first successful login.",
   "already": "Authenticator already set up. Enter the code from your app.",
   "authCode": "Authenticator code"
 };
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { lang, t } = useLanguage();
   const [mode, setMode] = useState("staff");
   const [email, setEmail] = useState("");
@@ -70,12 +71,23 @@ export default function LoginForm() {
   const [role, setRole] = useState("development");
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
   const [busy, setBusy] = useState(false);
   const [staffStep, setStaffStep] = useState(null);
 
   const isKn = lang === "kn";
   const mlaName = KN.mlaName;
   const mlaTitle = KN.mlaTitle;
+
+  useEffect(() => {
+    if (searchParams.get("reason") === "session_replaced") {
+      setInfo(
+        isKn
+          ? "ಬೇರೆ ಟ್ಯಾಬ್‌ನಲ್ಲಿ ಹೊಸ ಲಾಗಿನ್ ಆಯಿತು — ಈ ಸೆಷನ್ ಮುಚ್ಚಲಾಗಿದೆ. ಮತ್ತೆ ಲಾಗಿನ್ ಮಾಡಿ."
+          : "You signed in from another tab — this session was closed. Please log in again."
+      );
+    }
+  }, [searchParams, isKn]);
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -270,6 +282,20 @@ export default function LoginForm() {
                 <span>{t.tabAdmin || KN.adminTab}</span>
               </button>
             </div>
+
+            <AnimatePresence>
+              {info ? (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className="mb-4 text-xs text-sky-800 bg-sky-50 border border-sky-200 rounded-2xl px-4 py-3 flex items-center gap-2 font-bold"
+                >
+                  <FaInfoCircle className="w-4 h-4 text-sky-600 shrink-0" />
+                  <span>{info}</span>
+                </motion.div>
+              ) : null}
+            </AnimatePresence>
 
             <AnimatePresence>
               {error ? (

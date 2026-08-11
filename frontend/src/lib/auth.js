@@ -2,15 +2,14 @@ import { api, setToken, clearToken } from "@/lib/api";
 import { canModule } from "@/lib/permissionsStore";
 
 const SESSION_KEY = "mla_session";
+const EPOCH_KEY = "mla_auth_epoch";
 
-export function getSession() {
-  if (typeof window === "undefined") return null;
+export function bumpAuthEpoch() {
+  if (typeof window === "undefined") return;
   try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
+    localStorage.setItem(EPOCH_KEY, String(Date.now()));
   } catch {
-    return null;
+    /* ignore */
   }
 }
 
@@ -18,12 +17,56 @@ export function setSession(session) {
   if (typeof window === "undefined") return;
   if (session?.token) setToken(session.token);
   localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+  bumpAuthEpoch();
+  try {
+    sessionStorage.removeItem("mla_kicked");
+    sessionStorage.setItem(
+      "mla_seen_epoch",
+      localStorage.getItem(EPOCH_KEY) || ""
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+export function getSession() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    // Keep mla_token aligned so API Authorization never drops mid-session
+    if (session?.token) setToken(session.token);
+    return session;
+  } catch {
+    return null;
+  }
 }
 
 export function clearSession() {
   if (typeof window === "undefined") return;
   clearToken();
   localStorage.removeItem(SESSION_KEY);
+  bumpAuthEpoch();
+  try {
+    sessionStorage.removeItem("mla_kicked");
+    sessionStorage.setItem(
+      "mla_seen_epoch",
+      localStorage.getItem(EPOCH_KEY) || ""
+    );
+  } catch {
+    /* ignore */
+  }
+}
+
+/** True when another tab took over the browser session */
+export function wasSessionReplaced() {
+  if (typeof window === "undefined") return false;
+  try {
+    return sessionStorage.getItem("mla_kicked") === "1";
+  } catch {
+    return false;
+  }
 }
 
 export function canAccessDevelopment(session) {

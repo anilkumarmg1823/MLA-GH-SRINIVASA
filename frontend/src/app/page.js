@@ -18,11 +18,13 @@ import {
 } from "@/lib/landingContentStore";
 import { loadPublicDevelopments } from "@/lib/publicDevelopments";
 import { submitComplaint } from "@/lib/complaintsStore";
+import { loadGramPanchayats, loadVillagesForGp } from "@/lib/locations";
 import {
   FaUsers, FaHandshake, FaChartLine, FaShieldAlt, FaLaptop,
   FaFacebookF, FaTwitter, FaYoutube, FaInstagram, FaPhoneAlt, FaEnvelope,
   FaHospitalUser, FaImages, FaClipboardList, FaLandmark, FaGlobe,
-  FaBuilding, FaHome, FaMapMarkerAlt, FaBars, FaTimes
+  FaBuilding, FaHome, FaMapMarkerAlt, FaBars, FaTimes, FaFileAlt,
+  FaChevronDown, FaChevronUp, FaChevronRight
 } from "react-icons/fa";
 
 // Animated Counter Component for Constituency Stats
@@ -53,10 +55,15 @@ export default function Home() {
   const [form, setForm] = useState({
     name: "",
     phone: "",
+    gramPanchayat: "",
     village: "",
     subject: "",
     message: "",
   });
+  const [gpList, setGpList] = useState([]);
+  const [villageList, setVillageList] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
+  const [villagesLoading, setVillagesLoading] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [quickLinksOpen, setQuickLinksOpen] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -90,6 +97,46 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+    setLocationsLoading(true);
+    loadGramPanchayats()
+      .then((list) => {
+        if (!cancelled) setGpList(list);
+      })
+      .catch(() => {
+        if (!cancelled) setGpList([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLocationsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!form.gramPanchayat) {
+      setVillageList([]);
+      return undefined;
+    }
+    setVillagesLoading(true);
+    loadVillagesForGp(form.gramPanchayat)
+      .then((list) => {
+        if (!cancelled) setVillageList(list);
+      })
+      .catch(() => {
+        if (!cancelled) setVillageList([]);
+      })
+      .finally(() => {
+        if (!cancelled) setVillagesLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [form.gramPanchayat]);
+
   const currentText = content.copy?.[lang] || content.copy?.en || {};
   const site = content.site || {};
   const heroSlides = content.hero?.slides || [];
@@ -114,25 +161,37 @@ export default function Home() {
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormError("");
+    const phoneDigits = String(form.phone || "").replace(/\D/g, "");
+    if (phoneDigits.length !== 10) {
+      setFormError(
+        currentText.formPhoneInvalid ||
+          "Mobile number must be exactly 10 digits"
+      );
+      return;
+    }
+    if (!form.gramPanchayat || !form.village) {
+      setFormError(
+        currentText.formGpRequired ||
+          "Please select Gram Panchayat and Village"
+      );
+      return;
+    }
     setFormSending(true);
     try {
-      await submitComplaint(form);
+      await submitComplaint({ ...form, phone: phoneDigits });
       setFormSubmitted(true);
       setForm({
         name: "",
         phone: "",
+        gramPanchayat: "",
         village: "",
         subject: "",
         message: "",
       });
+      setVillageList([]);
       setTimeout(() => setFormSubmitted(false), 5000);
     } catch (err) {
-      setFormError(
-        err?.message ||
-        (lang === "kn"
-          ? "Could not submit. Please try again."
-          : "Could not submit. Please try again.")
-      );
+      setFormError(err?.message || "Failed to submit. Please try again.");
     } finally {
       setFormSending(false);
     }
@@ -305,11 +364,15 @@ export default function Home() {
                 className="inline-flex items-center gap-1.5 text-white/90 hover:text-[var(--land-gold)] transition-colors text-sm font-black tracking-wide cursor-pointer py-1"
               >
                 <span>{currentText.quickLinks}</span>
-                <span className="text-[10px] text-[var(--land-gold)] transition-transform duration-200">{quickLinksOpen ? "▲" : "▼"}</span>
+                {quickLinksOpen ? (
+                  <FaChevronUp className="w-2.5 h-2.5 text-[var(--land-gold)]" />
+                ) : (
+                  <FaChevronDown className="w-2.5 h-2.5 text-[var(--land-gold)]" />
+                )}
               </button>
 
               {quickLinksOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-[#001742]/95 backdrop-blur-2xl rounded-2xl p-2.5 shadow-2xl border-2 border-[var(--land-gold)]/60 flex flex-col gap-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="absolute right-0 mt-3 w-72 bg-[#001742]/95 backdrop-blur-2xl rounded-2xl p-2.5 shadow-2xl border-2 border-[var(--land-gold)]/60 flex flex-col gap-1 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                   <Link
                     href="/medical-referral"
                     onClick={() => setQuickLinksOpen(false)}
@@ -355,6 +418,17 @@ export default function Home() {
                   >
                     <FaGlobe className="w-4 h-4 text-cyan-400 shrink-0 group-hover:scale-110 transition-transform" />
                     <span>{currentText.districtPortal}</span>
+                  </a>
+
+                  <a
+                    href={content.quickLinks?.ajskCertificatesUrl || "https://nadakacheri.karnataka.gov.in/AJSKCertificates"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setQuickLinksOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-2.5 text-xs font-extrabold text-slate-100 hover:text-[var(--land-gold)] hover:bg-white/10 rounded-xl transition-all text-left group"
+                  >
+                    <FaFileAlt className="w-4 h-4 text-rose-400 shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{currentText.ajskCertificates || "AJSK / Nadakacheri Certificates"}</span>
                   </a>
                 </div>
               )}
@@ -491,6 +565,10 @@ export default function Home() {
               <FaGlobe className="w-4 h-4 text-cyan-400 shrink-0" />
               {currentText.districtPortal}
             </a>
+            <a href={content.quickLinks?.ajskCertificatesUrl || "https://nadakacheri.karnataka.gov.in/AJSKCertificates"} target="_blank" rel="noopener noreferrer" onClick={closeMobileNav} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10">
+              <FaFileAlt className="w-4 h-4 text-rose-400 shrink-0" />
+              {currentText.ajskCertificates || "AJSK / Nadakacheri Certificates"}
+            </a>
             <Link
               href="/login"
               onClick={closeMobileNav}
@@ -502,25 +580,30 @@ export default function Home() {
         ) : null}
       </header>
 
-      {/* 3. HERO BANNER AREA (Rich Royal Blue Theme with Animated Slogan & Photo Carousel) */}
+      {/* 3. HERO BANNER — fixed tall frame (~70vh); video fills, text + MLA overlaid */}
       <section
         id="home"
-        className="relative w-full overflow-hidden bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl min-h-[420px] sm:min-h-[460px] lg:h-[510px]"
+        className="relative w-full overflow-hidden bg-gradient-to-r from-[var(--land-blue-deep)] via-[var(--land-blue-mid)] to-[var(--land-blue-bright)] border-b-4 border-[var(--land-gold)] shadow-2xl h-[560px] sm:h-[600px] md:h-[640px] lg:h-[min(70vh,680px)] xl:h-[min(72vh,720px)]"
         style={{ fontFamily: "var(--land-font-display)" }}
       >
         {(() => {
           const slide = heroSlides[currentSlide] || heroSlides[0] || {};
           const slideBg = slide.backgroundImage || content.hero?.backgroundImage;
+          const heroVideo =
+            content.hero?.video || "/CM%20Kudalagi%20Pgm.mp4";
+          const hasVideo = Boolean(heroVideo);
           const overlay =
             typeof content.hero?.overlayOpacity === "number"
               ? content.hero.overlayOpacity
-              : 0.65;
+              : hasVideo
+                ? 0.45
+                : 0.65;
           return (
             <div className="absolute inset-0 z-0 overflow-hidden bg-[var(--land-blue-deep)] select-none pointer-events-none">
-              {content.hero?.video ? (
+              {hasVideo ? (
                 <div className="absolute inset-0 pointer-events-none select-none overflow-hidden">
                   <video
-                    key={content.hero.video}
+                    key={heroVideo}
                     autoPlay
                     loop
                     muted
@@ -530,13 +613,13 @@ export default function Home() {
                     tabIndex={-1}
                     aria-hidden="true"
                     controlsList="nodownload nofullscreen noremoteplayback"
-                    className="object-cover object-center w-full h-full opacity-40 filter brightness-110 contrast-110 saturate-110 pointer-events-none select-none"
+                    className="absolute inset-0 object-cover object-center w-full h-full opacity-75 filter brightness-105 contrast-105 saturate-110 pointer-events-none select-none"
                     style={{ pointerEvents: "none" }}
-                    src={content.hero.video}
+                    src={heroVideo}
                   />
                 </div>
               ) : null}
-              {slideBg ? (
+              {!hasVideo && slideBg ? (
                 <MediaImage
                   src={slideBg}
                   alt=""
@@ -555,65 +638,52 @@ export default function Home() {
           );
         })()}
 
-        {/* Banner Main Content — mobile: pin text+photo to bottom; desktop: classic left text */}
-        <div className="relative z-20 max-w-7xl mx-auto px-3 sm:px-8 lg:px-12 w-full h-full flex items-end sm:items-center pb-0 pt-5 sm:py-6 lg:py-0 min-h-[420px] sm:min-h-[460px] lg:min-h-0 lg:h-full">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-2 sm:gap-6 items-end sm:items-center w-full mt-auto sm:my-auto">
+        {/* Banner copy — simple left stack over video; MLA on right */}
+        <div className="relative z-20 max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 2xl:px-16 w-full h-full flex items-end sm:items-center pb-5 sm:py-8 lg:py-10">
+          <motion.div
+            key={`hero-copy-${currentSlide}`}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="flex flex-col items-start gap-3 sm:gap-4 lg:gap-5 w-[56%] sm:w-[58%] lg:w-[55%] xl:w-[52%] 2xl:w-[50%] min-w-0"
+          >
+            <span className="inline-flex items-center gap-2 bg-[var(--land-gold)] text-slate-950 text-[10px] sm:text-sm xl:text-base font-black px-3 sm:px-4 py-1 sm:py-1.5 rounded-full shadow-lg border border-white max-w-full">
+              <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[var(--land-blue)] animate-pulse shrink-0" />
+              <span className="leading-snug">
+                {lang === "kn"
+                  ? (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleKn
+                  : (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleEn}
+              </span>
+            </span>
 
-            {/* LEFT: slogans */}
-            <div className="lg:col-span-8 flex flex-col gap-2 sm:gap-3.5 text-left items-start z-30 max-w-3xl min-w-0 w-[58%] sm:w-full pr-1 sm:pr-[38%] md:pr-[36%] lg:pr-[8%] pb-3 sm:pb-0 self-end sm:self-auto">
+            <h1 className="text-left text-lg sm:text-3xl lg:text-4xl xl:text-5xl font-black leading-[1.35] tracking-tight drop-shadow-[0_2px_10px_rgba(0,0,0,0.7)]">
+              <span className="text-white">
+                {lang === "kn"
+                  ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1Kn
+                  : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1En}
+              </span>
+              <span className="text-[var(--land-gold)]">
+                {" "}
+                •{" "}
+                {lang === "kn"
+                  ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2Kn
+                  : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2En}
+              </span>
+            </h1>
 
-              <motion.div
-                key={`badge-${currentSlide}`}
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4 }}
-                className="inline-flex items-center gap-1.5 sm:gap-2.5 bg-[var(--land-gold)] text-slate-950 text-[10px] sm:text-sm font-black px-2.5 sm:px-4.5 py-1 sm:py-1.5 rounded-full shadow-xl border border-white max-w-full"
-              >
-                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[var(--land-blue)] animate-pulse shrink-0" />
-                <span className="leading-snug line-clamp-2 sm:line-clamp-none">
-                  {lang === "kn"
-                    ? (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleKn
-                    : (heroSlides[currentSlide] || heroSlides[0] || {}).badgeTitleEn}
-                </span>
-              </motion.div>
+            <p className="text-left text-sm sm:text-base xl:text-lg font-black text-[var(--land-gold)] leading-snug drop-shadow-[0_2px_8px_rgba(0,0,0,0.7)]">
+              •{" "}
+              {lang === "kn"
+                ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3Kn
+                : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3En}
+            </p>
 
-              <motion.div
-                key={`text-${currentSlide}`}
-                initial={{ opacity: 0, x: -15 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.5 }}
-                className="flex flex-col gap-1.5 sm:gap-2 text-white w-full min-w-0"
-              >
-                <h1 className="text-sm sm:text-3xl lg:text-4xl font-black leading-snug sm:leading-tight tracking-tight drop-shadow-md flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-0.5 sm:gap-2 text-white">
-                  <span>
-                    {lang === "kn"
-                      ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1Kn
-                      : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan1En}
-                  </span>
-                  <span className="text-[var(--land-gold)] font-extrabold text-[11px] sm:text-3xl lg:text-4xl">
-                    •{" "}
-                    {lang === "kn"
-                      ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2Kn
-                      : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan2En}
-                  </span>
-                </h1>
-
-                <div className="inline-flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-sm font-black text-[var(--land-gold)] bg-[var(--land-blue-deep)]/80 backdrop-blur-md px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-xl w-fit shadow-lg border border-[var(--land-gold)]/60 max-w-full">
-                  <span className="line-clamp-2 sm:line-clamp-none leading-snug">
-                    ✦{" "}
-                    {lang === "kn"
-                      ? (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3Kn
-                      : (heroSlides[currentSlide] || heroSlides[0] || {}).slogan3En}
-                  </span>
-                </div>
-                <p className="text-[10px] sm:text-sm font-bold text-slate-100 w-full max-w-2xl lg:max-w-3xl mt-0.5 sm:mt-1.5 leading-relaxed bg-[var(--land-blue-deep)]/80 backdrop-blur-xl p-2.5 sm:p-5 rounded-xl sm:rounded-2xl border border-[var(--land-gold)]/40 sm:border-2 shadow-2xl line-clamp-4 sm:line-clamp-none">
-                  {lang === "kn"
-                    ? (heroSlides[currentSlide] || heroSlides[0] || {}).subKn
-                    : (heroSlides[currentSlide] || heroSlides[0] || {}).subEn}
-                </p>
-              </motion.div>
-            </div>
-          </div>
+            <p className="text-left text-xs sm:text-sm xl:text-base font-semibold text-white/95 leading-relaxed max-w-xl drop-shadow-[0_2px_10px_rgba(0,0,0,0.75)]">
+              {lang === "kn"
+                ? (heroSlides[currentSlide] || heroSlides[0] || {}).subKn
+                : (heroSlides[currentSlide] || heroSlides[0] || {}).subEn}
+            </p>
+          </motion.div>
         </div>
 
         {/* Mobile MLA portrait — flush to bottom border */}
@@ -640,8 +710,8 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* Desktop / tablet: right-flushed MLA portrait */}
-        <div className="absolute right-0 bottom-0 z-30 hidden sm:block w-[280px] md:w-[330px] lg:w-[420px] xl:w-[450px] h-[320px] md:h-[360px] lg:h-[400px] xl:h-[425px] pointer-events-none">
+        {/* Desktop / tablet / projection: right-flushed MLA portrait */}
+        <div className="absolute right-0 bottom-0 z-30 hidden sm:block w-[280px] md:w-[330px] lg:w-[420px] xl:w-[500px] 2xl:w-[580px] h-[320px] md:h-[360px] lg:h-[400px] xl:h-[500px] 2xl:h-[580px] pointer-events-none">
           <motion.div
             key={`mla-portrait-${currentSlide}`}
             initial={{ opacity: 0, scale: 0.96 }}
@@ -658,7 +728,7 @@ export default function Home() {
               }
               alt="Dr. Srinivas N. T. MLA Kudligi"
               fill
-              sizes="(max-width: 1024px) 330px, 450px"
+              sizes="(max-width: 1024px) 330px, (max-width: 1536px) 500px, 580px"
               className="object-contain object-bottom object-right drop-shadow-2xl"
               priority
             />
@@ -684,19 +754,19 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-r from-[var(--land-blue-mid)]/80 via-[var(--land-blue-bright)]/60 to-[var(--land-blue-mid)]/80 z-[1]" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 lg:px-12">
+        <div className="relative z-10 max-w-7xl 2xl:max-w-[1600px] mx-auto px-4 sm:px-8 lg:px-12 2xl:px-16">
 
           {/* Constituency stats — 2×2 on mobile/tablet, equation row on desktop */}
-          <div className="grid grid-cols-2 lg:flex lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3.5 w-full">
+          <div className="grid grid-cols-2 lg:flex lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3.5 xl:gap-4 w-full">
 
             {/* 1. Gram Panchayats */}
-            <div className="flex-1 w-full flex items-center gap-2 sm:gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-2.5 sm:px-4 py-2.5 sm:py-3.5 rounded-2xl shadow-xl hover:bg-white/30 transition-all min-w-0">
-              <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#FFD700] to-[#FFA500] text-slate-950 shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
-                <FaBuilding className="w-4 h-4 sm:w-6 sm:h-6 text-slate-950" />
+            <div className="flex-1 w-full flex items-center gap-2 sm:gap-3.5 bg-white/20 backdrop-blur-md border-2 border-white px-2.5 sm:px-4 xl:px-5 py-2.5 sm:py-3.5 xl:py-4 rounded-2xl shadow-xl hover:bg-white/30 transition-all min-w-0">
+              <div className="w-9 h-9 sm:w-12 sm:h-12 xl:w-14 xl:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-tr from-[#FFD700] to-[#FFA500] text-slate-950 shrink-0 shadow-lg flex items-center justify-center border-2 border-white">
+                <FaBuilding className="w-4 h-4 sm:w-6 sm:h-6 xl:w-7 xl:h-7 text-slate-950" />
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-                  <span className="text-xl sm:text-3xl font-black text-white drop-shadow-md">
+                  <span className="text-xl sm:text-3xl xl:text-4xl 2xl:text-5xl font-black text-white drop-shadow-md">
                     <AnimatedCounter end={Number(content.stats?.gpCount) || 33} duration={1.8} />
                   </span>
                   <span className="text-[9px] sm:text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">G.P.</span>
@@ -721,7 +791,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-                  <span className="text-xl sm:text-3xl font-black text-white drop-shadow-md">
+                  <span className="text-xl sm:text-3xl xl:text-4xl 2xl:text-5xl font-black text-white drop-shadow-md">
                     <AnimatedCounter end={Number(content.stats?.villagesCount) || 160} duration={2.2} suffix={content.stats?.villagesSuffix || "+"} />
                   </span>
                   <span className="text-[9px] sm:text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">Villages</span>
@@ -746,7 +816,7 @@ export default function Home() {
               </div>
               <div className="flex flex-col min-w-0">
                 <div className="flex items-baseline gap-1 sm:gap-1.5 flex-wrap">
-                  <span className="text-xl sm:text-3xl font-black text-white drop-shadow-md">
+                  <span className="text-xl sm:text-3xl xl:text-4xl 2xl:text-5xl font-black text-white drop-shadow-md">
                     <AnimatedCounter end={Number(content.stats?.hoblisCount) || 4} duration={1.5} />
                   </span>
                   <span className="text-[9px] sm:text-xs font-black text-[var(--land-gold)] uppercase tracking-wider">Hoblis</span>
@@ -1137,42 +1207,89 @@ export default function Home() {
                     </label>
                     <input
                       type="tel"
+                      inputMode="numeric"
+                      autoComplete="tel"
                       required
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                      title={currentText.formPhoneHint || "10-digit mobile"}
                       value={form.phone}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, phone: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        const digits = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setForm((f) => ({ ...f, phone: digits }));
+                      }}
+                      placeholder={currentText.formPhoneHint || "10-digit mobile"}
                       className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors shadow-sm"
                     />
                   </div>
                 </div>
 
-                {/* Row 2: Dropdown selector */}
-                <div className="flex flex-col gap-2">
-                  <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
-                    {currentText.formVillage} *
-                  </label>
-                  <select
-                    required
-                    value={form.village}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, village: e.target.value }))
-                    }
-                    className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors cursor-pointer shadow-sm"
-                  >
-                    <option value="" className="bg-white text-slate-900">
-                      {currentText.formVillagePlaceholder}
-                    </option>
-                    {(content.grievance?.villages || []).map((v) => (
-                      <option
-                        key={v.value}
-                        value={v.value}
-                        className="bg-white text-slate-900"
-                      >
-                        {v.labelEn} / {v.labelKn}
+                {/* Row 2: Gram Panchayat → Village (from API) */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
+                      {currentText.formGp || currentText.gpLabel || "Gram Panchayat"} *
+                    </label>
+                    <select
+                      required
+                      value={form.gramPanchayat}
+                      disabled={locationsLoading}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          gramPanchayat: e.target.value,
+                          village: "",
+                        }))
+                      }
+                      className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                    >
+                      <option value="" className="bg-white text-slate-900">
+                        {locationsLoading
+                          ? "..."
+                          : currentText.formGpPlaceholder || "-- Select Gram Panchayat --"}
                       </option>
-                    ))}
-                  </select>
+                      {gpList.map((gp) => (
+                        <option
+                          key={gp.name}
+                          value={gp.name}
+                          className="bg-white text-slate-900"
+                        >
+                          {lang === "kn" ? gp.nameKn || gp.name : gp.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[#001D56] text-xs font-black uppercase tracking-wider">
+                      {currentText.formVillage} *
+                    </label>
+                    <select
+                      required
+                      value={form.village}
+                      disabled={!form.gramPanchayat || villagesLoading}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, village: e.target.value }))
+                      }
+                      className="bg-white border-2 border-slate-300 rounded-xl p-3.5 text-slate-900 text-xs sm:text-sm font-bold focus:border-[#002B7F] focus:outline-none transition-colors cursor-pointer shadow-sm disabled:opacity-50"
+                    >
+                      <option value="" className="bg-white text-slate-900">
+                        {!form.gramPanchayat
+                          ? currentText.formGpPlaceholder || "-- Select Gram Panchayat --"
+                          : villagesLoading
+                            ? "..."
+                            : currentText.formVillagePlaceholder}
+                      </option>
+                      {villageList.map((v) => (
+                        <option
+                          key={v.name}
+                          value={v.name}
+                          className="bg-white text-slate-900"
+                        >
+                          {lang === "kn" ? v.nameKn || v.name : v.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* Subject */}
@@ -1288,7 +1405,7 @@ export default function Home() {
           {/* MIDDLE COLUMN: Quick Links Navigation (3 Cols) */}
           <div className="md:col-span-3 flex flex-col items-center md:items-start gap-4">
             <h4 className="text-[var(--land-gold)] font-black text-sm uppercase tracking-widest flex items-center gap-2 border-b-2 border-[var(--land-gold)]/40 pb-2 w-full">
-              <span>✦</span>
+              <FaChevronRight className="w-3 h-3 text-[var(--land-gold)]" />
               <span>{currentText.quickLinks}</span>
             </h4>
 
@@ -1306,7 +1423,7 @@ export default function Home() {
                   onClick={() => handleScroll(link.id)}
                   className="group flex items-center gap-2 text-white/80 hover:text-[var(--land-gold)] text-xs sm:text-sm font-bold tracking-wide transition-all duration-200 text-left py-1 px-2 rounded-lg hover:bg-white/10"
                 >
-                  <span className="text-[var(--land-gold)] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-transform">➔</span>
+                  <FaChevronRight className="w-3 h-3 text-[var(--land-gold)] opacity-60 group-hover:opacity-100 group-hover:translate-x-1 transition-all shrink-0" />
                   <span>{link.label}</span>
                 </button>
               ))}

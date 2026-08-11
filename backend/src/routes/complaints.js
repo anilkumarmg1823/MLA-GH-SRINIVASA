@@ -4,6 +4,9 @@ import { prisma } from "../lib/prisma.js";
 import { AppError, asyncHandler, ok } from "../middleware/error.js";
 import { requireAuth, requireAdmin } from "../middleware/auth.js";
 import { activeWhere, archiveById, restoreById } from "../lib/archive.js";
+import { isWhatsAppReady } from "../lib/whatsapp/client.js";
+import { sendOfficerReply } from "../lib/whatsapp/bot.js";
+import { resolveObjectUrl } from "../lib/s3.js";
 
 const router = Router();
 
@@ -27,7 +30,6 @@ function assertRateLimit(ip) {
   hits.push(now);
   submitHits.set(key, hits);
 
-  // Drop other IPs whose windows have fully expired
   for (const [otherKey, otherHits] of submitHits) {
     if (otherKey === key) continue;
     const live = otherHits.filter((t) => now - t < RATE_WINDOW_MS);
@@ -42,11 +44,24 @@ const createSchema = z.object({
     .string()
     .trim()
     .transform((v) => v.replace(/\D/g, ""))
-    .refine((v) => v.length >= 10 && v.length <= 15, "Invalid phone"),
+    .refine((v) => v.length === 10, "Phone must be 10 digits"),
   village: z.string().trim().min(1).max(120),
+  gramPanchayat: z.string().trim().min(1).max(120),
   subject: z.string().trim().max(200).optional().default(""),
   message: z.string().trim().min(1).max(4000),
 });
+
+async function withPhotoUrls(row) {
+  if (!row) return row;
+  const photos = Array.isArray(row.photos) ? row.photos : [];
+  const resolved = await Promise.all(
+    photos.map(async (p) => ({
+      ...p,
+      url: await resolveObjectUrl(p.url, p.s3Key),
+    }))
+  );
+  return { ...row, photos: resolved };
+}
 
 router.post(
   "/",
@@ -58,9 +73,12 @@ router.post(
         name: body.name,
         phone: body.phone,
         village: body.village,
+        gramPanchayat: body.gramPanchayat,
         subject: body.subject || "",
         message: body.message,
         status: "new",
+        source: "web",
+        photos: [],
       },
     });
     return ok(res, row, null, 201);
@@ -75,6 +93,7 @@ router.get(
     const where = activeWhere();
     if (req.query.status) where.status = String(req.query.status);
     if (req.query.village) where.village = String(req.query.village);
+    if (req.query.source) where.source = String(req.query.source);
     const q = String(req.query.q || "").trim();
     if (q) {
       where.OR = [
@@ -83,6 +102,7 @@ router.get(
         { subject: { contains: q, mode: "insensitive" } },
         { message: { contains: q, mode: "insensitive" } },
         { village: { contains: q, mode: "insensitive" } },
+        { gramPanchayat: { contains: q, mode: "insensitive" } },
       ];
     }
     const page = Math.max(1, Number(req.query.page) || 1);
@@ -96,7 +116,8 @@ router.get(
         take: limit,
       }),
     ]);
-    return ok(res, rows, { total, page, limit });
+    const data = await Promise.all(rows.map(withPhotoUrls));
+    return ok(res, data, { total, page, limit });
   })
 );
 
@@ -107,18 +128,56 @@ router.patch(
   asyncHandler(async (req, res) => {
     const body = z
       .object({
-        status: z.enum(["new", "read", "closed"]),
+        status: z.enum(["new", "read", "closed"]).optional(),
+        replyText: z.string().trim().min(1).max(2000).optional(),
+        sendWhatsApp: z.boolean().optional().default(true),
       })
       .parse(req.body);
-    try {
-      const row = await prisma.complaint.update({
-        where: { id: req.params.id },
-        data: { status: body.status },
-      });
-      return ok(res, row);
-    } catch {
+
+    if (!body.status && !body.replyText) {
+      throw new AppError(400, "INVALID", "Provide status and/or replyText");
+    }
+
+    const existing = await prisma.complaint.findUnique({
+      where: { id: req.params.id },
+    });
+    if (!existing || existing.archivedAt) {
       throw new AppError(404, "NOT_FOUND", "Complaint not found");
     }
+
+    const data = {};
+    if (body.status) data.status = body.status;
+
+    if (body.replyText) {
+      data.replyText = body.replyText;
+      data.repliedAt = new Date();
+      data.repliedById = req.user?.id || null;
+      if (!body.status) data.status = "closed";
+    }
+
+    const row = await prisma.complaint.update({
+      where: { id: req.params.id },
+      data,
+    });
+
+    let waResult = null;
+    let waError = null;
+    if (
+      body.replyText &&
+      body.sendWhatsApp !== false &&
+      existing.source === "whatsapp" &&
+      isWhatsAppReady()
+    ) {
+      try {
+        waResult = await sendOfficerReply(row, body.replyText);
+      } catch (err) {
+        console.error("Officer WhatsApp reply failed", err);
+        waError = err.message || "Failed to send WhatsApp reply";
+      }
+    }
+
+    const out = await withPhotoUrls(row);
+    return ok(res, { ...out, waResult, waError });
   })
 );
 

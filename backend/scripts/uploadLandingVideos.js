@@ -26,8 +26,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const backendRoot = join(__dirname, "..");
 const repoRoot = join(backendRoot, "..");
 
-const HERO_LOCAL = join(repoRoot, "frontend/public/hero_nrega_video.mp4");
-const HERO_S3_KEY = "kudligi-mla/landing/hero_nrega_video.mp4";
+const HERO_LOCAL = join(repoRoot, "frontend/public/CM Kudalagi Pgm.mp4");
+const HERO_S3_KEY = "kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4";
 
 const DEV_LOCAL = join(repoRoot, "frontend/public/lv_0_20251107090516.mp4");
 const DEV_S3_KEY = "kudligi-mla/landing/developments_bg_video.mp4";

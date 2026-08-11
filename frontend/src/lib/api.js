@@ -9,7 +9,21 @@ export function getApiBase() {
 
 export function getToken() {
   if (typeof window === "undefined") return null;
-  return localStorage.getItem(TOKEN_KEY);
+  const direct = localStorage.getItem(TOKEN_KEY);
+  if (direct) return direct;
+  // Heal: token may live only on the session object after older logins
+  try {
+    const raw = localStorage.getItem("mla_session");
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (session?.token) {
+      localStorage.setItem(TOKEN_KEY, session.token);
+      return session.token;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
 }
 
 export function setToken(token) {

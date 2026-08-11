@@ -1,8 +1,16 @@
 "use client";
 
-import React from "react";
-import { FaFileAlt, FaEye, FaTrashAlt } from "react-icons/fa";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  FaFileAlt,
+  FaEye,
+  FaTrashAlt,
+  FaChevronLeft,
+  FaChevronRight,
+} from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
+
+const PAGE_SIZE = 10;
 
 function formatDate(iso, lang) {
   if (!iso) return "—";
@@ -22,8 +30,22 @@ export default function AssemblyQaList({
   onOpen,
   onDelete,
   canDelete = false,
+  pageSize = PAGE_SIZE,
 }) {
   const { lang, t } = useLanguage();
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows]);
+
+  const totalPages = Math.max(1, Math.ceil((rows?.length || 0) / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  const pageRows = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return (rows || []).slice(start, start + pageSize);
+  }, [rows, safePage, pageSize]);
 
   if (!rows?.length) {
     return (
@@ -33,89 +55,127 @@ export default function AssemblyQaList({
     );
   }
 
-  return (
-    <ul className="space-y-3">
-      {rows.map((row) => {
-        const question =
-          lang === "kn" && row.questionKn ? row.questionKn : row.question;
-        const askedLabel =
-          row.askedBy === "mla" ? t.aqTabMla : t.aqTabOther;
-        const statusLabel =
-          row.status === "answered" ? t.aqStatusAnswered : t.aqStatusPending;
-        const fileCount = row.files?.length || 0;
+  const from = (safePage - 1) * pageSize + 1;
+  const to = Math.min(safePage * pageSize, rows.length);
 
-        return (
-          <li
-            key={row.id}
-            className="rounded-2xl border border-[#CCBCA5]/25 bg-[var(--dash-panel)] p-4 sm:p-5 shadow-lg hover:border-[#CCBCA5]/50 transition-colors"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 mb-2">
-                  {row.questionNo ? (
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#CCBCA5]/15 text-[#CCBCA5] border border-[#CCBCA5]/35">
-                      {row.questionNo}
+  return (
+    <div className="space-y-3">
+      <ul className="space-y-3">
+        {pageRows.map((row) => {
+          const question =
+            lang === "kn" && row.questionKn ? row.questionKn : row.question;
+          const askedLabel =
+            row.askedBy === "mla" ? t.aqTabMla : t.aqTabOther;
+          const statusLabel =
+            row.status === "answered" ? t.aqStatusAnswered : t.aqStatusPending;
+          const fileCount = row.files?.length || 0;
+
+          return (
+            <li
+              key={row.id}
+              className="rounded-2xl border border-[#CCBCA5]/25 bg-[var(--dash-panel)] p-4 sm:p-5 shadow-lg hover:border-[#CCBCA5]/50 transition-colors"
+            >
+              <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    {row.questionNo ? (
+                      <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[#CCBCA5]/15 text-[#CCBCA5] border border-[#CCBCA5]/35">
+                        {row.questionNo}
+                      </span>
+                    ) : null}
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[var(--dash-hover)] text-[var(--dash-text-70)] border border-[var(--dash-border-faint)]">
+                      {askedLabel}
                     </span>
-                  ) : null}
-                  <span className="text-[10px] font-black px-2 py-0.5 rounded-md bg-[var(--dash-hover)] text-[var(--dash-text-70)] border border-[var(--dash-border-faint)]">
-                    {askedLabel}
-                  </span>
-                  <span
-                    className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${
-                      row.status === "answered"
-                        ? "bg-emerald-400/15 text-emerald-300 border-emerald-400/35"
-                        : "bg-amber-400/15 text-amber-300 border-amber-400/35"
-                    }`}
-                  >
-                    {statusLabel}
-                  </span>
-                  {fileCount > 0 ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-black text-[var(--dash-text-45)]">
-                      <FaFileAlt className="text-[9px]" />
-                      {fileCount} {t.aqFiles}
+                    <span
+                      className={`text-[10px] font-black px-2 py-0.5 rounded-md border ${
+                        row.status === "answered"
+                          ? "bg-emerald-400/15 text-emerald-300 border-emerald-400/35"
+                          : "bg-amber-400/15 text-amber-300 border-amber-400/35"
+                      }`}
+                    >
+                      {statusLabel}
                     </span>
-                  ) : null}
+                    {fileCount > 0 ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-black text-[var(--dash-text-45)]">
+                        <FaFileAlt className="text-[9px]" />
+                        {fileCount} {t.aqFiles}
+                      </span>
+                    ) : null}
+                  </div>
+
+                  <p className="text-sm sm:text-base font-bold text-[var(--dash-text)] leading-snug line-clamp-3">
+                    {question}
+                  </p>
+
+                  <p className="text-xs text-[var(--dash-text-45)] mt-2">
+                    {row.askedByName}
+                    {row.askedBy === "other" && row.partyName
+                      ? ` · ${row.partyName}`
+                      : ""}
+                    {row.sessionLabel ? ` · ${row.sessionLabel}` : ""}
+                    {" · "}
+                    {formatDate(row.sessionDate || row.createdAt, lang)}
+                  </p>
                 </div>
 
-                <p className="text-sm sm:text-base font-bold text-[var(--dash-text)] leading-snug line-clamp-3">
-                  {question}
-                </p>
-
-                <p className="text-xs text-[var(--dash-text-45)] mt-2">
-                  {row.askedByName}
-                  {row.askedBy === "other" && row.partyName
-                    ? ` · ${row.partyName}`
-                    : ""}
-                  {row.sessionLabel ? ` · ${row.sessionLabel}` : ""}
-                  {" · "}
-                  {formatDate(row.sessionDate || row.createdAt, lang)}
-                </p>
-              </div>
-
-              <div className="flex sm:flex-col gap-2 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => onOpen?.(row)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-[#CCBCA5]/40 text-[#CCBCA5] text-xs font-black hover:bg-[#CCBCA5]/10"
-                >
-                  <FaEye className="text-[10px]" />
-                  {t.aqView}
-                </button>
-                {canDelete ? (
+                <div className="flex sm:flex-col gap-2 shrink-0">
                   <button
                     type="button"
-                    onClick={() => onDelete?.(row)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-red-400/35 text-red-300 text-xs font-black hover:bg-red-400/10"
+                    onClick={() => onOpen?.(row)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-[#CCBCA5]/40 text-[#CCBCA5] text-xs font-black hover:bg-[#CCBCA5]/10"
                   >
-                    <FaTrashAlt className="text-[10px]" />
-                    {t.delete}
+                    <FaEye className="text-[10px]" />
+                    {t.aqView}
                   </button>
-                ) : null}
+                  {canDelete ? (
+                    <button
+                      type="button"
+                      onClick={() => onDelete?.(row)}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-full border border-red-400/35 text-red-300 text-xs font-black hover:bg-red-400/10"
+                    >
+                      <FaTrashAlt className="text-[10px]" />
+                      {t.delete}
+                    </button>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          </li>
-        );
-      })}
-    </ul>
+            </li>
+          );
+        })}
+      </ul>
+
+      {rows.length > pageSize ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-1 py-2">
+          <p className="text-xs text-[var(--dash-text-50)] font-medium">
+            {lang === "kn"
+              ? `${from}–${to} / ${rows.length}`
+              : `${from}–${to} of ${rows.length}`}
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={safePage <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/35 text-xs font-black text-[var(--dash-text)] disabled:opacity-35 hover:bg-[#CCBCA5]/12"
+            >
+              <FaChevronLeft className="text-[10px]" />
+              {lang === "kn" ? "ಹಿಂದೆ" : "Prev"}
+            </button>
+            <span className="text-xs font-bold text-[var(--dash-text-60)] tabular-nums">
+              {safePage} / {totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={safePage >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/35 text-xs font-black text-[var(--dash-text)] disabled:opacity-35 hover:bg-[#CCBCA5]/12"
+            >
+              {lang === "kn" ? "ಮುಂದೆ" : "Next"}
+              <FaChevronRight className="text-[10px]" />
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
   );
 }

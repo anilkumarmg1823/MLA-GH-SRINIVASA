@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { FaTimes } from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
 import { getGpLabel, getVillageLabel } from "@/data/gramPanchayats";
+import { confirmEnglishSaveIfNeeded } from "@/lib/transliterateName";
+import KnTextField from "@/components/ui/KnTextField";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 const emptyForm = {
@@ -79,18 +81,38 @@ export default function BedkeFormModal({
       setError(t.bedkeSelectVillageFirst);
       return;
     }
+    if (
+      !confirmEnglishSaveIfNeeded(
+        lang,
+        [name, subject],
+        t.confirmEnglishSave
+      )
+    ) {
+      return;
+    }
     setError("");
     setStep("preview");
   };
 
   const handleConfirm = () => {
+    const name = form.name.trim();
+    const subject = form.subject.trim();
+    if (
+      !confirmEnglishSaveIfNeeded(
+        lang,
+        [name, subject],
+        t.confirmEnglishSave
+      )
+    ) {
+      return;
+    }
     onSubmit?.({
       id: initial?.id,
       gramPanchayat,
       village,
-      name: form.name.trim(),
+      name,
       approach: form.approach,
-      subject: form.subject.trim(),
+      subject,
       status: form.status || "Pending",
     });
   };
@@ -133,21 +155,13 @@ export default function BedkeFormModal({
 
         {step === "form" ? (
           <form onSubmit={handlePreview} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
-                {t.bedkeName}
-              </label>
-              <input
-                type="text"
-                value={form.name}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, name: e.target.value }))
-                }
-                className="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
-                placeholder={t.bedkeNamePlaceholder}
-                autoFocus
-              />
-            </div>
+            <KnTextField
+              label={t.bedkeName}
+              value={form.name}
+              onChange={(name) => setForm((f) => ({ ...f, name }))}
+              placeholder={t.bedkeNamePlaceholder}
+              inputClassName="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
+            />
 
             <div>
               <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
@@ -189,20 +203,15 @@ export default function BedkeFormModal({
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-[#CCBCA5] mb-1.5">
-                {t.bedkeSubject}
-              </label>
-              <textarea
-                value={form.subject}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, subject: e.target.value }))
-                }
-                rows={4}
-                className="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20 resize-y"
-                placeholder={t.bedkeSubjectPlaceholder}
-              />
-            </div>
+            <KnTextField
+              label={t.bedkeSubject}
+              value={form.subject}
+              onChange={(subject) => setForm((f) => ({ ...f, subject }))}
+              multiline
+              rows={4}
+              placeholder={t.bedkeSubjectPlaceholder}
+              inputClassName="w-full rounded-lg border border-[#CCBCA5]/30 bg-[var(--dash-bg)]/90 px-3 py-2.5 text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20 resize-y"
+            />
 
             {error ? (
               <p className="text-sm text-red-300 font-medium">{error}</p>

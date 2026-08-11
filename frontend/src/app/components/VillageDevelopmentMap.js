@@ -3,8 +3,12 @@
 import { startTransition, useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { MAP_VILLAGE_PINS } from "@/data/mapGramPanchayats";
+import {
+  MAP_VILLAGE_PINS,
+  buildMapVillagePins,
+} from "@/data/mapGramPanchayats";
 import { getVillagesForGp } from "@/data/gramPanchayats";
+import { ensureLocationsTree } from "@/lib/locations";
 import { seedDevelopments } from "@/data/developments";
 import {
   filterDevelopmentsByVillage,
@@ -13,11 +17,14 @@ import {
 } from "@/lib/publicDevelopments";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 
-/** Official 33 GPs from constituency master / xlsx kamagari sheets */
-const VILLAGE_PINS = MAP_VILLAGE_PINS;
+/** Official GPs for map — PIN_XY fallback until /locations/tree hydrates */
+const INITIAL_PINS =
+  MAP_VILLAGE_PINS.length > 0
+    ? MAP_VILLAGE_PINS
+    : buildMapVillagePins([]);
 const SEED_PROJECTS = seedDevelopments.map(mapDevToProject);
 const DEFAULT_PIN =
-  VILLAGE_PINS.find((v) => v.gpName === "Kudligi Town") || VILLAGE_PINS[0];
+  INITIAL_PINS.find((v) => v.gpName === "Kudligi Town") || INITIAL_PINS[0] || null;
 
 // Project thumbnail images pool
 const PROJECT_PHOTOS = [
@@ -50,6 +57,7 @@ export default function VillageDevelopmentMap({
   lang = "kn",
   developments = null,
 }) {
+  const [villagePins, setVillagePins] = useState(INITIAL_PINS);
   const [selectedPin, setSelectedPin] = useState(DEFAULT_PIN);
   const [selectedGpFilter, setSelectedGpFilter] = useState("All");
   const [selectedVillage, setSelectedVillage] = useState("All");
@@ -77,6 +85,31 @@ export default function VillageDevelopmentMap({
 
   const activeGp =
     selectedGpFilter !== "All" ? selectedGpFilter : selectedPin?.gpName;
+
+  // Hydrate GP labels from DB locations tree
+  useEffect(() => {
+    let cancelled = false;
+    ensureLocationsTree()
+      .then((tree) => {
+        if (cancelled) return;
+        const next = buildMapVillagePins(tree);
+        if (!next.length) return;
+        setVillagePins(next);
+        setSelectedPin((prev) => {
+          if (prev?.gpName) {
+            const match = next.find((p) => p.gpName === prev.gpName);
+            if (match) return match;
+          }
+          return (
+            next.find((v) => v.gpName === "Kudligi Town") || next[0] || null
+          );
+        });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (Array.isArray(developments) && developments.length > 0) {
@@ -235,7 +268,7 @@ export default function VillageDevelopmentMap({
           {lang === "kn" ? "ಎಲ್ಲಾ ೩೩ ಪಂಚಾಯತಿಗಳು" : "All 33 Panchayats"}
         </button>
 
-        {VILLAGE_PINS.map((pin) => (
+        {villagePins.map((pin) => (
           <button
             type="button"
             key={pin.id}
@@ -262,7 +295,7 @@ export default function VillageDevelopmentMap({
                 {lang === "kn" ? "ಆಯ್ದ ಪಂಚಾಯತಿ" : "Selected Panchayat"}
               </p>
               <h3 className="text-lg font-black text-white truncate">
-                {selectedPin.fullName}
+                {selectedPin?.fullName}
               </h3>
             </div>
             <span className="shrink-0 px-2.5 py-1 rounded-full bg-[#FFD700] text-slate-900 text-[10px] font-black">
@@ -279,7 +312,7 @@ export default function VillageDevelopmentMap({
               : "Swipe cards below to pick a panchayat. Details are in the list below."}
           </p>
           <div className="flex gap-2.5 overflow-x-auto snap-x snap-mandatory pb-1 scrollbar-none -mx-1 px-1">
-            {VILLAGE_PINS.map((pin) => {
+            {villagePins.map((pin) => {
               const active = activeGp === pin.gpName;
               return (
                 <button
@@ -314,8 +347,8 @@ export default function VillageDevelopmentMap({
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
             <span className="font-bold truncate">
               {lang === "kn"
-                ? `ಆಯ್ದ ಪಂಚಾಯತಿ: ${selectedPin.fullName}`
-                : `Selected: ${selectedPin.fullName}`}
+                ? `ಆಯ್ದ ಪಂಚಾಯತಿ: ${selectedPin?.fullName}`
+                : `Selected: ${selectedPin?.fullName}`}
             </span>
           </div>
 
@@ -355,9 +388,9 @@ export default function VillageDevelopmentMap({
               priority
             />
 
-            {VILLAGE_PINS.map((v) => {
+            {villagePins.map((v) => {
               const isSelected =
-                selectedPin.id === v.id ||
+                selectedPin?.id === v.id ||
                 activeGp?.toLowerCase() === v.gpName.toLowerCase();
               const dimmed = isZoomed && !isSelected;
               return (
@@ -453,7 +486,7 @@ export default function VillageDevelopmentMap({
                 {lang === "kn" ? "ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರ" : "Kudligi Constituency"}
               </span>
               <h4 className="text-base sm:text-lg font-black text-white leading-tight truncate">
-                {selectedPin.fullName}
+                {selectedPin?.fullName}
               </h4>
               {selectedVillage !== "All" && (
                 <p className="text-[11px] text-[#FFD700] font-bold truncate">
@@ -681,7 +714,7 @@ export default function VillageDevelopmentMap({
               <div className="flex items-center justify-between border-b border-white/20 pb-4 pr-10">
                 <div>
                   <span className="bg-[#FFD700] text-slate-950 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider">
-                    {selectedPin.fullName}
+                    {selectedPin?.fullName}
                   </span>
                   <h3 className="text-xl sm:text-2xl font-black text-white mt-1">
                     {selectedVillage !== "All"

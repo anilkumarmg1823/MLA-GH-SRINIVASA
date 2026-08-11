@@ -7,6 +7,8 @@ import {
   MAX_AQ_FILE_BYTES,
   filesToAttachments,
 } from "@/lib/assemblyQaStore";
+import { confirmEnglishSaveIfNeeded } from "@/lib/transliterateName";
+import KnTextField from "@/components/ui/KnTextField";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 
 const empty = {
@@ -22,7 +24,7 @@ const empty = {
 };
 
 export default function AssemblyQaFormModal({ open, onClose, onSubmit }) {
-  const { t } = useLanguage();
+  const { lang, t } = useLanguage();
   const inputRef = useRef(null);
   const [form, setForm] = useState(empty);
   const [files, setFiles] = useState([]);
@@ -99,6 +101,21 @@ export default function AssemblyQaFormModal({ open, onClose, onSubmit }) {
       setError(t.aqPartyRequired);
       return;
     }
+    if (
+      !confirmEnglishSaveIfNeeded(
+        lang,
+        [
+          askedByName,
+          form.askedBy === "other" ? form.partyName : "",
+          question,
+          form.answer,
+          form.sessionLabel,
+        ],
+        t.confirmEnglishSave
+      )
+    ) {
+      return;
+    }
     setError("");
     onSubmit?.({
       ...form,
@@ -163,17 +180,13 @@ export default function AssemblyQaFormModal({ open, onClose, onSubmit }) {
             </div>
           </div>
 
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
-              {t.aqSessionLabel}
-            </label>
-            <input
-              value={form.sessionLabel}
-              onChange={(e) => setField("sessionLabel", e.target.value)}
-              placeholder={t.aqSessionPlaceholder}
-              className={fieldClass}
-            />
-          </div>
+          <KnTextField
+            label={t.aqSessionLabel}
+            value={form.sessionLabel}
+            onChange={(v) => setField("sessionLabel", v)}
+            placeholder={t.aqSessionPlaceholder}
+            inputClassName={fieldClass}
+          />
 
           <div>
             <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
@@ -201,29 +214,21 @@ export default function AssemblyQaFormModal({ open, onClose, onSubmit }) {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
-                {t.aqAskedByName} *
-              </label>
-              <input
-                value={form.askedByName}
-                onChange={(e) => setField("askedByName", e.target.value)}
-                placeholder={t.aqAskedByNamePlaceholder}
-                className={fieldClass}
-              />
-            </div>
+            <KnTextField
+              label={`${t.aqAskedByName} *`}
+              value={form.askedByName}
+              onChange={(v) => setField("askedByName", v)}
+              placeholder={t.aqAskedByNamePlaceholder}
+              inputClassName={fieldClass}
+            />
             {form.askedBy === "other" ? (
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
-                  {t.aqParty} *
-                </label>
-                <input
-                  value={form.partyName}
-                  onChange={(e) => setField("partyName", e.target.value)}
-                  placeholder={t.aqPartyPlaceholder}
-                  className={fieldClass}
-                />
-              </div>
+              <KnTextField
+                label={`${t.aqParty} *`}
+                value={form.partyName}
+                onChange={(v) => setField("partyName", v)}
+                placeholder={t.aqPartyPlaceholder}
+                inputClassName={fieldClass}
+              />
             ) : (
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
@@ -257,31 +262,25 @@ export default function AssemblyQaFormModal({ open, onClose, onSubmit }) {
             </div>
           ) : null}
 
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
-              {t.aqQuestion} *
-            </label>
-            <textarea
-              value={form.question}
-              onChange={(e) => setField("question", e.target.value)}
-              rows={3}
-              placeholder={t.aqQuestionPlaceholder}
-              className={`${fieldClass} resize-y min-h-[84px]`}
-            />
-          </div>
+          <KnTextField
+            label={`${t.aqQuestion} *`}
+            value={form.question}
+            onChange={(v) => setField("question", v)}
+            multiline
+            rows={3}
+            placeholder={t.aqQuestionPlaceholder}
+            inputClassName={`${fieldClass} resize-y min-h-[84px]`}
+          />
 
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
-              {t.aqAnswer}
-            </label>
-            <textarea
-              value={form.answer}
-              onChange={(e) => setField("answer", e.target.value)}
-              rows={3}
-              placeholder={t.aqAnswerPlaceholder}
-              className={`${fieldClass} resize-y min-h-[84px]`}
-            />
-          </div>
+          <KnTextField
+            label={t.aqAnswer}
+            value={form.answer}
+            onChange={(v) => setField("answer", v)}
+            multiline
+            rows={3}
+            placeholder={t.aqAnswerPlaceholder}
+            inputClassName={`${fieldClass} resize-y min-h-[84px]`}
+          />
 
           <div>
             <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">

@@ -10,10 +10,12 @@ import {
   FaEdit,
   FaQrcode,
   FaKey,
+  FaChevronLeft,
+  FaChevronRight,
 } from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
 import { getSession } from "@/lib/auth";
-import { toKannadaName } from "@/lib/transliterateName";
+import { toKannadaName, confirmEnglishSaveIfNeeded, looksLikeEnglish } from "@/lib/transliterateName";
 import {
   ACCESS_ACTIONS,
   MANAGEABLE_MODULES,
@@ -24,7 +26,11 @@ import {
   resetStaffTotp,
 } from "@/lib/permissionsStore";
 import PageLoader from "@/components/ui/PageLoader";
+import KudligiLoader from "@/components/ui/KudligiLoader";
+import { useGlobalLoader } from "@/components/ui/GlobalLoaderProvider";
+import { useEscapeKey } from "@/hooks/useEscapeKey";
 
+const PAGE_SIZE = 10;
 function emptyPerms() {
   return {
     view: false,
@@ -84,10 +90,12 @@ function Checkbox({ checked, onChange, label, disabled }) {
         {checked ? (
           <svg
             viewBox="0 0 12 12"
-            className="w-3 h-3 text-[#1e2223]"
+            className="w-3 h-3 text-white"
             fill="none"
             stroke="currentColor"
             strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           >
             <path d="M2 6l3 3 5-5" />
           </svg>
@@ -100,18 +108,21 @@ function Checkbox({ checked, onChange, label, disabled }) {
 export default function AccessManagementPage() {
   const router = useRouter();
   const { lang, t } = useLanguage();
+  const { withLoader } = useGlobalLoader();
   const [allowed, setAllowed] = useState(false);
+  const [listLoading, setListLoading] = useState(true);
   const [staff, setStaff] = useState([]);
   const [tab, setTab] = useState(MANAGEABLE_MODULES[0]?.id || "development");
   const [adding, setAdding] = useState(false);
   const [addForm, setAddForm] = useState({ phone: "", name: "", nameKn: "" });
-  const [editingId, setEditingId] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
   const [editForm, setEditForm] = useState({
     phone: "",
     name: "",
     nameKn: "",
     perms: emptyPerms(),
   });
+  const [page, setPage] = useState(1);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [totpModal, setTotpModal] = useState(null); // { phone, name, secret, qrDataUrl }
@@ -130,7 +141,10 @@ export default function AccessManagementPage() {
       return;
     }
     setAllowed(true);
-    refresh();
+    setListLoading(true);
+    refresh()
+      .catch(() => setStaff([]))
+      .finally(() => setListLoading(false));
   }, [router, refresh]);
 
   const activeModule = MANAGEABLE_MODULES.find((m) => m.id === tab);
@@ -143,6 +157,17 @@ export default function AccessManagementPage() {
     [staff, tab]
   );
 
+  const totalPages = Math.max(1, Math.ceil(usersOnTab.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+  const pageUsers = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return usersOnTab.slice(start, start + PAGE_SIZE);
+  }, [usersOnTab, safePage]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [tab]);
+
   const persist = async (record) => {
     const result = await upsertStaffAccess(record);
     if (!result.ok) {
@@ -154,22 +179,39 @@ export default function AccessManagementPage() {
     return result.item;
   };
 
-  const cancelEdit = () => {
-    setEditingId(null);
+  const cancelEdit = useCallback(() => {
+    setEditingUser(null);
     setEditForm({ phone: "", name: "", nameKn: "", perms: emptyPerms() });
     setError("");
-  };
+  }, []);
+
+  const cancelAdd = useCallback(() => {
+    setAdding(false);
+    setAddForm({ phone: "", name: "", nameKn: "" });
+    setError("");
+  }, []);
+
+  useEscapeKey(Boolean(editingUser), cancelEdit);
+  useEscapeKey(Boolean(adding), cancelAdd);
+  useEscapeKey(Boolean(totpModal), () => setTotpModal(null));
 
   const startEdit = (user) => {
-    setAdding(false);
+    cancelAdd();
     setError("");
-    setEditingId(user.id);
+    setEditingUser(user);
     setEditForm({
       phone: user.phone || "",
       name: user.name || "",
       nameKn: staffKannadaName(user),
       perms: { ...emptyPerms(), ...(user.modules?.[tab] || {}) },
     });
+  };
+
+  const openAdd = () => {
+    cancelEdit();
+    setError("");
+    setAddForm({ phone: "", name: "", nameKn: "" });
+    setAdding(true);
   };
 
   const toggleDraftPerm = (actionId) => {
@@ -186,7 +228,9 @@ export default function AccessManagementPage() {
     });
   };
 
-  const saveEdit = async (user) => {
+  const saveEdit = async () => {
+    const user = editingUser;
+    if (!user) return;
     setError("");
     const digits = String(editForm.phone || "").replace(/\D/g, "");
     if (digits.length !== 10) {
@@ -202,6 +246,15 @@ export default function AccessManagementPage() {
     // Kannada is optional. Blank = use English name in Kannada mode too.
     const nameKn = (editForm.nameKn || "").trim();
 
+    if (
+      lang === "kn" &&
+      looksLikeEnglish(name) &&
+      !nameKn &&
+      !confirmEnglishSaveIfNeeded(lang, [name], t.confirmEnglishSave)
+    ) {
+      return;
+    }
+
     if (!hasAnyAccess(editForm.perms)) {
       setError(t.accessNeedOnePerm);
       return;
@@ -210,16 +263,18 @@ export default function AccessManagementPage() {
     const modules = { ...blankModules(), ...(user.modules || {}) };
     modules[tab] = { ...emptyPerms(), ...editForm.perms };
 
-    const result = await persist({
-      id: user.id,
-      phone: digits,
-      name,
-      nameKn,
-      modules,
+    await withLoader(async () => {
+      const result = await persist({
+        id: user.id,
+        phone: digits,
+        name,
+        nameKn,
+        modules,
+      });
+      if (!result) return;
+      cancelEdit();
+      setToast(t.accessSaved);
     });
-    if (!result) return;
-    cancelEdit();
-    setToast(t.accessSaved);
   };
 
   const removeFromPortal = async (user) => {
@@ -231,14 +286,16 @@ export default function AccessManagementPage() {
       (m) => m.id !== tab && hasAnyAccess(modules[m.id])
     );
 
-    if (!stillHasOther) {
-      await deleteStaffAccess(user.id);
-      await refresh();
-    } else {
-      await persist({ ...user, modules });
-    }
-    if (editingId === user.id) cancelEdit();
-    setToast(t.accessRemovedFromPortal);
+    await withLoader(async () => {
+      if (!stillHasOther) {
+        await deleteStaffAccess(user.id);
+        await refresh();
+      } else {
+        await persist({ ...user, modules });
+      }
+      if (editingUser?.id === user.id) cancelEdit();
+      setToast(t.accessRemovedFromPortal);
+    });
   };
 
   const handleAddStaff = async (e) => {
@@ -255,6 +312,16 @@ export default function AccessManagementPage() {
       return;
     }
 
+    const nameKn = (addForm.nameKn || "").trim();
+    if (
+      lang === "kn" &&
+      looksLikeEnglish(name) &&
+      !nameKn &&
+      !confirmEnglishSaveIfNeeded(lang, [name], t.confirmEnglishSave)
+    ) {
+      return;
+    }
+
     const existing = staff.find((s) => s.phone === digits);
     const modules = existing
       ? { ...blankModules(), ...existing.modules }
@@ -266,18 +333,23 @@ export default function AccessManagementPage() {
       view: true,
     };
 
-    const result = await persist({
-      id: existing?.id,
-      phone: digits,
-      name,
-      nameKn: (addForm.nameKn || "").trim(),
-      modules,
-    });
+    await withLoader(async () => {
+      const item = await persist({
+        id: existing?.id,
+        phone: digits,
+        name,
+        nameKn,
+        modules,
+      });
 
-    if (!result) return;
-    setAddForm({ phone: "", name: "", nameKn: "" });
-    setAdding(false);
-    setToast(t.accessStaffAdded);
+      if (!item) return;
+      cancelAdd();
+      if (item.totpReused || item.revived) {
+        setToast(t.accessTotpReused || t.accessStaffAdded);
+      } else {
+        setToast(t.accessStaffAdded);
+      }
+    });
   };
 
   useEffect(() => {
@@ -288,28 +360,47 @@ export default function AccessManagementPage() {
 
   const openTotpEnroll = async (user, { reset = false } = {}) => {
     setError("");
+    // Rehydrate Authorization token from session before admin TOTP calls
+    getSession();
+    if (reset) {
+      const ok = window.confirm(
+        t.accessTotpResetWarn ||
+          "Reset creates a NEW Authenticator entry. Delete the old Kudligi entry in the app first, then scan the new QR."
+      );
+      if (!ok) return;
+    }
     setTotpBusyId(user.id);
     try {
-      const data = reset
-        ? await resetStaffTotp(user.id)
-        : await enrollStaffTotp(user.id);
-      setTotpModal({
-        phone: data.phone || user.phone,
-        name: data.name || user.name,
-        secret: data.secret,
-        qrDataUrl: data.qrDataUrl,
-        reset,
+      await withLoader(async () => {
+        const data = reset
+          ? await resetStaffTotp(user.id)
+          : await enrollStaffTotp(user.id);
+
+        if (!reset && data?.alreadyEnrolled) {
+          setTotpModal({
+            phone: data.phone || user.phone,
+            name: data.name || user.name,
+            alreadyEnrolled: true,
+            secret: null,
+            qrDataUrl: null,
+            reset: false,
+          });
+          setToast(t.accessTotpAlreadyEnrolled);
+          await refresh();
+          return;
+        }
+
+        setTotpModal({
+          phone: data.phone || user.phone,
+          name: data.name || user.name,
+          secret: data.secret,
+          qrDataUrl: data.qrDataUrl,
+          reset,
+          alreadyEnrolled: false,
+        });
+        await refresh();
+        setToast(reset ? t.accessTotpResetDone : t.accessTotpReady);
       });
-      await refresh();
-      setToast(
-        reset
-          ? lang === "kn"
-            ? "Authenticator ಮರುಹೊಂದಿಸಲಾಗಿದೆ"
-            : "Authenticator reset — scan new QR"
-          : lang === "kn"
-            ? "Authenticator QR ತಯಾರಾಗಿದೆ"
-            : "Authenticator QR ready — scan once"
-      );
     } catch (err) {
       setError(err?.message || "Could not enroll Authenticator");
     } finally {
@@ -322,8 +413,18 @@ export default function AccessManagementPage() {
     return <PageLoader />;
   }
 
+  if (listLoading) {
+    return (
+      <KudligiLoader
+        variant="block"
+        subKn="ಪ್ರವೇಶ ಪಟ್ಟಿ ಲೋಡ್ ಆಗುತ್ತಿದೆ…"
+        subEn="Loading access list…"
+      />
+    );
+  }
+
   return (
-    <div className="max-w-5xl">
+    <div className="w-full">
       <div className="mb-5">
         <h1 className="text-2xl font-black text-[var(--dash-text)] tracking-wide">
           {t.manageAccess}
@@ -343,7 +444,7 @@ export default function AccessManagementPage() {
               type="button"
               onClick={() => {
                 setTab(mod.id);
-                setAdding(false);
+                cancelAdd();
                 cancelEdit();
                 setError("");
               }}
@@ -368,7 +469,7 @@ export default function AccessManagementPage() {
         })}
       </div>
 
-      <div className="rounded-2xl border border-[#CCBCA5]/25 bg-[var(--dash-panel)] overflow-hidden">
+      <div className="rounded-2xl border border-[#CCBCA5]/25 bg-[var(--dash-panel)] overflow-hidden w-full">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 sm:px-5 py-4 border-b border-[#CCBCA5]/15">
           <div>
             <p className="text-sm font-black text-[var(--dash-text)]">
@@ -380,86 +481,15 @@ export default function AccessManagementPage() {
           </div>
           <button
             type="button"
-            onClick={() => {
-              cancelEdit();
-              setAdding((v) => !v);
-              setError("");
-            }}
+            onClick={openAdd}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#CCBCA5] text-[#1e2223] text-sm font-black hover:bg-[#d9cbb8]"
           >
-            {adding ? (
-              <FaTimes className="text-xs" />
-            ) : (
-              <FaUserPlus className="text-xs" />
-            )}
-            {adding ? t.cancel : t.accessAddStaff}
+            <FaUserPlus className="text-xs" />
+            {t.accessAddStaff}
           </button>
         </div>
 
-        {adding ? (
-          <form
-            onSubmit={handleAddStaff}
-            className="px-4 sm:px-5 py-4 border-b border-[#CCBCA5]/15 bg-[var(--dash-bg)]/40 space-y-3"
-          >
-            <p className="text-xs text-[#CCBCA5] font-bold">
-              {t.accessAddToPortalHint}
-            </p>
-            <p className="text-[11px] text-[var(--dash-text-40)]">{t.accessNameLangHint}</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <input
-                value={addForm.phone}
-                onChange={(e) =>
-                  setAddForm((p) => ({ ...p, phone: e.target.value }))
-                }
-                maxLength={10}
-                placeholder={t.phone}
-                className="rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
-                required
-              />
-              <input
-                value={addForm.name}
-                onChange={(e) =>
-                  setAddForm((p) => ({ ...p, name: e.target.value }))
-                }
-                placeholder={t.accessNameMain}
-                className="rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
-                required
-              />
-              <input
-                value={addForm.nameKn}
-                onChange={(e) =>
-                  setAddForm((p) => ({ ...p, nameKn: e.target.value }))
-                }
-                placeholder={t.accessNameKnOptional}
-                className="rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
-              />
-            </div>
-            <div className="flex flex-wrap justify-between gap-2">
-              <button
-                type="button"
-                onClick={() =>
-                  setAddForm((p) => ({
-                    ...p,
-                    nameKn: toKannadaName(p.name),
-                  }))
-                }
-                disabled={!addForm.name.trim()}
-                className="text-xs font-black text-[#CCBCA5] border border-[#CCBCA5]/35 px-3 py-2 rounded-full hover:bg-[#CCBCA5]/10 disabled:opacity-40"
-              >
-                {t.accessFillKannada}
-              </button>
-              <button
-                type="submit"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#CCBCA5] text-[#1e2223] text-sm font-black hover:bg-[#d9cbb8]"
-              >
-                <FaPlus className="text-xs" />
-                {t.accessAddToPortal}
-              </button>
-            </div>
-          </form>
-        ) : null}
-
-        {error ? (
+        {error && !editingUser && !adding ? (
           <p className="mx-4 sm:mx-5 mt-3 text-sm text-red-300 bg-red-400/10 border border-red-400/25 rounded-xl px-3 py-2">
             {error}
           </p>
@@ -476,155 +506,78 @@ export default function AccessManagementPage() {
             {t.accessNoUsersOnPortal}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[760px] text-left">
-              <thead>
-                <tr className="border-b border-[#CCBCA5]/15 text-[10px] font-black uppercase tracking-widest text-[#CCBCA5]/80">
-                  <th className="px-4 sm:px-5 py-3 font-black">
-                    {t.accessStaffCol}
-                  </th>
-                  {ACCESS_ACTIONS.map((a) => (
-                    <th
-                      key={a.id}
-                      className="px-2 py-3 text-center font-black whitespace-nowrap"
-                    >
-                      {lang === "kn" ? a.labelKn : a.labelEn}
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left">
+                <thead>
+                  <tr className="border-b border-[#CCBCA5]/15 text-[10px] font-black uppercase tracking-widest text-[#CCBCA5]/80">
+                    <th className="px-4 sm:px-5 py-3 font-black">
+                      {t.accessStaffCol}
                     </th>
-                  ))}
-                  <th className="px-4 py-3 text-center font-black min-w-[140px]" />
-                </tr>
-              </thead>
-              <tbody>
-                {usersOnTab.map((user) => {
-                  const isEditing = editingId === user.id;
-                  const perms = isEditing
-                    ? editForm.perms
-                    : { ...emptyPerms(), ...(user.modules?.[tab] || {}) };
-                  const knExtra = staffKannadaName(user);
+                    {ACCESS_ACTIONS.map((a) => (
+                      <th
+                        key={a.id}
+                        className="px-2 py-3 text-center font-black whitespace-nowrap"
+                      >
+                        {lang === "kn" ? a.labelKn : a.labelEn}
+                      </th>
+                    ))}
+                    <th className="px-4 py-3 text-center font-black min-w-[140px]" />
+                  </tr>
+                </thead>
+                <tbody>
+                  {pageUsers.map((user) => {
+                    const perms = {
+                      ...emptyPerms(),
+                      ...(user.modules?.[tab] || {}),
+                    };
+                    const knExtra = staffKannadaName(user);
 
-                  return (
-                    <tr
-                      key={user.id}
-                      className={`border-b border-[#CCBCA5]/10 ${
-                        isEditing ? "bg-[#CCBCA5]/08" : "hover:bg-[var(--dash-hover)]"
-                      }`}
-                    >
-                      <td className="px-4 sm:px-5 py-3.5 align-top">
-                        {isEditing ? (
-                          <div className="space-y-2 min-w-[230px]">
-                            <input
-                              value={editForm.phone}
-                              onChange={(e) =>
-                                setEditForm((p) => ({
-                                  ...p,
-                                  phone: e.target.value,
-                                }))
-                              }
-                              maxLength={10}
-                              placeholder={t.phone}
-                              className="w-full rounded-lg border border-[#CCBCA5]/35 bg-[var(--dash-bg)] px-2.5 py-1.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
-                            />
-                            <input
-                              value={editForm.name}
-                              onChange={(e) =>
-                                setEditForm((p) => ({
-                                  ...p,
-                                  name: e.target.value,
-                                }))
-                              }
-                              placeholder={t.accessNameMain}
-                              className="w-full rounded-lg border border-[#CCBCA5]/35 bg-[var(--dash-bg)] px-2.5 py-1.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
-                            />
-                            <input
-                              value={editForm.nameKn}
-                              onChange={(e) =>
-                                setEditForm((p) => ({
-                                  ...p,
-                                  nameKn: e.target.value,
-                                }))
-                              }
-                              placeholder={t.accessNameKnOptional}
-                              className="w-full rounded-lg border border-[#CCBCA5]/35 bg-[var(--dash-bg)] px-2.5 py-1.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
-                            />
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setEditForm((p) => ({
-                                  ...p,
-                                  nameKn: toKannadaName(p.name),
-                                }))
-                              }
-                              disabled={!editForm.name.trim()}
-                              className="text-[10px] font-black text-[#CCBCA5] border border-[#CCBCA5]/35 px-2.5 py-1 rounded-full hover:bg-[#CCBCA5]/10 disabled:opacity-40"
-                            >
-                              {t.accessFillKannada}
-                            </button>
-                            <p className="text-[10px] text-[var(--dash-text-30)] leading-snug">
-                              {t.accessNameLangHint}
+                    return (
+                      <tr
+                        key={user.id}
+                        className="border-b border-[#CCBCA5]/10 hover:bg-[var(--dash-hover)]"
+                      >
+                        <td className="px-4 sm:px-5 py-3.5 align-top">
+                          <p className="text-sm font-black text-[var(--dash-text)]">
+                            {staffDisplayName(user)}
+                          </p>
+                          {knExtra ? (
+                            <p className="text-[11px] text-[#CCBCA5]/80 mt-0.5">
+                              {knExtra}
                             </p>
-                          </div>
-                        ) : (
-                          <>
-                            <p className="text-sm font-black text-[var(--dash-text)]">
-                              {staffDisplayName(user)}
-                            </p>
-                            {knExtra ? (
-                              <p className="text-[11px] text-[#CCBCA5]/80 mt-0.5">
-                                {knExtra}
-                              </p>
-                            ) : null}
-                            <p className="text-[11px] text-[var(--dash-text-45)] mt-0.5">
-                              {user.phone}
-                            </p>
-                            <p
-                              className={`text-[10px] font-black mt-1 ${
-                                user.totpEnabled
-                                  ? "text-emerald-600"
-                                  : "text-amber-600"
-                              }`}
-                            >
-                              {user.totpEnabled
-                                ? lang === "kn"
-                                  ? "Authenticator ON"
-                                  : "Authenticator ON"
-                                : lang === "kn"
-                                  ? "Authenticator needed"
-                                  : "Authenticator needed"}
-                            </p>
-                          </>
-                        )}
-                      </td>
-                      {ACCESS_ACTIONS.map((a) => (
-                        <td key={a.id} className="px-2 py-3.5 text-center align-middle">
-                          <Checkbox
-                            checked={Boolean(perms[a.id])}
-                            label={lang === "kn" ? a.labelKn : a.labelEn}
-                            disabled={!isEditing}
-                            onChange={() => {
-                              if (isEditing) toggleDraftPerm(a.id);
-                            }}
-                          />
+                          ) : null}
+                          <p className="text-[11px] text-[var(--dash-text-45)] mt-0.5">
+                            {user.phone}
+                          </p>
+                          <p
+                            className={`text-[10px] font-black mt-1 ${
+                              user.totpEnabled
+                                ? "text-emerald-600"
+                                : "text-amber-600"
+                            }`}
+                          >
+                            {user.totpEnabled
+                              ? "Authenticator ON"
+                              : lang === "kn"
+                                ? "Authenticator needed"
+                                : "Authenticator needed"}
+                          </p>
                         </td>
-                      ))}
-                      <td className="px-3 py-3.5 align-middle">
-                        {isEditing ? (
-                          <div className="flex flex-col items-stretch gap-1.5 min-w-[120px]">
-                            <button
-                              type="button"
-                              onClick={() => saveEdit(user)}
-                              className="px-3 py-1.5 rounded-full bg-[#CCBCA5] text-[#1e2223] text-xs font-black hover:bg-[#d9cbb8]"
-                            >
-                              {t.save}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={cancelEdit}
-                              className="px-3 py-1.5 rounded-full border border-[var(--dash-border-soft)] text-[var(--dash-text-70)] text-xs font-black hover:bg-[var(--dash-hover)]"
-                            >
-                              {t.cancel}
-                            </button>
-                          </div>
-                        ) : (
+                        {ACCESS_ACTIONS.map((a) => (
+                          <td
+                            key={a.id}
+                            className="px-2 py-3.5 text-center align-middle"
+                          >
+                            <Checkbox
+                              checked={Boolean(perms[a.id])}
+                              label={lang === "kn" ? a.labelKn : a.labelEn}
+                              disabled
+                              onChange={() => {}}
+                            />
+                          </td>
+                        ))}
+                        <td className="px-3 py-3.5 align-middle">
                           <div className="flex flex-col items-stretch gap-1.5 min-w-[130px]">
                             <button
                               type="button"
@@ -672,16 +625,310 @@ export default function AccessManagementPage() {
                               </button>
                             </div>
                           </div>
-                        )}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+
+            {usersOnTab.length > PAGE_SIZE ? (
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 sm:px-5 py-3 border-t border-[#CCBCA5]/15">
+                <p className="text-xs text-[var(--dash-text-50)] font-medium">
+                  {lang === "kn"
+                    ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(
+                        safePage * PAGE_SIZE,
+                        usersOnTab.length
+                      )} / ${usersOnTab.length}`
+                    : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(
+                        safePage * PAGE_SIZE,
+                        usersOnTab.length
+                      )} of ${usersOnTab.length}`}
+                </p>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={safePage <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/35 text-xs font-black text-[var(--dash-text)] disabled:opacity-35 hover:bg-[#CCBCA5]/12"
+                  >
+                    <FaChevronLeft className="text-[10px]" />
+                    {lang === "kn" ? "ಹಿಂದೆ" : "Prev"}
+                  </button>
+                  <span className="text-xs font-bold text-[var(--dash-text-60)] tabular-nums">
+                    {safePage} / {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={safePage >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/35 text-xs font-black text-[var(--dash-text)] disabled:opacity-35 hover:bg-[#CCBCA5]/12"
+                  >
+                    {lang === "kn" ? "ಮುಂದೆ" : "Next"}
+                    <FaChevronRight className="text-[10px]" />
+                  </button>
+                </div>
+              </div>
+            ) : null}
+          </>
         )}
       </div>
+
+      {adding ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div
+            className="absolute inset-0"
+            onClick={cancelAdd}
+            aria-hidden="true"
+          />
+          <form
+            onSubmit={handleAddStaff}
+            className="relative w-full max-w-lg rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-panel)] p-5 shadow-2xl space-y-4"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-black text-[var(--dash-heading)]">
+                  {t.accessAddStaff}
+                </h2>
+                <p className="text-xs text-[var(--dash-text-60)] mt-1">
+                  {lang === "kn" ? activeModule?.labelKn : activeModule?.labelEn}{" "}
+                  · {t.accessAddToPortalHint}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={cancelAdd}
+                className="p-2 rounded-full hover:bg-[var(--dash-hover)] text-[var(--dash-text-60)]"
+                aria-label={t.close || "Close"}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {error ? (
+              <p className="text-sm text-red-300 bg-red-400/10 border border-red-400/25 rounded-xl px-3 py-2">
+                {error}
+              </p>
+            ) : null}
+
+            <p className="text-[11px] text-[var(--dash-text-40)]">
+              {t.accessNameLangHint}
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-1">
+                  {t.phone}
+                </label>
+                <input
+                  value={addForm.phone}
+                  onChange={(e) =>
+                    setAddForm((p) => ({ ...p, phone: e.target.value }))
+                  }
+                  maxLength={10}
+                  placeholder={t.phone}
+                  className="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-1">
+                  {t.accessNameMain}
+                </label>
+                <input
+                  value={addForm.name}
+                  onChange={(e) =>
+                    setAddForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                  placeholder={t.accessNameMain}
+                  className="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-1">
+                  {t.accessNameKnOptional}
+                </label>
+                <input
+                  value={addForm.nameKn}
+                  onChange={(e) =>
+                    setAddForm((p) => ({ ...p, nameKn: e.target.value }))
+                  }
+                  placeholder={t.accessNameKnOptional}
+                  className="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAddForm((p) => ({
+                      ...p,
+                      nameKn: toKannadaName(p.name),
+                    }))
+                  }
+                  disabled={!addForm.name.trim()}
+                  className="mt-2 text-[10px] font-black text-[#CCBCA5] border border-[#CCBCA5]/35 px-2.5 py-1 rounded-full hover:bg-[#CCBCA5]/10 disabled:opacity-40"
+                >
+                  {t.accessFillKannada}
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-[var(--dash-text-45)]">
+              {lang === "kn"
+                ? "ಸೇರಿಸಿದ ನಂತರ View ಮಾತ್ರ ಆನ್. ಇತರ ಅನುಮತಿಗಳಿಗೆ Edit ಒತ್ತಿ."
+                : "Adds with View only. Use Edit later for other permissions."}
+            </p>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={cancelAdd}
+                className="flex-1 py-2.5 rounded-full border border-[var(--dash-border-soft)] text-[var(--dash-text-70)] text-sm font-black hover:bg-[var(--dash-hover)]"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="submit"
+                className="flex-1 inline-flex items-center justify-center gap-2 py-2.5 rounded-full bg-[#CCBCA5] text-[#1e2223] text-sm font-black hover:bg-[#d9cbb8]"
+              >
+                <FaPlus className="text-xs" />
+                {t.accessAddToPortal}
+              </button>
+            </div>
+          </form>
+        </div>
+      ) : null}
+
+      {editingUser ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div
+            className="absolute inset-0"
+            onClick={cancelEdit}
+            aria-hidden="true"
+          />
+          <div className="relative w-full max-w-lg rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-panel)] p-5 shadow-2xl space-y-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-black text-[var(--dash-heading)]">
+                  {t.edit} ·{" "}
+                  {lang === "kn" ? activeModule?.labelKn : activeModule?.labelEn}
+                </h2>
+                <p className="text-xs text-[var(--dash-text-60)] mt-1">
+                  {staffDisplayName(editingUser)} · {editingUser.phone}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="p-2 rounded-full hover:bg-[var(--dash-hover)] text-[var(--dash-text-60)]"
+                aria-label={t.close || "Close"}
+              >
+                <FaTimes />
+              </button>
+            </div>
+
+            {error ? (
+              <p className="text-sm text-red-300 bg-red-400/10 border border-red-400/25 rounded-xl px-3 py-2">
+                {error}
+              </p>
+            ) : null}
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-1">
+                  {t.phone}
+                </label>
+                <input
+                  value={editForm.phone}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, phone: e.target.value }))
+                  }
+                  maxLength={10}
+                  className="w-full rounded-xl border border-[#CCBCA5]/35 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-1">
+                  {t.accessNameMain}
+                </label>
+                <input
+                  value={editForm.name}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, name: e.target.value }))
+                  }
+                  className="w-full rounded-xl border border-[#CCBCA5]/35 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-1">
+                  {t.accessNameKnOptional}
+                </label>
+                <input
+                  value={editForm.nameKn}
+                  onChange={(e) =>
+                    setEditForm((p) => ({ ...p, nameKn: e.target.value }))
+                  }
+                  className="w-full rounded-xl border border-[#CCBCA5]/35 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5]"
+                />
+                <button
+                  type="button"
+                  onClick={() =>
+                    setEditForm((p) => ({
+                      ...p,
+                      nameKn: toKannadaName(p.name),
+                    }))
+                  }
+                  disabled={!editForm.name.trim()}
+                  className="mt-2 text-[10px] font-black text-[#CCBCA5] border border-[#CCBCA5]/35 px-2.5 py-1 rounded-full hover:bg-[#CCBCA5]/10 disabled:opacity-40"
+                >
+                  {t.accessFillKannada}
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-wider text-[#CCBCA5] mb-2">
+                {lang === "kn" ? "ಅನುಮತಿಗಳು" : "Permissions"}
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {ACCESS_ACTIONS.map((a) => (
+                  <div
+                    key={a.id}
+                    className="flex items-center gap-2 rounded-xl border border-[#CCBCA5]/25 px-3 py-2.5 hover:bg-[var(--dash-hover)]"
+                  >
+                    <Checkbox
+                      checked={Boolean(editForm.perms[a.id])}
+                      label={lang === "kn" ? a.labelKn : a.labelEn}
+                      onChange={() => toggleDraftPerm(a.id)}
+                    />
+                    <span className="text-xs font-bold text-[var(--dash-text)]">
+                      {lang === "kn" ? a.labelKn : a.labelEn}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={cancelEdit}
+                className="flex-1 py-2.5 rounded-full border border-[var(--dash-border-soft)] text-[var(--dash-text-70)] text-sm font-black hover:bg-[var(--dash-hover)]"
+              >
+                {t.cancel}
+              </button>
+              <button
+                type="button"
+                onClick={saveEdit}
+                className="flex-1 py-2.5 rounded-full bg-[#CCBCA5] text-[#1e2223] text-sm font-black hover:bg-[#d9cbb8]"
+              >
+                {t.save}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {totpModal ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
@@ -689,7 +936,11 @@ export default function AccessManagementPage() {
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-lg font-black text-[var(--dash-heading)]">
-                  Authenticator QR
+                  {totpModal.alreadyEnrolled
+                    ? lang === "kn"
+                      ? "ಈಗಾಗಲೇ Authenticator ಇದೆ"
+                      : "Already enrolled"
+                    : "Authenticator QR"}
                 </h2>
                 <p className="text-xs text-[var(--dash-text-60)] mt-1">
                   {totpModal.name} · {totpModal.phone}
@@ -704,34 +955,55 @@ export default function AccessManagementPage() {
                 <FaTimes />
               </button>
             </div>
-            <p className="text-sm text-[var(--dash-text-70)]">
-              Staff scans this once in Google or Microsoft Authenticator. Show
-              this screen only once — then close it.
-            </p>
-            {totpModal.qrDataUrl ? (
-              <div className="flex justify-center bg-white rounded-xl p-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={totpModal.qrDataUrl}
-                  alt="Authenticator QR code"
-                  className="w-56 h-56"
-                />
-              </div>
-            ) : null}
-            <div className="rounded-xl border border-[var(--dash-border-soft)] bg-[var(--dash-bg)] px-3 py-2">
-              <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dash-text-50)]">
-                Manual secret
+            {totpModal.alreadyEnrolled ? (
+              <p className="text-sm text-[var(--dash-text-70)]">
+                {(
+                  t.accessTotpReuseModal ||
+                  "This phone is already enrolled. Use the existing Kudligi MLA Office · staff-{phone} entry — do not add a second one."
+                ).replace("{phone}", totpModal.phone || "")}
               </p>
-              <p className="font-mono text-xs text-[var(--dash-text)] break-all mt-1">
-                {totpModal.secret}
-              </p>
-            </div>
+            ) : (
+              <>
+                <p className="text-sm text-[var(--dash-text-70)]">
+                  {totpModal.reset
+                    ? t.accessTotpResetWarn ||
+                      "New QR created. Staff can scan here now, or the same QR will appear on their next login until they enter a valid code."
+                    : "Staff can scan here now, or the same QR appears on their login until the first successful authenticator code."}
+                </p>
+                {totpModal.qrDataUrl ? (
+                  <div className="flex justify-center bg-white rounded-xl p-4">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={totpModal.qrDataUrl}
+                      alt="Authenticator QR code"
+                      className="w-56 h-56"
+                    />
+                  </div>
+                ) : null}
+                {totpModal.secret ? (
+                  <div className="rounded-xl border border-[var(--dash-border-soft)] bg-[var(--dash-bg)] px-3 py-2">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-[var(--dash-text-50)]">
+                      Manual secret
+                    </p>
+                    <p className="font-mono text-xs text-[var(--dash-text)] break-all mt-1">
+                      {totpModal.secret}
+                    </p>
+                  </div>
+                ) : null}
+              </>
+            )}
             <button
               type="button"
               onClick={() => setTotpModal(null)}
               className="w-full py-2.5 rounded-full bg-[var(--dash-accent)] text-white text-sm font-black"
             >
-              Done — staff has scanned
+              {totpModal.alreadyEnrolled
+                ? lang === "kn"
+                  ? "ಸರಿ"
+                  : "Got it"
+                : lang === "kn"
+                  ? "ಮುಚ್ಚಿ — ಸಿಬ್ಬಂದಿ ಲಾಗಿನ್‌ನಲ್ಲೂ QR ನೋಡುತ್ತಾರೆ"
+                  : "Close — QR also shows on staff login"}
             </button>
           </div>
         </div>

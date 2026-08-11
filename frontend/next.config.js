@@ -13,7 +13,17 @@ const nextConfig = {
       },
       {
         protocol: "https",
+        hostname: "kudligi-mla-media.s3.ap-south-1.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
         hostname: "*.s3.us-east-1.amazonaws.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.s3.ap-south-1.amazonaws.com",
         pathname: "/**",
       },
       {

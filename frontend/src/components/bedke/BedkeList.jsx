@@ -1,8 +1,10 @@
 "use client";
 
-import React from "react";
-import { FaPlus, FaPen, FaArchive } from "react-icons/fa";
+import React, { useEffect, useMemo, useState } from "react";
+import { FaPlus, FaPen, FaArchive, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
+
+const PAGE_SIZE = 10;
 
 function formatDate(iso, lang) {
   if (!iso) return "—";
@@ -43,12 +45,26 @@ export default function BedkeList({
   canAdd,
   canEdit,
   canArchive,
+  pageSize = PAGE_SIZE,
 }) {
   const { lang, t } = useLanguage();
+  const [page, setPage] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [rows]);
+
+  const totalPages = Math.max(1, Math.ceil((rows?.length || 0) / pageSize));
+  const safePage = Math.min(page, totalPages);
+
+  const pageRows = useMemo(() => {
+    const start = (safePage - 1) * pageSize;
+    return (rows || []).slice(start, start + pageSize);
+  }, [rows, safePage, pageSize]);
 
   if (!rows.length) {
     return (
-      <div className="rounded-2xl border border-dashed border-[#CCBCA5]/40 bg-[var(--dash-panel-soft)] backdrop-blur-sm px-6 py-14 text-center space-y-4">
+      <div className="rounded-2xl border border-dashed border-[#CCBCA5]/40 bg-[var(--dash-panel-soft)] backdrop-blur-sm px-6 py-14 text-center space-y-4 min-h-[280px] flex flex-col items-center justify-center">
         <p className="text-[var(--dash-text-50)] text-sm">{t.bedkeNoNeeds}</p>
         {canAdd && onAdd ? (
           <button
@@ -64,11 +80,14 @@ export default function BedkeList({
     );
   }
 
+  const from = (safePage - 1) * pageSize + 1;
+  const to = Math.min(safePage * pageSize, rows.length);
+
   return (
-    <div className="rounded-2xl border border-[#CCBCA5]/25 bg-[var(--dash-panel-soft)] overflow-hidden shadow-lg">
-      <div className="overflow-x-auto">
+    <div className="rounded-2xl border border-[#CCBCA5]/25 bg-[var(--dash-panel-soft)] overflow-hidden shadow-lg flex flex-col min-h-[420px]">
+      <div className="overflow-x-auto flex-1 max-h-[min(60vh,520px)] overflow-y-auto">
         <table className="w-full text-left text-sm">
-          <thead>
+          <thead className="sticky top-0 z-10 bg-[var(--dash-panel)]">
             <tr className="border-b border-[#CCBCA5]/20 text-[10px] uppercase tracking-wider text-[#CCBCA5]/80">
               <th className="px-4 py-3 font-black">{t.bedkeName}</th>
               <th className="px-4 py-3 font-black">{t.bedkeSubject}</th>
@@ -86,7 +105,7 @@ export default function BedkeList({
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
+            {pageRows.map((row) => (
               <tr
                 key={row.id}
                 className="border-b border-[var(--dash-border-faint)] hover:bg-[var(--dash-hover)] transition-colors"
@@ -139,6 +158,37 @@ export default function BedkeList({
             ))}
           </tbody>
         </table>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-4 py-3 border-t border-[#CCBCA5]/20 bg-[var(--dash-panel)]/80">
+        <p className="text-xs text-[var(--dash-text-50)] font-medium">
+          {lang === "kn"
+            ? `${from}–${to} / ${rows.length}`
+            : `${from}–${to} of ${rows.length}`}
+        </p>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            disabled={safePage <= 1}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/35 text-xs font-black text-[var(--dash-text)] disabled:opacity-35 hover:bg-[#CCBCA5]/12"
+          >
+            <FaChevronLeft className="text-[10px]" />
+            {lang === "kn" ? "ಹಿಂದೆ" : "Prev"}
+          </button>
+          <span className="text-xs font-bold text-[var(--dash-text-60)] tabular-nums">
+            {safePage} / {totalPages}
+          </span>
+          <button
+            type="button"
+            disabled={safePage >= totalPages}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#CCBCA5]/35 text-xs font-black text-[var(--dash-text)] disabled:opacity-35 hover:bg-[#CCBCA5]/12"
+          >
+            {lang === "kn" ? "ಮುಂದೆ" : "Next"}
+            <FaChevronRight className="text-[10px]" />
+          </button>
+        </div>
       </div>
     </div>
   );

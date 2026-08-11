@@ -21,6 +21,8 @@ import {
   whatsappChatUrl,
   telHref,
 } from "@/lib/leadersStore";
+import KnTranslateButtons from "@/components/ui/KnTranslateButtons";
+import { textMatchesSearch } from "@/lib/transliterateName";
 
 const CATEGORY_TABS = [
   { id: "all", emoji: "🌟", kn: "ಎಲ್ಲಾ ಮುಖಂಡರು", en: "All Leaders" },
@@ -30,18 +32,20 @@ const CATEGORY_TABS = [
 ];
 
 function filterLeaders(rows, activeTab, searchTerm) {
-  const q = searchTerm.toLowerCase().trim();
   return rows.filter((leader) => {
     const matchesTab = activeTab === "all" || leader.category === activeTab;
     if (!matchesTab) return false;
-    if (!q) return true;
-    return (
-      leader.nameKn?.toLowerCase().includes(q) ||
-      leader.nameEn?.toLowerCase().includes(q) ||
-      leader.roleKn?.toLowerCase().includes(q) ||
-      leader.roleEn?.toLowerCase().includes(q) ||
-      leader.locationKn?.toLowerCase().includes(q)
-    );
+    if (!searchTerm.trim()) return true;
+    const hay = [
+      leader.nameKn,
+      leader.nameEn,
+      leader.roleKn,
+      leader.roleEn,
+      leader.locationKn,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return textMatchesSearch(hay, searchTerm);
   });
 }
 
@@ -93,7 +97,7 @@ export default function LeadersDirectory() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
+          <div className="relative w-full sm:w-80">
             <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dash-text-40)] text-base" />
             <input
               type="text"
@@ -104,7 +108,13 @@ export default function LeadersDirectory() {
                   ? "ಮುಖಂಡರ ಹೆಸರು ಅಥವಾ ಸ್ಥಳ ಹುಡುಕಿ..."
                   : "Search leaders by name or area..."
               }
-              className="w-full pl-11 pr-4 py-3 bg-[var(--dash-panel)] text-[var(--dash-heading)] rounded-2xl border border-[#CCBCA5]/30 shadow-sm text-sm font-bold placeholder:text-[var(--dash-text-40)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-accent)]/40"
+              className="w-full pl-11 pr-[5.5rem] py-3 bg-[var(--dash-panel)] text-[var(--dash-heading)] rounded-2xl border border-[#CCBCA5]/30 shadow-sm text-sm font-bold placeholder:text-[var(--dash-text-40)] focus:outline-none focus:ring-2 focus:ring-[var(--dash-accent)]/40"
+            />
+            <KnTranslateButtons
+              value={searchTerm}
+              onChange={setSearchTerm}
+              compact
+              className="absolute right-2 top-1/2 -translate-y-1/2"
             />
           </div>
           <button

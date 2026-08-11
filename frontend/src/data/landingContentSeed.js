@@ -56,6 +56,7 @@ export const landingContentSeed = {
       "grievancesSuggestions": "Grievances & Suggestions",
       "sevaSindhu": "Seva Sindhu Schemes",
       "districtPortal": "Vijayanagara District Portal",
+      "ajskCertificates": "AJSK / Nadakacheri Certificates",
       "login": "Login",
       "aboutHeading": "ABOUT DR. SRINIVAS N. T.",
       "aboutDesc": "Dr. Srinivas N. T. is a visionary leader and MLA representing the Kudligi constituency. With a deep-rooted commitment to social progress, infrastructure development, and digital governance, he is working continuously to make Kudligi a model constituency. By bridging the gap between governance and citizens, the MLA office has implemented various schemes in water conservation, education, local agriculture support, and healthcare.",
@@ -90,12 +91,17 @@ export const landingContentSeed = {
       "formSub": "Connect with your MLA. Log your suggestions or grievances directly.",
       "formName": "Full Name",
       "formPhone": "Mobile / WhatsApp Number",
-      "formVillage": "Select Panchayat / Village",
+      "formGp": "Gram Panchayat",
+      "formVillage": "Village",
       "formSubject": "Subject",
       "formMessage": "Message / Grievance Details",
       "formSubmit": "SUBMIT COMPLAINT",
       "formSuccess": "Thank you! Your grievance has been recorded successfully.",
+      "formGpPlaceholder": "-- Select Gram Panchayat --",
       "formVillagePlaceholder": "-- Select Village --",
+      "formPhoneHint": "Enter 10-digit mobile number",
+      "formPhoneInvalid": "Mobile number must be exactly 10 digits",
+      "formGpRequired": "Please select Gram Panchayat and Village",
       "grievancesTab": "Complaint / Suggestion",
       "gpLabel": "Gram Panchayats",
       "villagesLabel": "Revenue Villages",
@@ -132,6 +138,7 @@ export const landingContentSeed = {
       "grievancesSuggestions": "ದೂರುಗಳು & ಸಲಹೆಗಳು",
       "sevaSindhu": "ಸೇವಾ ಸಿಂಧು ಯೋಜನೆಗಳು",
       "districtPortal": "ವಿಜಯನಗರ ಜಿಲ್ಲಾ ತಾಣ",
+      "ajskCertificates": "ಎಜೆಎಸ್‌ಕೆ / ನಾಡಕಚೇರಿ ಪ್ರಮಾಣಪತ್ರಗಳು",
       "login": "Login",
       "aboutHeading": "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರ ಬಗ್ಗೆ",
       "aboutDesc": "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ. ಅವರು ಕೂಡ್ಲಿಗಿ ಕ್ಷೇತ್ರವನ್ನು ಪ್ರತಿನಿಧಿಸುವ ಜನಪ್ರಿಯ ಶಾಸಕರಾಗಿದ್ದಾರೆ. ಸಾಮಾಜಿಕ ಪ್ರಗತಿ, ಮೂಲಸೌಕರ್ಯ ಅಭಿವೃದ್ಧಿ ಮತ್ತು ಡಿಜಿಟಲ್ ಆಡಳಿತಕ್ಕೆ ಬದ್ಧರಾಗಿರುವ ಇವರು ಕೂಡ್ಲಿಗಿಯನ್ನು ಮಾದರಿ ಕ್ಷೇತ್ರವನ್ನಾಗಿ ಮಾಡಲು ನಿರಂತರವಾಗಿ ಶ್ರಮಿಸುತ್ತಿದ್ದಾರೆ. ಆಡಳಿತ ಮತ್ತು ಸಾರ್ವಜನಿಕರ ನಡುವಿನ ಅಂತರವನ್ನು ಕಡಿಮೆ ಮಾಡಲು ಶಾಸಕರ ಕಚೇರಿಯು ಶಿಕ್ಷಣ, ನೀರಾವರಿ, ಕೃಷಿ ಮತ್ತು ಆರೋಗ್ಯ ಕ್ಷೇತ್ರಗಳಲ್ಲಿ ಹಲವಾರು ಸುಧಾರಣೆಗಳನ್ನು ಜಾರಿಗೆ ತಂದಿದೆ.",
@@ -166,12 +173,17 @@ export const landingContentSeed = {
       "formSub": "ನಿಮ್ಮ ಶಾಸಕರೊಂದಿಗೆ ಸಂಪರ್ಕ ಸಾಧಿಸಿ. ನಿಮ್ಮ ಅಹವಾಲುಗಳನ್ನು ನೇರವಾಗಿ ದಾಖಲಿಸಿ.",
       "formName": "ಪೂರ್ಣ ಹೆಸರು",
       "formPhone": "ಮೊಬೈಲ್ / ವಾಟ್ಸಾಪ್ ಸಂಖ್ಯೆ",
-      "formVillage": "ಪಂಚಾಯತ್ / ಗ್ರಾಮವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
+      "formGp": "ಗ್ರಾಮ ಪಂಚಾಯತಿ",
+      "formVillage": "ಗ್ರಾಮ",
       "formSubject": "ವಿಷಯ",
       "formMessage": "ವಿವರವಾದ ಸಂದೇಶ / ದೂರು ವಿವರಗಳು",
       "formSubmit": "ದೂರು ಸಲ್ಲಿಸಿ",
       "formSuccess": "ಧನ್ಯವಾದಗಳು! ನಿಮ್ಮ ದೂರು ಯಶಸ್ವಿಯಾಗಿ ದಾಖಲಾಗಿದೆ.",
-      "formVillagePlaceholder": "-- Select Village / --",
+      "formGpPlaceholder": "-- ಗ್ರಾಮ ಪಂಚಾಯತಿ ಆಯ್ಕೆಮಾಡಿ --",
+      "formVillagePlaceholder": "-- ಗ್ರಾಮ ಆಯ್ಕೆಮಾಡಿ --",
+      "formPhoneHint": "10 ಅಂಕಿಯ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಮೂದಿಸಿ",
+      "formPhoneInvalid": "ಮೊಬೈಲ್ ಸಂಖ್ಯೆ ನಿಖರವಾಗಿ 10 ಅಂಕಿಗಳಿರಬೇಕು",
+      "formGpRequired": "ಗ್ರಾಮ ಪಂಚಾಯತಿ ಮತ್ತು ಗ್ರಾಮವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
       "grievancesTab": "ದೂರು / ಸಲಹೆಗಳು",
       "gpLabel": "ಗ್ರಾಮ ಪಂಚಾಯಿತಿಗಳು",
       "villagesLabel": "ಕಂದಾಯ ಗ್ರಾಮಗಳು",
@@ -195,8 +207,8 @@ export const landingContentSeed = {
     }
   },
   "hero": {
-    "video": "https://kudligi-mla.s3.us-east-1.amazonaws.com/kudligi-mla/landing/hero_nrega_video.mp4",
-    "videoS3Key": "kudligi-mla/landing/hero_nrega_video.mp4",
+    "video": "https://kudligi-mla-media.s3.ap-south-1.amazonaws.com/kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4",
+    "videoS3Key": "kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4",
     "backgroundImage": "",
     "overlayOpacity": 0.65,
     "slides": [
@@ -460,7 +472,8 @@ export const landingContentSeed = {
   },
   "quickLinks": {
     "sevaSindhuUrl": "https://sevasindhu.karnataka.gov.in",
-    "districtPortalUrl": "https://vijayanagara.nic.in"
+    "districtPortalUrl": "https://vijayanagara.nic.in",
+    "ajskCertificatesUrl": "https://nadakacheri.karnataka.gov.in/AJSKCertificates"
   }
 };
 

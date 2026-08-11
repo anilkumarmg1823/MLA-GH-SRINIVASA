@@ -1,5 +1,9 @@
 import { STAFF_ROLES } from "@/data/mockUsers";
-import { api } from "@/lib/api";
+import { api, getToken } from "@/lib/api";
+
+function authToken() {
+  return getToken();
+}
 
 /** Action flags per module */
 export const ACCESS_ACTIONS = [
@@ -39,7 +43,7 @@ function fullModulePerms() {
 }
 
 export async function loadStaffAccess() {
-  const { data } = await api("/staff-access");
+  const { data } = await api("/staff-access", { token: authToken() });
   return Array.isArray(data) ? data : [];
 }
 
@@ -68,6 +72,7 @@ export async function upsertStaffAccess(record) {
   try {
     const { data } = await api("/staff-access", {
       method: "POST",
+      token: authToken(),
       body: {
         phone: digits,
         name: (record.name || "").trim() || "Staff User",
@@ -86,22 +91,32 @@ export async function upsertStaffAccess(record) {
 }
 
 export async function deleteStaffAccess(id) {
-  await api(`/staff-access/${id}`, { method: "DELETE" });
+  await api(`/staff-access/${id}`, { method: "DELETE", token: authToken() });
   return true;
 }
 
 /** Admin: generate Authenticator QR for staff (returns secret once). */
 export async function enrollStaffTotp(id) {
+  const token = authToken();
+  if (!token) {
+    throw new Error("Missing login token — please log out and log in again as admin.");
+  }
   const { data } = await api(`/staff-access/${id}/totp/enroll`, {
     method: "POST",
+    token,
   });
   return data;
 }
 
 /** Admin: rotate Authenticator secret + new QR. */
 export async function resetStaffTotp(id) {
+  const token = authToken();
+  if (!token) {
+    throw new Error("Missing login token — please log out and log in again as admin.");
+  }
   const { data } = await api(`/staff-access/${id}/totp/reset`, {
     method: "POST",
+    token,
   });
   return data;
 }

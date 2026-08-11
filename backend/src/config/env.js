@@ -21,4 +21,21 @@ export const env = {
     region: process.env.AWS_REGION || "us-east-1",
     bucket: process.env.AWS_S3_BUCKET || "kudligi-mla",
   },
+  whatsapp: {
+    enabled: String(process.env.WHATSAPP_ENABLED || "").toLowerCase() === "true",
+    token: process.env.WHATSAPP_TOKEN || "",
+    phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+    businessAccountId: process.env.WHATSAPP_BUSINESS_ACCOUNT_ID || "",
+    appSecret: process.env.WHATSAPP_APP_SECRET || "",
+    verifyToken: process.env.WHATSAPP_VERIFY_TOKEN || "kudligi-wa-verify-change-me",
+    apiVersion: process.env.WHATSAPP_API_VERSION || "v21.0",
+    templates: {
+      replyKn: process.env.WHATSAPP_TEMPLATE_REPLY_KN || "complaint_reply_kn",
+      replyEn: process.env.WHATSAPP_TEMPLATE_REPLY_EN || "complaint_reply_en",
+      registeredKn:
+        process.env.WHATSAPP_TEMPLATE_REGISTERED_KN || "complaint_registered_kn",
+      registeredEn:
+        process.env.WHATSAPP_TEMPLATE_REGISTERED_EN || "complaint_registered_en",
+    },
+  },
 };

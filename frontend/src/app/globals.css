@@ -115,6 +115,19 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* Large hall / projector screens — keep landing readable when zoomed out */
+@media (min-width: 1536px) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@media (min-width: 1920px) {
+  #home h1 {
+    letter-spacing: -0.02em;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;

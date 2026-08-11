@@ -31,29 +31,40 @@ function emptyPerms() {
   return { view: false, add: false, edit: false, delete: false, download: false };
 }
 
+function emptyAllModules() {
+  return {
+    development: emptyPerms(),
+    department_records: emptyPerms(),
+    demands: emptyPerms(),
+    assembly_qa: emptyPerms(),
+  };
+}
+
+function toPublicStaff(u) {
+  return {
+    id: u.id,
+    phone: u.phone,
+    name: u.name,
+    nameKn: u.nameKn,
+    role: u.role,
+    totpEnabled: Boolean(u.totpEnabled && u.totpSecret),
+    modules: u.permissions?.modules || emptyAllModules(),
+  };
+}
+
 router.get(
   "/",
   asyncHandler(async (_req, res) => {
     const users = await prisma.user.findMany({
-      where: { role: { not: "admin" }, phone: { not: null } },
+      where: {
+        role: { not: "admin" },
+        phone: { not: null },
+        archivedAt: null,
+      },
       include: { permissions: true },
       orderBy: { createdAt: "desc" },
     });
-    const data = users.map((u) => ({
-      id: u.id,
-      phone: u.phone,
-      name: u.name,
-      nameKn: u.nameKn,
-      role: u.role,
-      totpEnabled: Boolean(u.totpEnabled),
-      modules: u.permissions?.modules || {
-        development: emptyPerms(),
-        department_records: emptyPerms(),
-        demands: emptyPerms(),
-        assembly_qa: emptyPerms(),
-      },
-    }));
-    return ok(res, data);
+    return ok(res, users.map(toPublicStaff));
   })
 );
 
@@ -83,14 +94,21 @@ router.post(
       include: { permissions: true },
     });
 
+    const wasArchived = Boolean(existing?.archivedAt);
+    const totpReused = Boolean(
+      existing?.totpEnabled && existing?.totpSecret
+    );
+
     let user;
     if (existing) {
+      // Revive soft-removed staff with same phone — keep TOTP secret
       user = await prisma.user.update({
         where: { id: existing.id },
         data: {
           name: body.name,
           nameKn: body.nameKn || "",
           role: body.role || existing.role,
+          archivedAt: null,
           permissions: {
             upsert: {
               create: { modules: body.modules },
@@ -116,24 +134,47 @@ router.post(
     return ok(
       res,
       {
-        id: user.id,
-        phone: user.phone,
-        name: user.name,
-        nameKn: user.nameKn,
-        role: user.role,
-        totpEnabled: Boolean(user.totpEnabled),
-        modules: user.permissions.modules,
+        ...toPublicStaff(user),
+        totpReused,
+        revived: wasArchived,
       },
       null,
-      existing ? 200 : 201
+      existing && !wasArchived ? 200 : 201
     );
   })
 );
 
-async function enrollStaffTotp(userId) {
+async function enrollStaffTotp(userId, { forceNew = false } = {}) {
   const user = await prisma.user.findUnique({ where: { id: userId } });
-  if (!user || user.role === "admin" || !user.phone) {
+  if (!user || user.role === "admin" || !user.phone || user.archivedAt) {
     throw new AppError(404, "NOT_FOUND", "Staff not found");
+  }
+
+  // One TOTP per phone — do not mint a second secret (confuses Authenticator apps)
+  if (!forceNew && user.totpEnabled && user.totpSecret && !user.totpPendingScan) {
+    return {
+      phone: user.phone,
+      name: user.name,
+      totpEnabled: true,
+      alreadyEnrolled: true,
+      totpReused: true,
+    };
+  }
+
+  // Pending scan with existing secret — re-show the same QR (admin or copy for staff)
+  if (!forceNew && user.totpSecret && user.totpPendingScan) {
+    const otpauthUrl = buildOtpauthUrl(user.phone, user.totpSecret);
+    const qrDataUrl = await otpauthToQrDataUrl(otpauthUrl);
+    return {
+      phone: user.phone,
+      name: user.name,
+      secret: user.totpSecret,
+      otpauthUrl,
+      qrDataUrl,
+      totpEnabled: true,
+      alreadyEnrolled: false,
+      pendingScan: true,
+    };
   }
 
   const secret = generateTotpSecret();
@@ -142,7 +183,12 @@ async function enrollStaffTotp(userId) {
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { totpSecret: secret, totpEnabled: true },
+    data: {
+      totpSecret: secret,
+      totpEnabled: true,
+      totpPendingScan: true,
+      archivedAt: null,
+    },
   });
 
   return {
@@ -152,44 +198,70 @@ async function enrollStaffTotp(userId) {
     otpauthUrl,
     qrDataUrl,
     totpEnabled: true,
+    alreadyEnrolled: false,
+    pendingScan: true,
   };
 }
 
-/** Generate / rotate Authenticator secret; returns QR once. */
+/** Generate Authenticator secret only if phone has none; returns QR once. */
 router.post(
   "/:id/totp/enroll",
   asyncHandler(async (req, res) => {
-    const data = await enrollStaffTotp(req.params.id);
+    const data = await enrollStaffTotp(req.params.id, { forceNew: false });
     return ok(res, data);
   })
 );
 
-/** Clear TOTP then issue a fresh secret + QR. */
+/** Clear TOTP then issue a fresh secret + QR (staff must delete old Authenticator entry). */
 router.post(
   "/:id/totp/reset",
   asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({ where: { id: req.params.id } });
-    if (!user || user.role === "admin" || !user.phone) {
+    if (!user || user.role === "admin" || !user.phone || user.archivedAt) {
       throw new AppError(404, "NOT_FOUND", "Staff not found");
     }
     await prisma.user.update({
       where: { id: user.id },
-      data: { totpSecret: null, totpEnabled: false },
+      data: {
+        totpSecret: null,
+        totpEnabled: false,
+        totpPendingScan: true,
+      },
     });
-    const data = await enrollStaffTotp(user.id);
-    return ok(res, data);
+    const data = await enrollStaffTotp(user.id, { forceNew: true });
+    return ok(res, { ...data, reset: true });
   })
 );
 
+/** Soft-remove: hide from Access, block login, keep phone + TOTP for reuse. */
 router.delete(
   "/:id",
   asyncHandler(async (req, res) => {
-    const user = await prisma.user.findUnique({ where: { id: req.params.id } });
+    const user = await prisma.user.findUnique({
+      where: { id: req.params.id },
+      include: { permissions: true },
+    });
     if (!user || user.role === "admin") {
       throw new AppError(404, "NOT_FOUND", "Staff not found");
     }
-    await prisma.user.delete({ where: { id: req.params.id } });
-    return ok(res, { deleted: true });
+    await prisma.user.update({
+      where: { id: req.params.id },
+      data: {
+        archivedAt: new Date(),
+        permissions: {
+          upsert: {
+            create: { modules: emptyAllModules() },
+            update: { modules: emptyAllModules() },
+          },
+        },
+      },
+    });
+    return ok(res, {
+      deleted: true,
+      soft: true,
+      totpKept: Boolean(user.totpSecret),
+      phone: user.phone,
+    });
   })
 );
 

@@ -9,6 +9,7 @@ const MAX_PAGES = 20;
 
 export async function loadBedke(params = {}) {
   const all = [];
+  const seen = new Set();
   let page = 1;
   while (page <= MAX_PAGES) {
     const qs = new URLSearchParams({
@@ -18,7 +19,11 @@ export async function loadBedke(params = {}) {
     });
     const { data, meta } = await api(`/demands?${qs}`);
     const rows = Array.isArray(data) ? data : [];
-    all.push(...rows);
+    for (const row of rows) {
+      if (!row?.id || seen.has(row.id)) continue;
+      seen.add(row.id);
+      all.push(row);
+    }
     const total = Number(meta?.total) || all.length;
     if (all.length >= total || rows.length < LIST_LIMIT) break;
     page += 1;

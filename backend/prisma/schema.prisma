@@ -50,6 +50,11 @@ enum ComplaintStatus {
   closed
 }
 
+enum ComplaintSource {
+  web
+  whatsapp
+}
+
 model User {
   id           String   @id @default(cuid())
   role         UserRole @default(staff)
@@ -61,11 +66,17 @@ model User {
   /// Base32 TOTP secret for Authenticator apps (Google/Microsoft)
   totpSecret   String?
   totpEnabled  Boolean  @default(false)
+  /// True after admin enroll/reset until staff verifies once (shows QR on login)
+  totpPendingScan Boolean @default(false)
+  /// Soft-remove from Access — keeps phone + TOTP so re-add reuses same Authenticator entry
+  archivedAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   permissions StaffPermission?
   mediaAssets MediaAsset[]
+
+  @@index([archivedAt])
 }
 
 model StaffPermission {
@@ -204,20 +215,47 @@ model AssemblyQaFile {
 }
 
 model Complaint {
-  id        String          @id @default(cuid())
-  name      String
-  phone     String
-  village   String
-  subject    String          @default("")
-  message    String
-  status     ComplaintStatus @default(new)
-  archivedAt DateTime?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id             String          @id @default(cuid())
+  name           String
+  phone          String
+  village        String
+  gramPanchayat  String          @default("")
+  subject        String          @default("")
+  message        String
+  status         ComplaintStatus @default(new)
+  source         ComplaintSource @default(web)
+  language       String?
+  waPhone        String?
+  waMessageId    String?
+  photos         Json            @default("[]")
+  replyText      String?
+  repliedAt      DateTime?
+  repliedById    String?
+  lastInboundAt  DateTime?
+  archivedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   @@index([status])
   @@index([createdAt])
   @@index([archivedAt])
+  @@index([source])
+  @@index([waPhone])
+}
+
+/** Multi-step WhatsApp complaint intake session (one active draft per phone) */
+model WaSession {
+  id              String   @id @default(cuid())
+  waPhone         String   @unique
+  step            String   @default("start")
+  lang            String   @default("kn")
+  draft           Json     @default("{}")
+  lastMessageId   String?
+  lastInboundAt   DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([updatedAt])
 }
 
 model LandingContent {
@@ -225,6 +263,34 @@ model LandingContent {
   data      Json
   updatedAt DateTime @updatedAt
   createdAt DateTime @default(now())
+}
+
+/** Constituency master — Gram Panchayat (stable EN `name` used in filters/records) */
+model GramPanchayat {
+  id        String    @id @default(cuid())
+  name      String    @unique
+  nameKn    String    @default("")
+  sortOrder Int       @default(0)
+  villages  Village[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([sortOrder])
+}
+
+model Village {
+  id              String        @id @default(cuid())
+  gramPanchayatId String
+  gramPanchayat   GramPanchayat @relation(fields: [gramPanchayatId], references: [id], onDelete: Cascade)
+  name            String
+  nameKn          String        @default("")
+  sortOrder       Int           @default(0)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([gramPanchayatId, name])
+  @@index([gramPanchayatId])
+  @@index([sortOrder])
 }
 
 model MediaAsset {

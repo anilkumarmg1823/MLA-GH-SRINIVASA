@@ -10,6 +10,8 @@ import {
 } from "@/data/departmentDocumentTypes";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import VoiceSearchButton from "@/components/ui/VoiceSearchButton";
+import KnTranslateButtons from "@/components/ui/KnTranslateButtons";
+import { textMatchesSearch } from "@/lib/transliterateName";
 
 function previewSrc(doc) {
   if (doc.coverUrl) return doc.coverUrl;
@@ -41,8 +43,7 @@ export default function DepartmentSearchModal({
   }, [open]);
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
+    if (!query.trim()) return [];
     return (records || []).filter((r) => {
       const hay = [
         r.title,
@@ -60,9 +61,8 @@ export default function DepartmentSearchModal({
         r.status ? getFollowUpStatusLabel(r.status, "kn") : "",
       ]
         .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
+        .join(" ");
+      return textMatchesSearch(hay, query);
     });
   }, [records, query]);
 
@@ -84,8 +84,9 @@ export default function DepartmentSearchModal({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.deptSearchPlaceholder}
-            className="flex-1 bg-transparent text-[var(--dash-text)] text-base outline-none placeholder:text-[var(--dash-text-40)]"
+            className="flex-1 min-w-0 bg-transparent text-[var(--dash-text)] text-base outline-none placeholder:text-[var(--dash-text-40)]"
           />
+          <KnTranslateButtons value={query} onChange={setQuery} compact />
           <VoiceSearchButton active={open} onTranscript={setQuery} />
           <button
             type="button"

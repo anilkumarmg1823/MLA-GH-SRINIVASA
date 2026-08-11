@@ -14,7 +14,7 @@ import { fileURLToPath } from "url";
 
 const router = Router();
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const HERO_S3_KEY = "kudligi-mla/landing/hero_nrega_video.mp4";
+const HERO_S3_KEY = "kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4";
 const DEVELOPMENTS_VIDEO_S3_KEY =
   "kudligi-mla/landing/developments_bg_video.mp4";
 

@@ -4,11 +4,12 @@ import React, { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import { getSession } from "@/lib/auth";
+import { getSession, wasSessionReplaced } from "@/lib/auth";
 import DashboardNavbar from "@/components/dashboard/DashboardNavbar";
 import DashboardWaveBackground from "@/components/dashboard/DashboardWaveBackground";
 import AdminSidebar from "@/components/dashboard/AdminSidebar";
 import KudligiLoader from "@/components/ui/KudligiLoader";
+import SessionSync from "@/components/auth/SessionSync";
 
 function DashboardShell({ children }) {
   const router = useRouter();
@@ -20,13 +21,21 @@ function DashboardShell({ children }) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   useEffect(() => {
+    if (wasSessionReplaced()) {
+      router.replace("/login?reason=session_replaced");
+      return;
+    }
     const s = getSession();
     if (!s) {
       router.replace("/login");
       return;
     }
     setSessionState(s);
-    setReady(true);
+    // Prefetch GP/village master from DB (hydrates @/data/gramPanchayats)
+    import("@/lib/locations")
+      .then((m) => m.ensureLocationsTree())
+      .catch(() => {})
+      .finally(() => setReady(true));
   }, [router]);
 
   if (!ready || !session) {
@@ -49,6 +58,7 @@ function DashboardShell({ children }) {
         className="relative min-h-screen bg-[var(--dash-bg)] text-[var(--dash-text)] overflow-x-hidden"
         data-theme={theme}
       >
+        <SessionSync />
         <DashboardWaveBackground />
         <div className="relative z-10 min-h-screen flex flex-col">{children}</div>
       </div>
@@ -62,6 +72,7 @@ function DashboardShell({ children }) {
       className="relative min-h-screen flex flex-col text-[var(--dash-text)]"
       data-theme={theme}
     >
+      <SessionSync />
       <DashboardWaveBackground />
       <div className="relative z-10 flex flex-col min-h-screen">
         <DashboardNavbar

@@ -51,27 +51,50 @@ function slugId(name) {
     .replace(/^_|_$/g, "");
 }
 
-/** Chip bar labels — English GP names in A–Z order */
-export const MAP_GRAM_PANCHAYATS = gramPanchayats
-  .filter((g) => !MAP_EXCLUDE.has(g.name))
-  .map((g) => g.name)
-  .sort((a, b) => a.localeCompare(b));
+function gpNamesFromMaster(list) {
+  return list
+    .filter((g) => g?.name && !MAP_EXCLUDE.has(g.name))
+    .map((g) => g.name)
+    .sort((a, b) => a.localeCompare(b));
+}
 
-/** Map pins driven by official master + development GP names */
-export const MAP_VILLAGE_PINS = MAP_GRAM_PANCHAYATS.map((name, index) => {
-  const gp = gramPanchayats.find((g) => g.name === name);
-  const xy = PIN_XY[name] || {
-    x: 18 + (index % 8) * 9,
-    y: 22 + Math.floor(index / 8) * 14,
-  };
-  const nameKn = gp?.nameKn || name;
-  return {
-    id: slugId(name),
-    gpName: name,
-    name: nameKn,
-    fullName: `${nameKn} (${name})`,
-    hobli: "Kudligi",
-    x: xy.x,
-    y: xy.y,
-  };
-});
+/** Static PIN_XY keys when API master not hydrated yet */
+function gpNamesFromPins() {
+  return Object.keys(PIN_XY)
+    .filter((name) => !MAP_EXCLUDE.has(name))
+    .sort((a, b) => a.localeCompare(b));
+}
+
+/** Build map pins from GP master (or PIN_XY fallback). */
+export function buildMapVillagePins(list = gramPanchayats) {
+  const fromMaster = Array.isArray(list) ? gpNamesFromMaster(list) : [];
+  const names = fromMaster.length ? fromMaster : gpNamesFromPins();
+
+  return names.map((name, index) => {
+    const gp = (Array.isArray(list) ? list : []).find((g) => g.name === name);
+    const xy = PIN_XY[name] || {
+      x: 18 + (index % 8) * 9,
+      y: 22 + Math.floor(index / 8) * 14,
+    };
+    const nameKn = gp?.nameKn || name;
+    return {
+      id: slugId(name),
+      gpName: name,
+      name: nameKn,
+      fullName: `${nameKn} (${name})`,
+      hobli: "Kudligi",
+      x: xy.x,
+      y: xy.y,
+    };
+  });
+}
+
+/** Chip bar labels — prefer hydrated master, else PIN_XY */
+export function getMapGramPanchayats(list = gramPanchayats) {
+  const fromMaster = Array.isArray(list) ? gpNamesFromMaster(list) : [];
+  return fromMaster.length ? fromMaster : gpNamesFromPins();
+}
+
+/** Snapshot at import — may use PIN_XY until locations hydrate */
+export const MAP_GRAM_PANCHAYATS = getMapGramPanchayats();
+export const MAP_VILLAGE_PINS = buildMapVillagePins();

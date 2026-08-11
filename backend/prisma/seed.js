@@ -5,6 +5,7 @@ import { dirname, join } from "path";
 import bcrypt from "bcryptjs";
 import { PrismaClient } from "@prisma/client";
 import { DEMO_TOTP_SECRET } from "../src/lib/totp.js";
+import { gramPanchayats as GP_MASTER } from "../src/data/gramPanchayats.js";
 
 const prisma = new PrismaClient();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -59,8 +60,8 @@ const FALLBACK_LANDING = {
   hero: {
     slides: [],
     video:
-      "https://kudligi-mla.s3.us-east-1.amazonaws.com/kudligi-mla/landing/hero_nrega_video.mp4",
-    videoS3Key: "kudligi-mla/landing/hero_nrega_video.mp4",
+      "https://kudligi-mla-media.s3.ap-south-1.amazonaws.com/kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4",
+    videoS3Key: "kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4",
   },
   media: {
     tourScheduleImage: "/tour_schedule_sheet_v10.png",
@@ -314,7 +315,7 @@ function loadHeroVideoMeta() {
     const meta = JSON.parse(readFileSync(jsonPath, "utf8"));
     return {
       video: meta.video || "",
-      videoS3Key: meta.s3Key || "kudligi-mla/landing/hero_nrega_video.mp4",
+      videoS3Key: meta.s3Key || "kudligi-mla/landing/hero_cm_kudalagi_pgm.mp4",
     };
   } catch {
     return { video: "", videoS3Key: "" };
@@ -570,6 +571,31 @@ async function main() {
     create: { id: "default", data: landingData },
   });
 
+  // Replace Gram Panchayat + Village master (from BACKEND DATA.xlsx → gramPanchayats.js)
+  await prisma.village.deleteMany({});
+  await prisma.gramPanchayat.deleteMany({});
+  for (let gi = 0; gi < GP_MASTER.length; gi++) {
+    const gp = GP_MASTER[gi];
+    const created = await prisma.gramPanchayat.create({
+      data: {
+        name: gp.name,
+        nameKn: gp.nameKn || gp.name,
+        sortOrder: gi,
+      },
+    });
+    const villages = gp.villages || [];
+    if (villages.length) {
+      await prisma.village.createMany({
+        data: villages.map((v, vi) => ({
+          gramPanchayatId: created.id,
+          name: v.name,
+          nameKn: v.nameKn || v.name,
+          sortOrder: vi,
+        })),
+      });
+    }
+  }
+
   // Replace developments with constituency kamagari master (xlsx import)
   await prisma.developmentMedia.deleteMany({});
   await prisma.development.deleteMany({});
@@ -685,7 +711,7 @@ async function main() {
     `Seed complete: admin@mla.local / admin123, staff 9876543210 Authenticator secret ${DEMO_TOTP_SECRET}`
   );
   console.log(
-    `Dummy data: developments=${await prisma.development.count()}, demands=${await prisma.demand.count()}, docs=${await prisma.departmentDocument.count()}, qa=${await prisma.assemblyQa.count()}, complaints=${await prisma.complaint.count()}, tourSchedules=${TOUR_SCHEDULES.length}`
+    `Dummy data: gps=${await prisma.gramPanchayat.count()}, villages=${await prisma.village.count()}, developments=${await prisma.development.count()}, demands=${await prisma.demand.count()}, docs=${await prisma.departmentDocument.count()}, qa=${await prisma.assemblyQa.count()}, complaints=${await prisma.complaint.count()}, tourSchedules=${TOUR_SCHEDULES.length}`
   );
 }
 

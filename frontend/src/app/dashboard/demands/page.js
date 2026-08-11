@@ -45,6 +45,8 @@ export default function DemandsPage() {
   const [editingRow, setEditingRow] = useState(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [downloadOpen, setDownloadOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
   const allRowsCache = useRef([]);
 
   useEffect(() => {
@@ -120,18 +122,40 @@ export default function DemandsPage() {
     () => rows.filter((r) => r.approach === "personal"),
     [rows]
   );
-  const displayRows = approachTab === "personal" ? personalRows : civilRows;
+
+  const tabRows = approachTab === "personal" ? personalRows : civilRows;
+
+  const displayRows = useMemo(() => {
+    let list = [...tabRows];
+    if (statusFilter !== "all") {
+      list = list.filter((r) => r.status === statusFilter);
+    }
+    list.sort((a, b) => {
+      if (sortBy === "oldest") {
+        return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+      }
+      if (sortBy === "name") {
+        return String(a.name || "").localeCompare(String(b.name || ""), lang === "kn" ? "kn" : "en");
+      }
+      // newest
+      return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+    });
+    return list;
+  }, [tabRows, statusFilter, sortBy, lang]);
 
   const handleGpChange = (gp) => {
     setGramPanchayat(gp);
     setVillage("");
     setRows([]);
+    setStatusFilter("all");
   };
 
   const handleClear = () => {
     setGramPanchayat("");
     setVillage("");
     setApproachTab("civil");
+    setStatusFilter("all");
+    setSortBy("newest");
     setRows([]);
   };
 
@@ -252,7 +276,32 @@ export default function DemandsPage() {
           onGpChange={handleGpChange}
           onVillageChange={setVillage}
           onClear={handleClear}
-          showExtraFilters={false}
+          showExtraFilters
+          statusFilter={statusFilter}
+          onStatusFilterChange={setStatusFilter}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          statusOptions={[
+            { value: "all", label: t.filterStatusAll },
+            { value: "Pending", label: t.bedkePending },
+            {
+              value: "InProgress",
+              label: t.bedkeInProgress || (lang === "kn" ? "ಪ್ರಗತಿಯಲ್ಲಿ" : "In progress"),
+            },
+            {
+              value: "Completed",
+              label: t.bedkeCompleted || (lang === "kn" ? "ಪೂರ್ಣ" : "Completed"),
+            },
+            {
+              value: "Rejected",
+              label: t.bedkeRejected || (lang === "kn" ? "ತಿರಸ್ಕೃತ" : "Rejected"),
+            },
+          ]}
+          sortOptions={[
+            { value: "newest", label: t.sortNewest },
+            { value: "oldest", label: t.sortOldest },
+            { value: "name", label: t.sortName },
+          ]}
           extraVillages={extraVillages}
         />
       </div>

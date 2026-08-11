@@ -7,6 +7,8 @@ import { getGpLabel, getVillageLabel } from "@/data/gramPanchayats";
 import { getCoverImage } from "@/lib/media";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import VoiceSearchButton from "@/components/ui/VoiceSearchButton";
+import KnTranslateButtons from "@/components/ui/KnTranslateButtons";
+import { textMatchesSearch } from "@/lib/transliterateName";
 
 function formatInr(amount) {
   return new Intl.NumberFormat("en-IN", {
@@ -33,8 +35,7 @@ export default function SearchModal({ open, onClose, records, onSelect }) {
   }, [open]);
 
   const results = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
+    if (!query.trim()) return [];
     return (records || []).filter((r) => {
       const hay = [
         r.name,
@@ -49,9 +50,8 @@ export default function SearchModal({ open, onClose, records, onSelect }) {
         r.status,
       ]
         .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
+        .join(" ");
+      return textMatchesSearch(hay, query);
     });
   }, [records, query]);
 
@@ -73,7 +73,12 @@ export default function SearchModal({ open, onClose, records, onSelect }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t.searchPlaceholder}
-            className="flex-1 bg-transparent text-[var(--dash-text)] text-base outline-none placeholder:text-[var(--dash-text-40)]"
+            className="flex-1 min-w-0 bg-transparent text-[var(--dash-text)] text-base outline-none placeholder:text-[var(--dash-text-40)]"
+          />
+          <KnTranslateButtons
+            value={query}
+            onChange={setQuery}
+            compact
           />
           <VoiceSearchButton active={open} onTranscript={setQuery} />
           <button

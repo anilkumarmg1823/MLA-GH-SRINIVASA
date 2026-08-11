@@ -1404,6 +1404,16 @@ export default function LandingCmsEditor({
                   })
                 }
               />
+              <TextInput
+                label="AJSK / Nadakacheri certificates URL"
+                value={quickLinks.ajskCertificatesUrl}
+                onChange={(val) =>
+                  onChange({
+                    ...v,
+                    quickLinks: { ...quickLinks, ajskCertificatesUrl: val },
+                  })
+                }
+              />
             </div>
           </Section>
         </div>

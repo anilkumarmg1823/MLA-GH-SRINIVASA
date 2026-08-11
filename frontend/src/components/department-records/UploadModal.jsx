@@ -7,6 +7,8 @@ import {
   MAX_FILE_BYTES,
   addDepartmentRecord,
 } from "@/lib/departmentRecordsStore";
+import { confirmEnglishSaveIfNeeded } from "@/lib/transliterateName";
+import KnTextField from "@/components/ui/KnTextField";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
 import {
   FOLLOW_UP_STATUSES,
@@ -57,6 +59,13 @@ export default function UploadModal({
 
     if (followUps && !eGeneratedId.trim()) {
       setError(t.deptEGeneratedIdRequired);
+      return;
+    }
+
+    if (
+      title.trim() &&
+      !confirmEnglishSaveIfNeeded(lang, [title], t.confirmEnglishSave)
+    ) {
       return;
     }
 
@@ -177,18 +186,13 @@ export default function UploadModal({
             </div>
           ) : null}
 
-          <div>
-            <label className="block text-[10px] font-black uppercase tracking-widest text-[#CCBCA5] mb-1">
-              {t.deptTitleOptional}
-            </label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={t.deptTitlePlaceholder}
-              className="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
-            />
-          </div>
+          <KnTextField
+            label={t.deptTitleOptional}
+            value={title}
+            onChange={setTitle}
+            placeholder={t.deptTitlePlaceholder}
+            inputClassName="w-full rounded-xl border border-[#CCBCA5]/30 bg-[var(--dash-bg)] px-3 py-2.5 text-sm text-[var(--dash-text)] outline-none focus:border-[#CCBCA5] focus:ring-2 focus:ring-[#CCBCA5]/20"
+          />
 
           {followUps ? (
             <div>

@@ -184,7 +184,8 @@ export const CRUD_MODULES = [
         body: {
           name: "IT Complaint User",
           phone: "9988776655",
-          village: "kudligi",
+          gramPanchayat: "Kudligi Town",
+          village: "Kudligi",
           subject: "Integration complaint",
           message: `Integration complaint body ${Date.now()}`,
         },

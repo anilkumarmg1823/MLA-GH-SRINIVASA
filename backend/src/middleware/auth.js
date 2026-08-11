@@ -20,6 +20,9 @@ export async function requireAuth(req, _res, next) {
       include: { permissions: true },
     });
     if (!user) throw new AppError(401, "UNAUTHORIZED", "User not found");
+    if (user.archivedAt) {
+      throw new AppError(401, "UNAUTHORIZED", "Staff access removed");
+    }
     req.user = user;
     next();
   } catch (err) {
