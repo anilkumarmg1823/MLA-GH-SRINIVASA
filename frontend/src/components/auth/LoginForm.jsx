@@ -325,7 +325,7 @@ export default function LoginForm() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-10 pr-3.5 text-sm text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                        placeholder="admin@mla.local"
+                        placeholder=""
                         required
                       />
                     </div>
@@ -341,7 +341,7 @@ export default function LoginForm() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-10 pr-3.5 text-sm text-slate-900 font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                        placeholder="********"
+                        placeholder=""
                         required
                       />
                     </div>
@@ -389,7 +389,7 @@ export default function LoginForm() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-16 pr-3.5 text-sm text-slate-900 font-mono font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                      placeholder="9876543210"
+                      placeholder=""
                       maxLength={10}
                       required
                     />
