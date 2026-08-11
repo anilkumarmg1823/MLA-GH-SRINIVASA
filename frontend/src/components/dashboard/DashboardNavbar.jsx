@@ -16,6 +16,7 @@ import {
   getRoleDashboardPath,
 } from "@/lib/auth";
 import { useEscapeKey } from "@/hooks/useEscapeKey";
+import { encodeRoute, isRouteActive } from "@/lib/routeEncoder";
 
 function LogoutConfirmModal({ open, onClose, onConfirm }) {
   const { t } = useLanguage();
@@ -102,7 +103,7 @@ export default function DashboardNavbar({ session, onMenuClick }) {
   const confirmLogout = () => {
     clearSession();
     setLogoutOpen(false);
-    router.replace("/login");
+    router.replace(encodeRoute("/login"));
   };
 
   const navLinkClass = (active) =>
@@ -180,9 +181,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
             <nav className="hidden lg:flex flex-1 items-center justify-center gap-4 xl:gap-6 text-sm font-black tracking-wide px-2">
               {showDev && (
                 <Link
-                  href="/dashboard/development"
+                  href={encodeRoute("/dashboard/development")}
                   className={navLinkClass(
-                    pathname?.startsWith("/dashboard/development")
+                    isRouteActive(pathname, "/dashboard/development")
                   )}
                 >
                   {t.development}
@@ -190,9 +191,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               )}
               {showDept && (
                 <Link
-                  href="/dashboard/department-records"
+                  href={encodeRoute("/dashboard/department-records")}
                   className={navLinkClass(
-                    pathname?.startsWith("/dashboard/department-records")
+                    isRouteActive(pathname, "/dashboard/department-records")
                   )}
                 >
                   {t.departmentRecords}
@@ -200,9 +201,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               )}
               {showDemands && (
                 <Link
-                  href="/dashboard/demands"
+                  href={encodeRoute("/dashboard/demands")}
                   className={navLinkClass(
-                    pathname?.startsWith("/dashboard/demands")
+                    isRouteActive(pathname, "/dashboard/demands")
                   )}
                 >
                   {t.navDemands}
@@ -210,9 +211,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
               )}
               {showAssembly && (
                 <Link
-                  href="/dashboard/assembly-qa"
+                  href={encodeRoute("/dashboard/assembly-qa")}
                   className={navLinkClass(
-                    pathname?.startsWith("/dashboard/assembly-qa")
+                    isRouteActive(pathname, "/dashboard/assembly-qa")
                   )}
                 >
                   {t.navAssembly}
@@ -302,9 +303,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
           <div className="lg:hidden border-t border-[#CCBCA5]/20 px-4 py-2 flex gap-2 overflow-x-auto">
             {showDev && (
               <Link
-                href="/dashboard/development"
+                href={encodeRoute("/dashboard/development")}
                 className={`text-xs px-3 py-1.5 rounded-full shrink-0 font-bold ${
-                  pathname?.startsWith("/dashboard/development")
+                  isRouteActive(pathname, "/dashboard/development")
                     ? "bg-[#CCBCA5] text-[#1e2223]"
                     : "text-[var(--dash-heading)] border border-[var(--dash-heading)]/40"
                 }`}
@@ -314,9 +315,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
             )}
             {showDept && (
               <Link
-                href="/dashboard/department-records"
+                href={encodeRoute("/dashboard/department-records")}
                 className={`text-xs px-3 py-1.5 rounded-full shrink-0 font-bold ${
-                  pathname?.startsWith("/dashboard/department-records")
+                  isRouteActive(pathname, "/dashboard/department-records")
                     ? "bg-[#CCBCA5] text-[#1e2223]"
                     : "text-[var(--dash-heading)] border border-[var(--dash-heading)]/40"
                 }`}
@@ -326,9 +327,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
             )}
             {showDemands && (
               <Link
-                href="/dashboard/demands"
+                href={encodeRoute("/dashboard/demands")}
                 className={`text-xs px-3 py-1.5 rounded-full shrink-0 font-bold ${
-                  pathname?.startsWith("/dashboard/demands")
+                  isRouteActive(pathname, "/dashboard/demands")
                     ? "bg-[#CCBCA5] text-[#1e2223]"
                     : "text-[var(--dash-heading)] border border-[var(--dash-heading)]/40"
                 }`}
@@ -338,9 +339,9 @@ export default function DashboardNavbar({ session, onMenuClick }) {
             )}
             {showAssembly && (
               <Link
-                href="/dashboard/assembly-qa"
+                href={encodeRoute("/dashboard/assembly-qa")}
                 className={`text-xs px-3 py-1.5 rounded-full shrink-0 font-bold ${
-                  pathname?.startsWith("/dashboard/assembly-qa")
+                  isRouteActive(pathname, "/dashboard/assembly-qa")
                     ? "bg-[#CCBCA5] text-[#1e2223]"
                     : "text-[var(--dash-heading)] border border-[var(--dash-heading)]/40"
                 }`}

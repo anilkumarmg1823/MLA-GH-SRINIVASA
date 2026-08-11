@@ -26,6 +26,7 @@ import {
   FaBuilding, FaHome, FaMapMarkerAlt, FaBars, FaTimes, FaFileAlt,
   FaChevronDown, FaChevronUp, FaChevronRight
 } from "react-icons/fa";
+import { encodeRoute } from "@/lib/routeEncoder";
 
 // Animated Counter Component for Constituency Stats
 function AnimatedCounter({ end, duration = 2, suffix = "" }) {
@@ -510,7 +511,7 @@ export default function Home() {
 
             {/* Login Button */}
             <Link
-              href="/login"
+              href={encodeRoute("/login")}
               className="hidden sm:inline-flex px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs md:text-sm font-black text-[var(--land-gold)] border-2 border-[var(--land-gold)] rounded-full hover:bg-[var(--land-gold)] hover:text-slate-900 transition-all duration-300 shadow-md whitespace-nowrap items-center"
             >
               {currentText.login || 'LOGIN'}
@@ -545,7 +546,7 @@ export default function Home() {
             <p className="px-3 pt-2 pb-1 text-[10px] font-black uppercase tracking-widest text-[var(--land-gold)]/80">
               {currentText.quickLinks}
             </p>
-            <Link href="/medical-referral" onClick={closeMobileNav} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10">
+            <Link href={encodeRoute("/medical-referral")} onClick={closeMobileNav} className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-extrabold text-slate-100 hover:bg-white/10">
               <FaHospitalUser className="w-4 h-4 text-[var(--land-gold)] shrink-0" />
               {currentText.medicalReferral}
             </Link>
@@ -570,7 +571,7 @@ export default function Home() {
               {currentText.ajskCertificates || "AJSK / Nadakacheri Certificates"}
             </a>
             <Link
-              href="/login"
+              href={encodeRoute("/login")}
               onClick={closeMobileNav}
               className="sm:hidden mt-2 mx-1 text-center px-4 py-2.5 text-sm font-black text-slate-900 bg-[var(--land-gold)] rounded-full"
             >

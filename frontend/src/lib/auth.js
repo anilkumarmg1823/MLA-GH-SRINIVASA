@@ -1,5 +1,6 @@
 import { api, setToken, clearToken } from "@/lib/api";
 import { canModule } from "@/lib/permissionsStore";
+import { encodeRoute } from "@/lib/routeEncoder";
 
 const SESSION_KEY = "mla_session";
 const EPOCH_KEY = "mla_auth_epoch";

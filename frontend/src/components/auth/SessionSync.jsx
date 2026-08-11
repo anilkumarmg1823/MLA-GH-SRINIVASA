@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { encodeRoute } from "@/lib/routeEncoder";
 
 const SESSION_KEY = "mla_session";
 const EPOCH_KEY = "mla_auth_epoch";
@@ -40,7 +41,7 @@ export default function SessionSync() {
         /* ignore */
       }
 
-      router.replace("/login?reason=session_replaced");
+      router.replace(`${encodeRoute("/login")}?reason=session_replaced`);
     };
 
     window.addEventListener("storage", onStorage);

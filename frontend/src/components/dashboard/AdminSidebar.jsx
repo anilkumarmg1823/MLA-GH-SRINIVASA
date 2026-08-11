@@ -18,74 +18,75 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useLanguage } from "@/context/LanguageContext";
+import { encodeRoute, isRouteActive } from "@/lib/routeEncoder";
 
 const links = [
   {
     href: "/dashboard",
     icon: FaTachometerAlt,
     labelKey: "dashboard",
-    match: (p) => p === "/dashboard",
+    match: (p) => isRouteActive(p, "/dashboard", true),
   },
   {
     href: "/dashboard/development",
     icon: FaHardHat,
     labelKey: "development",
-    match: (p) => p?.startsWith("/dashboard/development"),
+    match: (p) => isRouteActive(p, "/dashboard/development"),
   },
   {
     href: "/dashboard/department-records",
     icon: FaFolderOpen,
     labelKey: "departmentRecords",
-    match: (p) => p?.startsWith("/dashboard/department-records"),
+    match: (p) => isRouteActive(p, "/dashboard/department-records"),
   },
   {
     href: "/dashboard/demands",
     icon: FaHandsHelping,
     labelKey: "navDemands",
-    match: (p) => p?.startsWith("/dashboard/demands"),
+    match: (p) => isRouteActive(p, "/dashboard/demands"),
   },
   {
     href: "/dashboard/complaints",
     icon: FaCommentDots,
     labelKey: "navComplaints",
-    match: (p) => p?.startsWith("/dashboard/complaints"),
+    match: (p) => isRouteActive(p, "/dashboard/complaints"),
   },
   {
     href: "/dashboard/medical-referrals",
     icon: FaUserShield,
     labelKey: "medicalReferrals",
     labelFallback: "Medical Referrals",
-    match: (p) => p?.startsWith("/dashboard/medical-referrals"),
+    match: (p) => isRouteActive(p, "/dashboard/medical-referrals"),
   },
   {
     href: "/dashboard/assembly-qa",
     icon: FaBalanceScale,
     labelKey: "navAssembly",
-    match: (p) => p?.startsWith("/dashboard/assembly-qa"),
+    match: (p) => isRouteActive(p, "/dashboard/assembly-qa"),
   },
   {
     href: "/dashboard/landing",
     icon: FaGlobe,
     labelKey: "landingPage",
-    match: (p) => p?.startsWith("/dashboard/landing"),
+    match: (p) => isRouteActive(p, "/dashboard/landing"),
   },
   {
     href: "/dashboard/leaders",
     icon: FaUserTie,
     labelKey: "navLeaders",
-    match: (p) => p?.startsWith("/dashboard/leaders"),
+    match: (p) => isRouteActive(p, "/dashboard/leaders"),
   },
   {
     href: "/dashboard/tour-schedules",
     icon: FaCalendarAlt,
     labelKey: "navTourSchedules",
-    match: (p) => p?.startsWith("/dashboard/tour-schedules"),
+    match: (p) => isRouteActive(p, "/dashboard/tour-schedules"),
   },
   {
     href: "/dashboard/access",
     icon: FaUserShield,
     labelKey: "manageAccess",
-    match: (p) => p?.startsWith("/dashboard/access"),
+    match: (p) => isRouteActive(p, "/dashboard/access"),
   },
 ];
 
@@ -108,10 +109,11 @@ export default function AdminSidebar({
       {links.map((item) => {
         const Icon = item.icon;
         const active = item.match(pathname);
+        const encodedHref = encodeRoute(item.href);
         return (
           <Link
             key={item.href}
-            href={item.href}
+            href={encodedHref}
             title={t[item.labelKey]}
             onClick={onNavigate}
             className={`flex items-center rounded-xl text-sm font-bold transition-colors ${
