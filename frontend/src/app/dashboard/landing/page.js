@@ -83,6 +83,23 @@ export default function LandingCmsPreviewPage() {
 
   return (
     <div className="text-[var(--dash-text)] space-y-4 pb-8">
+      {/* Prominent Coming Soon Banner */}
+      <div className="rounded-2xl bg-amber-500/15 border-2 border-amber-400/60 p-4 shadow-lg flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <span className="px-3.5 py-1 rounded-full bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-widest shadow shrink-0">
+            🚀 Coming Soon
+          </span>
+          <div className="text-xs text-[var(--dash-heading)] font-bold">
+            {isKn
+              ? "ಸಿಎಂಎಸ್ ಪೂರ್ಣಪ್ರಮಾಣದ ಎಡಿಟಿಂಗ್ ವೈಶಿಷ್ಟ್ಯವು ಶೀಘ್ರದಲ್ಲೇ ಬಿಡುಗಡೆಯಾಗಲಿದೆ."
+              : "CMS Studio full drag-and-drop customization is under enhancement and coming soon."}
+          </div>
+        </div>
+        <span className="hidden sm:inline-block text-[11px] font-black text-amber-500 dark:text-amber-400 uppercase tracking-wider shrink-0">
+          {isKn ? "ಅಭಿವೃದ್ಧಿಯಲ್ಲಿದೆ" : "Under Active Enhancement"}
+        </span>
+      </div>
+
       {/* Floating Top Control Toolbar */}
       <div className="rounded-2xl border border-[var(--dash-border)] bg-[var(--dash-panel)] p-4 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-4 z-40 backdrop-blur-md">
         {/* Title & Info */}
@@ -221,20 +238,29 @@ export default function LandingCmsPreviewPage() {
         </div>
 
         <div className="relative overflow-hidden rounded-xl border border-[var(--dash-border)] p-1 bg-slate-950/40 min-h-[750px]">
-          {/* Coming Soon Overlay Layer */}
-          <div className="absolute inset-0 z-30 pointer-events-none bg-slate-950/50 backdrop-blur-[3px] flex items-center justify-center p-6 text-center">
-            <div className="max-w-md p-6 rounded-3xl bg-slate-900/95 border-2 border-amber-400/50 shadow-2xl text-white space-y-3 pointer-events-auto">
-              <span className="inline-block px-4 py-1.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/50 text-xs font-black uppercase tracking-widest shadow-sm">
+          {/* Complete Canvas Section Coming Soon Overlay Layer */}
+          <div className="absolute inset-0 z-50 pointer-events-auto bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-6 text-center">
+            <div className="max-w-lg p-8 sm:p-10 rounded-3xl bg-slate-900/95 border-2 border-amber-400/60 shadow-2xl text-white space-y-4">
+              <span className="inline-block px-5 py-1.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/60 text-xs font-black uppercase tracking-widest shadow-md">
                 🚀 Coming Soon
               </span>
-              <h2 className="text-xl sm:text-2xl font-black tracking-wide text-amber-400">
-                {isKn ? "ಎಡಿಟರ್ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ" : "CMS Studio Editor - Coming Soon"}
+              <h2 className="text-2xl sm:text-3xl font-black tracking-wide text-amber-400">
+                {isKn ? "ಸಿಎಂಎಸ್ ಎಡಿಟರ್ ಶೀಘ್ರದಲ್ಲೇ ಬರಲಿದೆ" : "CMS Studio Editor — Coming Soon"}
               </h2>
-              <p className="text-xs text-slate-300 font-medium leading-relaxed">
-                {isKn 
-                  ? "ಲ್ಯಾಂಡಿಂಗ್ ಪುಟದ ಸುಧಾರಿತ ಲೈವ್ ಎಡಿಟರ್ ಸದ್ಯದಲ್ಲೇ ಬರಲಿದೆ. ಸದ್ಯಕ್ಕೆ ಮುನ್ನೋಟ ಲಭ್ಯವಿದೆ." 
-                  : "Advanced visual CMS customization tools are coming soon. Current site preview is active below."}
+              <p className="text-xs sm:text-sm text-slate-300 font-medium leading-relaxed">
+                {isKn
+                  ? "ಲ್ಯಾಂಡಿಂಗ್ ಪುಟದ ಪ್ರತಿಯೊಂದು ವಿಭಾಗವನ್ನು ಡ್ರ್ಯಾಗ್-ಅಂಡ್-ಡ್ರಾಪ್ ಮೂಲಕ ನೇರವಾಗಿ ಎಡಿಟ್ ಮಾಡುವ ಸೌಲಭ್ಯ ಶೀಘ್ರದಲ್ಲೇ ಲಭ್ಯವಾಗಲಿದೆ."
+                  : "Section-by-section live visual drag-and-drop customization for all landing page components is under active enhancement and coming soon."}
               </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={onOpenPublicSite}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs font-black tracking-wide shadow-xl transition-all"
+                >
+                  <span>{isKn ? "ಸಾರ್ವಜನಿಕ ವೆಬ್‌ಸೈಟ್ ವೀಕ್ಷಿಸಿ" : "View Live Public Website"}</span>
+                </button>
+              </div>
             </div>
           </div>
 

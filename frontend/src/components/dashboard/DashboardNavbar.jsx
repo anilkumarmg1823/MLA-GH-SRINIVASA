@@ -166,8 +166,8 @@ export default function DashboardNavbar({ session, onMenuClick }) {
                 />
               </div>
 
-              <div className="hidden md:flex flex-col text-left min-w-0 ml-0.5">
-                <span className="font-black text-sm sm:text-base tracking-wider uppercase text-[var(--dash-text)] leading-tight truncate">
+              <div className="flex flex-col text-left min-w-0 ml-1">
+                <span className="font-black text-xs sm:text-sm md:text-base tracking-wide uppercase text-[var(--dash-text)] leading-tight truncate">
                   {lang === "kn" ? "ಡಾ. ಶ್ರೀನಿವಾಸ್ ಎನ್. ಟಿ." : "DR. SRINIVAS N. T."}
                 </span>
                 <span className="text-[var(--dash-accent)] text-[8px] sm:text-[10px] font-black uppercase tracking-widest mt-0.5 truncate">

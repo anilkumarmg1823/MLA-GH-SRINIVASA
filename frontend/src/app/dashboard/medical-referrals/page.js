@@ -2,7 +2,20 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { FaHospital, FaSearch, FaFileAlt, FaSync } from "react-icons/fa";
+import {
+  FaHospital,
+  FaSearch,
+  FaFileAlt,
+  FaSync,
+  FaClipboardList,
+  FaHourglassHalf,
+  FaCheckCircle,
+  FaCheckDouble,
+  FaTimesCircle,
+  FaListUl,
+  FaPhoneAlt,
+  FaMapMarkerAlt,
+} from "react-icons/fa";
 import { getSession } from "@/lib/auth";
 import { getToken } from "@/lib/api";
 import { useLanguage } from "@/context/LanguageContext";
@@ -146,12 +159,12 @@ export default function AdminMedicalReferralsPage() {
   }, [referrals, statusFilter, search]);
 
   const statusTabs = [
-    { id: "ALL", label: t.mrFilterAll },
-    { id: "APPLIED", label: `📋 ${t.mrFilterNew}` },
-    { id: "IN_PROCESS", label: `⏳ ${t.mrFilterReview}` },
-    { id: "APPROVED", label: `✓ ${t.mrFilterApproved}` },
-    { id: "COMPLETED", label: `🔵 ${t.mrFilterCompleted}` },
-    { id: "REJECTED", label: `❌ ${t.mrFilterRejected}` },
+    { id: "ALL", label: t.mrFilterAll, icon: FaListUl },
+    { id: "APPLIED", label: t.mrFilterNew, icon: FaClipboardList },
+    { id: "IN_PROCESS", label: t.mrFilterReview, icon: FaHourglassHalf },
+    { id: "APPROVED", label: t.mrFilterApproved, icon: FaCheckCircle },
+    { id: "COMPLETED", label: t.mrFilterCompleted, icon: FaCheckDouble },
+    { id: "REJECTED", label: t.mrFilterRejected, icon: FaTimesCircle },
   ];
 
   if (!allowed) return <PageLoader />;
@@ -174,19 +187,23 @@ export default function AdminMedicalReferralsPage() {
 
       <div className="mb-4 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
         <div className="flex flex-wrap items-center gap-1.5 w-full md:w-auto">
-          {statusTabs.map((st) => (
-            <button
-              key={st.id}
-              onClick={() => setStatusFilter(st.id)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all ${
-                statusFilter === st.id
-                  ? "bg-[#CCBCA5]/25 text-[var(--dash-heading)] shadow-md border border-[#CCBCA5]/60"
-                  : "bg-[var(--dash-panel)] text-[var(--dash-text-70)] hover:bg-[var(--dash-hover)] hover:text-white border border-[#CCBCA5]/30"
-              }`}
-            >
-              {st.label}
-            </button>
-          ))}
+          {statusTabs.map((st) => {
+            const Icon = st.icon;
+            return (
+              <button
+                key={st.id}
+                onClick={() => setStatusFilter(st.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all inline-flex items-center gap-1.5 ${
+                  statusFilter === st.id
+                    ? "bg-[#CCBCA5]/25 text-[var(--dash-heading)] shadow-md border border-[#CCBCA5]/60"
+                    : "bg-[var(--dash-panel)] text-[var(--dash-text-70)] hover:bg-[var(--dash-hover)] hover:text-white border border-[#CCBCA5]/30"
+                }`}
+              >
+                {Icon ? <Icon className="text-xs shrink-0" /> : null}
+                <span>{st.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         <div className="relative w-full md:w-80">
@@ -244,8 +261,11 @@ export default function AdminMedicalReferralsPage() {
                       <div className="font-bold text-[var(--dash-text)] text-sm">
                         {item.patientName}
                       </div>
-                      <div className="text-[var(--dash-text-70)] text-xs mt-0.5">
-                        {t.mrAge}: {item.age} | 📞 {item.mobile}
+                      <div className="text-[var(--dash-text-70)] text-xs mt-0.5 flex items-center gap-1.5">
+                        <span>{t.mrAge}: {item.age}</span>
+                        <span>|</span>
+                        <FaPhoneAlt className="text-[10px] text-[#CCBCA5]" />
+                        <span>{item.mobile}</span>
                       </div>
                       <div className="text-[var(--dash-text-50)] text-[11px] mt-0.5">
                         {t.mrDisease}: {item.disease}
@@ -266,7 +286,7 @@ export default function AdminMedicalReferralsPage() {
                         className="w-full px-2 py-1 rounded-lg border border-[#CCBCA5]/40 bg-[var(--dash-bg)] text-[10px] font-bold outline-none text-[var(--dash-text)]"
                       >
                         <option value={item.hospitalName}>
-                          🏥 {t.mrChangeHospital}
+                          {t.mrChangeHospital}
                         </option>
                         <option value="ಶ್ರೀ ಜಯದೇವ ಹೃದ್ರೋಗ ವಿಜ್ಞಾನ ಮತ್ತು ಸಂಶೋಧನಾ ಸಂಸ್ಥೆ, ಬೆಂಗಳೂರು">
                           ಶ್ರೀ ಜಯದೇವ ಹೃದ್ರೋಗ ಸಂಸ್ಥೆ, ಬೆಂಗಳೂರು
@@ -296,7 +316,10 @@ export default function AdminMedicalReferralsPage() {
                     </td>
 
                     <td className="px-3 py-2.5 font-bold text-[var(--dash-text-70)]">
-                      📍 {item.village}
+                      <div className="flex items-center gap-1">
+                        <FaMapMarkerAlt className="text-xs text-[#CCBCA5]" />
+                        <span>{item.village}</span>
+                      </div>
                       {item.gramPanchayat && (
                         <span className="block text-[10px] text-[var(--dash-text-40)]">
                           GP: {item.gramPanchayat}
