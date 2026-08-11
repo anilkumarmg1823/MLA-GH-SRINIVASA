@@ -1,6 +1,6 @@
 /**
  * Universal Route Encoder / Obfuscator for Next.js App Router
- * Safely encodes application paths to base64 URL-safe strings under /_e/
+ * Safely encodes application paths to base64 URL-safe strings under /e/
  */
 
 /**
@@ -12,7 +12,7 @@ export function encodeRoute(path) {
   // Return as-is for home page, already encoded paths, API endpoints, or assets
   if (
     path === "/" ||
-    path.startsWith("/_e/") ||
+    path.startsWith("/e/") ||
     path.startsWith("/api/") ||
     path.startsWith("/_next/") ||
     path.startsWith("http://") ||
@@ -34,7 +34,7 @@ export function encodeRoute(path) {
     
     // URL-safe Base64: replace '+' with '-', '/' with '_', remove '=' padding
     const urlSafe = b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-    return `/_e/${urlSafe}`;
+    return `/e/${urlSafe}`;
   } catch (err) {
     return path;
   }
@@ -47,7 +47,7 @@ export function decodeRoute(encodedSegment) {
   if (!encodedSegment) return "/";
   let slug = Array.isArray(encodedSegment) ? encodedSegment.join("/") : encodedSegment;
   
-  if (slug.startsWith("_e/")) slug = slug.slice(3);
+  if (slug.startsWith("e/")) slug = slug.slice(2);
   if (slug.startsWith("/")) slug = slug.slice(1);
 
   if (!slug) return "/";
@@ -77,8 +77,8 @@ export function isRouteActive(currentPathname, targetRawRoute, exact = false) {
   if (!currentPathname) return false;
   
   let decodedCurrent = currentPathname;
-  if (currentPathname.startsWith("/_e/")) {
-    const slug = currentPathname.slice(4);
+  if (currentPathname.startsWith("/e/")) {
+    const slug = currentPathname.slice(3);
     decodedCurrent = decodeRoute(slug);
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { use } from "react";
 import { useParams } from "next/navigation";
 import { decodeRoute } from "@/lib/routeEncoder";
 
@@ -19,9 +19,10 @@ import TourSchedulesPage from "@/app/dashboard/tour-schedules/page";
 import AccessPage from "@/app/dashboard/access/page";
 import DashboardLayout from "@/app/dashboard/layout";
 
-export default function EncodedRoutePage() {
-  const params = useParams();
-  const slug = params?.slug;
+export default function EncodedRoutePage({ params: paramsProp }) {
+  const nextParams = useParams();
+  const rawParams = paramsProp ? (typeof paramsProp.then === "function" ? use(paramsProp) : paramsProp) : nextParams;
+  const slug = rawParams?.slug;
   const decodedPath = decodeRoute(slug);
 
   if (decodedPath === "/login") {
