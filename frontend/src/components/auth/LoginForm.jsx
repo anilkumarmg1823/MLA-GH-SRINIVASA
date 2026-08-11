@@ -180,10 +180,11 @@ export default function LoginForm() {
   };
 
   return (
-    <div className="relative min-h-[100dvh] w-full bg-[#F8FAFC] text-slate-900 flex overflow-x-hidden overflow-y-auto select-none">
-      {/* Dynamic Animated Background */}
+    <div className="relative min-h-[100dvh] w-full bg-gradient-to-br from-[#F8FAFC] via-[#F1F5F9] to-[#E2E8F0] text-slate-900 flex overflow-x-hidden overflow-y-auto select-none">
+      {/* Fantastic White-Shaded Dynamic Background */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
-        <div className="absolute inset-0 opacity-40">
+        {/* Subtle Map Overlay */}
+        <div className="absolute inset-0 opacity-30 mix-blend-multiply">
           <Image
             src="/kudligi_3d_map_blue.png"
             alt="Kudligi Constituency Map"
@@ -192,8 +193,11 @@ export default function LoginForm() {
             className="object-cover filter brightness-110 contrast-125"
           />
         </div>
-        <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-[#0055C4]/30 via-[#002B7F]/20 to-transparent blur-[140px] animate-pulse duration-10000" />
-        <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tl from-[#FFD700]/30 via-[#001438]/20 to-transparent blur-[140px] animate-pulse duration-10000" />
+
+        {/* Soft Glowing Aura Accents */}
+        <div className="absolute -top-32 -left-32 w-[650px] h-[650px] rounded-full bg-gradient-to-br from-[#0055C4]/20 via-[#3B82F6]/15 to-transparent blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-32 -right-32 w-[650px] h-[650px] rounded-full bg-gradient-to-tl from-[#FFD700]/30 via-[#F59E0B]/15 to-transparent blur-[130px] animate-pulse" />
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[750px] h-[750px] rounded-full bg-radial from-amber-200/25 via-blue-100/20 to-transparent blur-[150px]" />
       </div>
 
       {/* Top Header Buttons */}
