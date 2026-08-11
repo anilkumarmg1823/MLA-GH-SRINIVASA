@@ -11,7 +11,7 @@ git pull --ff-only origin main
 
 echo "==> Backend"
 cd "$REPO_ROOT/backend"
-npm ci --omit=dev || npm install --omit=dev
+npm ci || npm install
 npx prisma generate
 # Apply schema if you changed prisma (safe for additive changes)
 npx prisma db push

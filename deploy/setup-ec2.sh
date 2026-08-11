@@ -36,8 +36,9 @@ mkdir -p "$REPO_ROOT/logs"
 
 echo "==> Backend deps"
 cd "$REPO_ROOT/backend"
-npm ci --omit=dev || npm install --omit=dev
+npm ci || npm install
 npx prisma generate
+npx prisma db push
 
 echo "==> Frontend deps + build (set NEXT_PUBLIC_* in frontend/.env.production first)"
 cd "$REPO_ROOT/frontend"
