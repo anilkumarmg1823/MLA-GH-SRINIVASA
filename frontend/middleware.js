@@ -4,6 +4,11 @@ import { decodeRoute, encodeRoute } from "@/lib/routeEncoder";
 export function middleware(req) {
   const { pathname, search } = req.nextUrl;
 
+  // 0. If this is an internal rewrite request created by our middleware, pass through directly
+  if (req.headers.get("x-route-encoded") === "1") {
+    return NextResponse.next();
+  }
+
   // Bypass internals, static assets, images, API routes
   if (
     pathname.startsWith("/_next") ||
@@ -27,7 +32,14 @@ export function middleware(req) {
     
     if (decodedPath && decodedPath !== "/" && !decodedPath.startsWith("/_e/")) {
       const targetUrl = new URL(`${decodedPath}${search}`, req.url);
-      return NextResponse.rewrite(targetUrl);
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set("x-route-encoded", "1");
+
+      return NextResponse.rewrite(targetUrl, {
+        request: {
+          headers: requestHeaders,
+        },
+      });
     }
     return NextResponse.next();
   }
@@ -50,3 +62,5 @@ export function middleware(req) {
 export const config = {
   matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };
+
+export default middleware;

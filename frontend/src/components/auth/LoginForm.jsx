@@ -346,13 +346,6 @@ export default function LoginForm() {
                       />
                     </div>
                   </div>
-                  <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 flex items-center text-xs text-[#0055C4] font-bold gap-2">
-                    <FaInfoCircle className="w-4 h-4 shrink-0" />
-                    <span>
-                      Demo: <strong className="text-slate-900">admin@mla.local</strong>{" "}
-                      | Pass: <strong className="text-slate-900">admin123</strong>
-                    </span>
-                  </div>
                 </div>
                 <button
                   type="submit"
@@ -396,7 +389,7 @@ export default function LoginForm() {
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
                       className="w-full h-12 rounded-xl bg-slate-50 border-2 border-slate-200 pl-16 pr-3.5 text-sm text-slate-900 font-mono font-bold placeholder:text-slate-400 focus:outline-none focus:border-[#0055C4] focus:bg-white transition-all shadow-inner"
-                      placeholder="8660970170"
+                      placeholder="9876543210"
                       maxLength={10}
                       required
                     />
